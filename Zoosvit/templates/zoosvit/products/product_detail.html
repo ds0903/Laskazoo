@@ -1,0 +1,68 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} – Зоосвіт{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'home' %}">Головна</a>
+  <span class="separator">›</span>
+
+  <a href="{% url 'products:main_category_list' %}">Каталог</a>
+  <span class="separator">›</span>
+
+  <a href="{% url 'products:subcategory_list' main_slug %}">
+    {{ category.main_category.name }}
+  </a>
+  <span class="separator">›</span>
+
+  <a href="{% url 'products:category_products' main_slug category.slug %}">
+    {{ category.name }}
+  </a>
+  <span class="separator">›</span>
+
+  <span class="current">{{ product.name }}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="product-detail container">
+  <div class="detail-wrapper">
+    {# --- ЛІВА КОЛОНКА: ЗОБРАЖЕННЯ --- #}
+    <div class="detail-images">
+      {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+      {% endif %}
+    </div>
+
+    {# --- ПРАВА КОЛОНКА: ІНФОРМАЦІЯ --- #}
+    <div class="detail-info">
+      <h1 class="detail-title">{{ product.name }}</h1>
+      <p class="detail-sku">Артикул: {{ product.sku }}</p>
+      <p class="detail-price">₴ {{ product.price }}</p>
+
+      {% if variants %}
+        <h3>Варіанти:</h3>
+        <ul class="variant-list">
+          {% for v in variants %}
+            <li>{{ v.weight }} — ₴ {{ v.price }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if product.description %}
+        <div class="detail-description">
+          {{ product.description|linebreaks }}
+        </div>
+      {% endif %}
+
+      <button class="btn-primary">Додати в кошик</button>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Мої замовлення{% endblock %}
+
+{% block extra_css %}
+  {# За потреби створіть й підключіть свій CSS-файл #}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/orders/order_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="orders-wrapper">
+    <!-- Сайдбар -->
+  <aside class="profile-sidebar">
+    <ul class="profile-nav">
+      <li>
+        <a href="{% url 'users:profile' %}">Особисті дані</a>
+      </li>
+      <li class="active">
+        <a href="{% url 'orders:list' %}">Замовлення</a>
+      </li>
+      <li>
+        <a href="{% url 'favourites:list' %}">Обране</a>
+      </li>
+    </ul>
+  </aside>
+
+  <h1 class="orders-title">Мої замовлення</h1>
+
+  {% if orders %}
+    <ul class="orders-list">
+      {% for order in orders %}
+        <li class="order-item">
+          <div class="order-header">
+            <span class="order-number">Замовлення №{{ order.pk }}</span>
+            <span class="order-date">{{ order.created_at|date:"j F Y H:i" }}</span>
+          </div>
+          <div class="order-status">
+            Статус: {{ order.get_status_display }}
+          </div>
+          <a href="{% url 'orders:detail' order.pk %}" class="order-detail-link">
+            Детальніше
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>У вас поки немає замовлень.</p>
+  {% endif %}
+</div>
+{% endblock %}

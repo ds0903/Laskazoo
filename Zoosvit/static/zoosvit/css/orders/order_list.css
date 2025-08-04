@@ -1,0 +1,98 @@
+/* static/zoosvit/css/orders/order_list.css */
+
+/* Загальні контейнери для списку замовлень */
+.orders-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 2rem auto;
+  gap: 1.5rem;
+}
+
+/* Заголовок сторінки */
+.orders-title {
+  font-size: 1.8rem;
+  color: #35a800;
+  margin-bottom: 1rem;
+}
+
+/* Список замовлень */
+.orders-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Одна позиція замовлення */
+.order-item {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Шапка замовлення: номер та дата */
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.order-number {
+  font-weight: 600;
+  color: #333;
+}
+.order-date {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* Статус замовлення */
+.order-status {
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Посилання на детальний перегляд */
+.order-detail-link {
+  align-self: flex-end;
+  text-decoration: none;
+  color: #35a800;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+.order-detail-link:hover {
+  color: #2a7c00;
+  text-decoration: underline;
+}
+
+/* Якщо немає замовлень */
+.orders-wrapper p {
+  font-size: 1rem;
+  color: #555;
+  text-align: center;
+}
+/* Сайдбар */
+.profile-sidebar {
+  flex: 0 0 200px;
+}
+.profile-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.profile-nav li {
+  margin-bottom: 1rem;
+}
+.profile-nav li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+}
+.profile-nav li.active a,
+.profile-nav li a:hover {
+  color: #35a800;
+}

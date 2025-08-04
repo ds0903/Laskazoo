@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>{% block title %}Зоосвіт{% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/products/catalog.css' %}">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+
+<body>
+
+  {% include 'zoosvit/core/partials/header.html' %}
+
+  {% block breadcrumbs %}{% endblock %}
+
+  <main class="site-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include 'zoosvit/core/partials/footer.html' %}
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

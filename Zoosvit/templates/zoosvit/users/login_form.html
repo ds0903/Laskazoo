@@ -1,0 +1,24 @@
+<form id="login-form-ajax" method="post" action="{% url 'users:login' %}">
+  {% csrf_token %}
+  {% if error %}
+    <div class="error-message red-error">{{ error }}</div>
+  {% endif %}
+
+  <div class="form-group">
+    {{ login_form.username.label_tag }}
+    {{ login_form.username }}
+    {% for err in login_form.username.errors %}
+      <div class="error-message">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="form-group">
+    {{ login_form.password.label_tag }}
+    {{ login_form.password }}
+    {% for err in login_form.password.errors %}
+      <div class="error-message">{{ err }}</div>
+    {% endfor %}
+  </div>
+
+  <button type="submit">Увійти</button>
+</form>

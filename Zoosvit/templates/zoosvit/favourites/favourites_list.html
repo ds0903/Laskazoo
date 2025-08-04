@@ -1,0 +1,50 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Обране{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/favourites/favourites_list.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="favourites-wrapper">
+
+<!-- Сайдбар -->
+<aside class="profile-sidebar">
+<ul class="profile-nav">
+  <li>
+    <a href="{% url 'users:profile' %}">Особисті дані</a>
+  </li>
+  <li>
+    <a href="{% url 'orders:list' %}">Замовлення</a>
+  </li>
+  <li class="active">
+    <a href="{% url 'favourites:list' %}">Обране</a>
+  </li>
+</ul>
+</aside>
+
+  <h1 class="favourites-title">Моє обране</h1>
+
+  {% if favs %}
+    <ul class="favourites-list">
+      {% for fav in favs %}
+        <li class="favourite-item">
+          <a href="{% url 'products:detail' fav.product.pk %}">
+            {% if fav.product.image %}
+              <img src="{{ fav.product.image.url }}"
+                   alt="{{ fav.product.name }}"
+                   class="favourite-img">
+            {% endif %}
+            <span class="favourite-name">{{ fav.product.name }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="no-favourites">У вас поки що немає обраних товарів.</p>
+  {% endif %}
+</div>
+{% endblock %}

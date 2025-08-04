@@ -1,0 +1,36 @@
+# apps/products/urls.py
+from django.urls import path
+from . import views
+
+app_name = 'products'
+
+urlpatterns = [
+    # 1) /categories/ — головні категорії
+    path(
+        '',
+        views.main_category_list,
+        name='main_category_list'
+    ),
+
+    # 2) /categories/cats/ — підкатегорії для головної "cats"
+    path(
+        '<slug:main_slug>/',
+        views.subcategory_list,
+        name='subcategory_list'
+    ),
+
+    # 3) /categories/cats/cats_food/ — продукти підкатегорії "cats_food"
+    path(
+        '<slug:main_slug>/<slug:slug>/',
+        views.category_list,
+        name='category_products'
+    ),
+
+    # 4) /categories/<main_slug>/<slug>/<product_slug>/ — детально про товар
+    path(
+      '<slug:main_slug>/<slug:slug>/<slug:product_slug>/',
+      views.product_detail,
+      name='product_detail'
+    ),
+]
+

@@ -1,0 +1,151 @@
+{% load static %}
+{% include 'zoosvit/users/modal.html' with form=form %}
+<script src="{% static 'zoosvit/js/login_modal.js' %}"></script>
+<header class="site-header">
+    <div class="site-topbar">
+      <div class="container topbar-inner">
+        <nav class="topbar-nav">
+          <a href="#stores">Магазини Zoosvit</a>
+          <a href="#about">Про нас</a>
+          <a href="#payment">Оплата та доставка</a>
+          <a href="#exchange">Обмін та повернення</a>
+          <a href="#help">Допомога</a>
+          <a href="#contact">Контакти</a>
+        </nav>
+      </div>
+    </div>
+    <div class="site-mainheader">
+      <div class="container header-inner">
+        <a href="/" class="logo">Зоосвіт</a>
+        <form class="search-form">
+          <input type="text" placeholder="пошук товарів">
+          <button type="submit">🔍</button>
+        </form>
+        <div class="icon-btn phone-btn">
+  <img src="{% static 'zoosvit/img/header_icons/phone-icon.png' %}" alt="Телефон">
+  <div class="phone-dropdown">
+    <div class="dropdown-title">Консультація менеджерів</div>
+    <div class="dropdown-contact">
+      <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram">
+      <a href="https://t.me/your_username">(067) 900 1022</a>
+      <small>(Telegram)</small>
+    </div>
+    <div class="dropdown-schedule">
+      <strong>Графік роботи:</strong> Пн–Нд 9:00–18:00
+    </div>
+    <div class="dropdown-chats">
+      <a href="viber://chat?number=+380679001022">
+        <img src="{% static 'zoosvit/img/header_icons/viber-icon.png' %}" alt="Viber">
+      </a>
+      <a href="https://t.me/your_username">
+        <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram">
+      </a>
+      <a href="https://t.me/your_username"><img src="{% static 'zoosvit/img/header_icons/instagram-icon.png' %}" alt="INST"></a>
+    </div>
+  </div>
+</div>
+        <div class="header-actions">
+          <a href="{% url 'products:subcategory_list' 'cats' %}"    class="icon-btn fav"      aria-label="Улюблені">
+
+          <img src="{% static 'zoosvit/img/header_icons/heart-icon.png' %}"    alt="Favorites">
+        </a>
+        <a href="#cart"    class="btn-cart"          aria-label="Мій кошик">
+          <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}"    alt="Cart">
+          <span class="cart-count">0</span>
+          <span class="cart-text">Мій кошик</span>
+        </a>
+          {% if user.is_authenticated %}
+            <div class="icon-btn login-btn">
+              <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
+              <div class="login-dropdown">
+                <div class="dropdown-title">Вітаємо, {{ user.username }}!</div>
+                <div class="dropdown-chats">
+                  <a href="{% url 'users:profile'      %}" class="dropdown-link">Особисті дані</a>
+                  <a href="{% url 'users:logout'       %}" class="dropdown-link">Вийти</a>
+                </div>
+              </div>
+            </div>
+          {% else %}
+  <div class="icon-btn login-btn">
+    <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
+    <div class="login-dropdown">
+      <div class="dropdown-title">Вхід / Реєстрація</div>
+      <div class="dropdown-chats">
+        <a href="#" class="dropdown-link" id="open-login-modal">Увійти</a>
+        <a href="#" class="dropdown-link" id="open-register-modal">Зареєструватись</a>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+      </div>
+    </div>
+    <div class="site-bottombar">
+      <div class="container topbar-inner">
+        <nav class="topbar-nav">
+          <a href="{% url 'products:subcategory_list' 'super-vigodniye-propozicii' %}" >Супер вигідні-пропозиції</a>
+          <a href="{% url 'products:subcategory_list' 'shares' %}">Акції</a>
+          <a href="{% url 'products:subcategory_list' 'dogs' %}">Собаки</a>
+          <a href="{% url 'products:subcategory_list' 'cats' %}">Коти</a>
+          <a href="{% url 'products:subcategory_list' 'birds' %}">Птахи</a>
+          <a href="{% url 'products:subcategory_list' 'rodents' %}">Гризуни</a>
+          <a href="{% url 'products:subcategory_list' 'aquarium' %}">Акваріум</a>
+          <a href="{% url 'products:subcategory_list' 'terrarium' %}">Тераріум</a>
+          <a href="{% url 'products:subcategory_list' 'brands' %}">Бренди</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initPhoneDropdown();
+  initLoginDropdown();
+});
+
+/**
+ * Телефонний дропдаун
+ */
+function initPhoneDropdown() {
+  const btn      = document.querySelector('.phone-btn');
+  const dropdown = document.querySelector('.phone-dropdown');
+  if (!btn || !dropdown) return;
+
+  let hideTimer;
+  const open = () => {
+    clearTimeout(hideTimer);
+    dropdown.classList.add('show');
+  };
+  const close = () => {
+    hideTimer = setTimeout(() => dropdown.classList.remove('show'), 300);
+  };
+
+  btn.addEventListener('mouseenter', open);
+  btn.addEventListener('mouseleave', close);
+  dropdown.addEventListener('mouseenter', open);
+  dropdown.addEventListener('mouseleave', close);
+}
+
+/**
+ * Дропдаун «Вхід/Реєстрація»
+ */
+function initLoginDropdown() {
+  const btn      = document.querySelector('.login-btn');
+  const dropdown = document.querySelector('.login-dropdown');
+  if (!btn || !dropdown) return;
+
+  let hideTimer;
+  const open = () => {
+    clearTimeout(hideTimer);
+    dropdown.classList.add('show');
+  };
+  const close = () => {
+    hideTimer = setTimeout(() => dropdown.classList.remove('show'), 300);
+  };
+
+  btn.addEventListener('mouseenter', open);
+  btn.addEventListener('mouseleave', close);
+  dropdown.addEventListener('mouseenter', open);
+  dropdown.addEventListener('mouseleave', close);
+}
+</script>
+

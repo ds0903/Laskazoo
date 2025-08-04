@@ -1,0 +1,44 @@
+{# templates/zoosvit/products/main_category_list.html #}
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Каталог – Зоосвіт{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'home' %}">Головна</a>
+  <span class="separator">›</span>
+  <span class="current">Каталог</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h1 class="catalog-page-heading">Каталог</h1>
+
+<section class="catalog container">
+  <div class="catalog-wrapper">
+    <main class="catalog-main">
+      <div class="main-category-grid">
+        {% for m in mains %}
+          <a href="{% url 'products:subcategory_list' m.slug %}"
+             class="category-card">
+            {% if m.image %}
+              <img src="{{ m.image.url }}" alt="{{ m.name }}">
+            {% else %}
+              <img src="{% static 'zoosvit/img/placeholder.png' %}"
+                   alt="no image">
+            {% endif %}
+            <span class="category-name">{{ m.name }}</span>
+          </a>
+        {% empty %}
+          <p>На жаль, категорії не знайдено.</p>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</section>
+{% endblock %}

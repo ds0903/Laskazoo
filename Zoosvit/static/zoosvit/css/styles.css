@@ -1,7 +1,6 @@
 :root {
   /* ваші змінні */
   --color-primary:  #095e56; /* темно-зелений */
-  --topbar-bg:      #ff;
   --topbar-color:   #095e56;
   --topbar-font:    0.75rem; /* 14px */
   --divider:         #e0e0e0;
@@ -20,7 +19,7 @@
   --prod-per-page: 6;
   /* скільки карток рухається за клік */
   --prod-scroll: 3;
-}
+
 }
 html {
   scroll-behavior: smooth;
@@ -846,9 +845,9 @@ footer { background:#fff; padding:16px 0; text-align:center; color:#777; font-si
 .category-slider .slide-btn.left  { left: -50px; }
 .category-slider .slide-btn.right { right: -50px; }
 
-* позиціонування стрілок поруч із слайдером */
-.product-slider .slide-btn.left  { left: -60px; }
+.product-slider .slide-btn.left  { left: -70px; }
 .product-slider .slide-btn.right { right: -120px; }
+
 background-color: #1c7f73;
   transform: translateY(-50%) scale(1.1);
 .category-slider .slide-btn.left  { left: -50px; }
@@ -1574,4 +1573,125 @@ section#mega-categories.container {
 .category-slider .cat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.site-header {
+  /* прибираємо тінь */
+  box-shadow: none !important;
+  /* якщо там є бордер, і він вам теж заважає, можна прибрати його */
+  border-bottom: none !important;
+}
+
+/* 1. Сам заголовок h3 */
+.category-title {
+  margin: 8px 0;
+  font-size: 1.125rem;            /* за вашим дизайном */
+  font-weight: 600;
+  color: var(--color-primary);    /* зелений як у “Коти” */
+}
+/* 2. Лінка всередині заголовку */
+.category-title .category-link {
+  color: inherit;       /* успадкує колір із .category-title */
+  text-decoration: none;/* скидає підкреслення */
+  display: inline-block;/* щоб можна було паддінг давати */
+  padding: 4px 8px;     /* необов’язково, підкреслити “кнопковість” */
+  border-radius: 4px;   /* легке заокруглення */
+  transition: background .2s, color .2s;
+}
+
+/* 3. Hover-ефект (як у кнопки) */
+.category-title .category-link:hover,
+.category-title .category-link:focus {
+  background: rgba(9,94,86, .1); /* світлий зелений фон */
+  color: var(--color-primary);   /* текст залишається темно-зеленим */
+  text-decoration: none;         /* ніякого підкреслення */
+}
+
+/* --- auth-modal.css або просто додай в styles.css --- */
+.auth-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  display: none;
+}
+
+.auth-modal.show {
+  display: flex;
+}
+
+.auth-modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  min-width: 400px;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+
+.auth-close-btn {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.auth-tabs {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px;
+  background: #eee;
+  border: none;
+  cursor: pointer;
+}
+
+.auth-tab.active {
+  background: #fff;
+  font-weight: bold;
+}
+
+.auth-form input {
+  margin-bottom: 1rem;
+  padding: 10px;
+  width: 100%;
+}
+
+.auth-form button {
+  padding: 10px;
+  background: #35a800;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+.auth-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.auth-modal.show {
+  display: flex;
+}
+.error-message {
+  color: red;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.red-error {
+  border-left: 3px solid red;
+  padding-left: 6px;
 }

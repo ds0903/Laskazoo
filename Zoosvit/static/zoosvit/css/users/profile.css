@@ -1,0 +1,90 @@
+/* Загальні контейнери */
+.profile-wrapper {
+  display: flex;
+  max-width: 1200px;
+  margin: 2rem auto;
+  gap: 2rem;
+}
+
+/* Сайдбар */
+.profile-sidebar {
+  flex: 0 0 200px;
+}
+.profile-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.profile-nav li {
+  margin-bottom: 1rem;
+}
+.profile-nav li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+}
+.profile-nav li.active a,
+.profile-nav li a:hover {
+  color: #35a800;
+}
+
+/* Основний блок */
+.profile-main {
+  flex: 1;
+}
+.profile-title {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #35a800;
+}
+
+/* Повідомлення Django messages */
+.messages .message {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+.messages .message.success {
+  background: #e6f9e6;
+  border: 1px solid #35a800;
+  color: #2b6f2b;
+}
+
+/* Картка даних */
+.profile-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 2rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Інформаційна нота всередині картки */
+.profile-note {
+  color: #c00;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+/* Форма (для вигляду readonly) */
+.profile-form .form-group {
+  margin-bottom: 1.25rem;
+}
+.profile-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+.profile-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f9f9f9;
+  color: #333;
+}
+.profile-form input:disabled {
+  color: #555;
+}

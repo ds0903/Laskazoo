@@ -1,0 +1,143 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Категорії – Зоосвіт{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+{% endblock %}
+{% block breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'home' %}">Головна</a>
+  <span class="separator">›</span>
+
+  <a href="{% url 'products:main_category_list' %}">Каталог</a>
+  <span class="separator">›</span>
+
+  <a href="{% url 'products:subcategory_list' main.slug %}">
+    {{ main.name }}
+  </a>
+  <span class="separator">›</span>
+
+  <span class="current">{{ category.name }}</span>
+</nav>
+{% endblock %}
+
+
+{% block content %}
+
+{% if category %}
+  <h1 class="catalog-page-heading">{{ category.name }}</h1>
+{% endif %}
+
+<section class="catalog container">
+  <div class="catalog-wrapper">
+    <aside class="filter-sidebar">
+      <h3 class="fs-title">Фільтри</h3>
+
+      <div class="fs-group">
+        <p class="fs-group-title">Бренд</p>
+        {% for brand in brands %}
+          <label>
+            <input type="checkbox" name="brand" value="{{ brand.slug }}">
+            {{ brand.name }} <span>({{ brand.count }})</span>
+          </label>
+        {% endfor %}
+      </div>
+
+      {# Ціна #}
+      <div class="fs-group">
+        <p class="fs-group-title">Ціна, грн</p>
+        <div class="range-inputs">
+          <input type="number" name="price_min" placeholder="від" value="{{ price_min }}">
+          <span>–</span>
+          <input type="number" name="price_max" placeholder="до"  value="{{ price_max }}">
+        </div>
+        <button class="btn-secondary btn-filter-apply">OK</button>
+      </div>
+
+      {# Наявність #}
+      <div class="fs-group">
+        <p class="fs-group-title">Наявність</p>
+        <label>
+          <input type="checkbox" name="in_stock" {% if in_stock %}checked{% endif %}>
+          В наявності
+        </label>
+      </div>
+    </aside>
+
+    {# ===== Основна частина ===== #}
+    <main class="catalog-main">
+      <div class="catalog-header">
+<!--        <h1 class="catalog-title">{{ category.name }}</h1>-->
+        <nav class="category-nav">
+          {% for pill in pills %}
+            <a href="{{ pill.url }}"
+               class="category-pill {% if pill.slug == category.slug %}active{% endif %}">
+              {{ pill.name }}
+            </a>
+          {% endfor %}
+        </nav>
+      </div>
+
+      <div class="product-grid">
+  {% for product in products %}
+    <div class="product-card">
+      <a href="{{ product.get_absolute_url }}" class="product-link">
+        <!-- 1) Фото -->
+        <div class="product-image">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/placeholder.png' %}" alt="no image">
+          {% endif %}
+        </div>
+
+        <!-- 2) Основна інфо -->
+        <div class="product-info">
+          <p class="prod-article">Артикул: {{ product.sku }}</p>
+          <h4 class="prod-name">{{ product.name }}</h4>
+          <div class="prod-price">₴ {{ product.price }}</div>
+        </div>
+
+        <!-- 3) Додаткова інфо, бачимо тільки на hover -->
+        <div class="additional-info">
+          {% with variants=product.variants.all %}
+            {% if variants %} {# порівнюється як пустий/непустий список #}
+              <p><strong>Фасування:</strong></p>
+              <div class="packaging-options">
+                {% for variant in variants %}
+                  <span class="packaging-btn">{{ variant.weight }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+<!--          <p><strong>В наявності:</strong>-->
+<!--            -->
+<!--          </p>-->
+
+        <!-- Додаткові кнопки та країна -->
+        <div class="product-actions">
+          <button class="btn-primary buy-btn">Купити</button>
+          <button class="btn-icon wishlist-btn" title="В бажання">
+            ❤️
+          </button>
+        </div>
+        {% if product.country %}
+          <p class="prod-country">Країна виробництва: {{ product.country }}</p>
+        {% endif %}
+      </div>
+      </a>
+    </div>
+  {% empty %}
+    <p>На жаль, товари не знайдено :(</p>
+  {% endfor %}
+</div>
+
+
+
+    </main>
+  </div>
+</section>
+{% endblock %}
