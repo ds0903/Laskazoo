@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Main_Categories, Category, Brand, Product
+from .models import Main_Categories, Category, Brand, Product, PopularProduct
 
 @admin.register(Main_Categories)
 class MainCategoriesAdmin(admin.ModelAdmin):
@@ -12,3 +12,10 @@ class CategoryAdmin(admin.ModelAdmin):
 admin.site.register(Brand)
 admin.site.register(Product)
 
+# @admin.register(PopularProduct)
+# class PopularProductAdmin(admin.ModelAdmin):
+#     list_display  = ('id', 'product', 'position', 'is_active', 'label', 'created_at')
+#     list_editable = ('position', 'is_active', 'label')
+#     search_fields = ('product__name', 'product__sku', 'product__slug')
+#     autocomplete_fields = ('product',)
+#     ordering = ('position',)

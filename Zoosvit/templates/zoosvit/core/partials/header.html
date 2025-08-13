@@ -1,5 +1,6 @@
 {% load static %}
 {% include 'zoosvit/users/modal.html' with form=form %}
+{% include 'zoosvit/orders/modal.html' %}
 <script src="{% static 'zoosvit/js/login_modal.js' %}"></script>
 <header class="site-header">
     <div class="site-topbar">
@@ -22,61 +23,74 @@
           <button type="submit">🔍</button>
         </form>
         <div class="icon-btn phone-btn">
-  <img src="{% static 'zoosvit/img/header_icons/phone-icon.png' %}" alt="Телефон">
-  <div class="phone-dropdown">
-    <div class="dropdown-title">Консультація менеджерів</div>
-    <div class="dropdown-contact">
-      <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram">
-      <a href="https://t.me/your_username">(067) 900 1022</a>
-      <small>(Telegram)</small>
-    </div>
-    <div class="dropdown-schedule">
-      <strong>Графік роботи:</strong> Пн–Нд 9:00–18:00
-    </div>
-    <div class="dropdown-chats">
-      <a href="viber://chat?number=+380679001022">
-        <img src="{% static 'zoosvit/img/header_icons/viber-icon.png' %}" alt="Viber">
-      </a>
-      <a href="https://t.me/your_username">
-        <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram">
-      </a>
-      <a href="https://t.me/your_username"><img src="{% static 'zoosvit/img/header_icons/instagram-icon.png' %}" alt="INST"></a>
-    </div>
-  </div>
-</div>
+          <img src="{% static 'zoosvit/img/header_icons/phone-icon.png' %}" alt="Телефон">
+          <div class="phone-dropdown">
+            <div class="dropdown-title">Консультація менеджерів</div>
+            <div class="dropdown-contact">
+              <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram">
+              <a href="https://t.me/your_username">(067) 900 1022</a>
+              <small>(Telegram)</small>
+            </div>
+            <div class="dropdown-schedule">
+              <strong>Графік роботи:</strong> Пн–Нд 9:00–18:00
+            </div>
+            <div class="dropdown-chats">
+              <a href="viber://chat?number=+380679001022">
+                <img src="{% static 'zoosvit/img/header_icons/viber-icon.png' %}" alt="Viber">
+              </a>
+              <a href="https://t.me/your_username">
+                <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram">
+              </a>
+              <a href="https://t.me/your_username"><img src="{% static 'zoosvit/img/header_icons/instagram-icon.png' %}" alt="INST"></a>
+            </div>
+          </div>
+        </div>
         <div class="header-actions">
-          <a href="{% url 'products:subcategory_list' 'cats' %}"    class="icon-btn fav"      aria-label="Улюблені">
-
-          <img src="{% static 'zoosvit/img/header_icons/heart-icon.png' %}"    alt="Favorites">
-        </a>
-        <a href="#cart"    class="btn-cart"          aria-label="Мій кошик">
-          <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}"    alt="Cart">
-          <span class="cart-count">0</span>
-          <span class="cart-text">Мій кошик</span>
-        </a>
           {% if user.is_authenticated %}
             <div class="icon-btn login-btn">
               <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
               <div class="login-dropdown">
                 <div class="dropdown-title">Вітаємо, {{ user.username }}!</div>
                 <div class="dropdown-chats">
-                  <a href="{% url 'users:profile'      %}" class="dropdown-link">Особисті дані</a>
-                  <a href="{% url 'users:logout'       %}" class="dropdown-link">Вийти</a>
+                  <a href="{% url 'orders:list' %}" class="dropdown-link">Замовлення</a>
+                  <a href="{% url 'favourites:list' %}" class="dropdown-link">Обране</a>
+                  <a href="{% url 'users:profile' %}" class="dropdown-link">Особисті дані</a>
+                  <a href="{% url 'users:logout' %}" class="dropdown-link">Вийти</a>
                 </div>
               </div>
             </div>
           {% else %}
-  <div class="icon-btn login-btn">
-    <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
-    <div class="login-dropdown">
-      <div class="dropdown-title">Вхід / Реєстрація</div>
-      <div class="dropdown-chats">
-        <a href="#" class="dropdown-link" id="open-login-modal">Увійти</a>
-        <a href="#" class="dropdown-link" id="open-register-modal">Зареєструватись</a>
-      </div>
-    </div>
-  </div>
-{% endif %}
+            <div class="icon-btn login-btn">
+              <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
+              <div class="login-dropdown">
+                <div class="dropdown-title">Вхід / Реєстрація</div>
+                <div class="dropdown-chats">
+                  <a href="#" class="dropdown-link" id="open-login-modal">Увійти</a>
+                  <a href="#" class="dropdown-link" id="open-register-modal">Зареєструватись</a>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          {# улюблені #}
+          <a href="{% url 'favourites:list' %}" class="icon-btn header-icon" id="fav-btn" aria-label="Обране">
+            <img src="{% static 'zoosvit/img/header_icons/heart-icon.png' %}" alt="Обране">
+            <span class="icon-badge js-fav-counter"
+                  {% if fav_count|default:0 <= 0 %}hidden{% endif %}>
+              {{ fav_count|default:0 }}
+            </span>
+          </a>
+
+          {# кошик: count + total всередині посилання #}
+          <a href="#cart" class="btn-cart" aria-label="Мій кошик">
+            <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}" alt="Cart">
+            <span class="cart-count">{{ cart_qty|default:0 }}</span>
+            <span class="cart-text">Мій кошик</span>
+          </a>
+          <span class="cart-total">{% if cart_total %}{{ cart_total }} грн{% else %}0 грн{% endif %}</span>
+        </div>
+
+
 
       </div>
     </div>
@@ -148,4 +162,53 @@ function initLoginDropdown() {
   dropdown.addEventListener('mouseleave', close);
 }
 </script>
+
+<script>
+// утиліта
+function updateBadge(id, n) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (n > 0) {
+    el.textContent = n;
+    el.hidden = false;
+  } else {
+    el.hidden = true;
+  }
+}
+
+// існуючий хендлер кліку по .js-fav
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.js-fav');
+  if (!btn) return;
+  e.preventDefault();
+
+  try {
+    const res = await fetch(btn.dataset.url, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+    const data = await res.json();
+    if (data.ok) {
+      btn.classList.toggle('active', data.state === 'added');
+      btn.setAttribute('aria-pressed', data.state === 'added' ? 'true' : 'false');
+      updateBadge('fav-count', data.count); // ← оновлюємо бейдж серця
+    }
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+// ініціалізація бейджа при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', () => {
+  fetch('{% url "favourites:api_count" %}')
+    .then(r => r.json())
+    .then(({count}) => updateBadge('fav-count', count))
+    .catch(console.error);
+});
+
+</script>
+
 

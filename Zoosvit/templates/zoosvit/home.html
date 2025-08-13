@@ -2,6 +2,7 @@
 {% load static %}
 <html lang="uk">
 <head>
+  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Зоосвіт – Все для ваших улюбленців</title>
@@ -26,7 +27,6 @@
      style="background-image: url({% static 'zoosvit/img/slider/slide-4.png' %});">
 </div>
 
-   <!-- ось сюди додамо наші «точки» -->
 <div class="carousel-nav"></div>
 
 <!--  <div class="carousel-overlay">-->
@@ -121,392 +121,107 @@
   <button class="slide-btn left">&lt;</button>
     <div class="slider-window">
   <div class="grid-slider">
+  {% for pp in populars %}
+    {% with product=pp.product %}
     <div class="prod-card">
+      <!-- FRONT -->
       <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
+        <a href="{{ product.get_absolute_url|default:'#' }}">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+          {% endif %}
+        </a>
+        <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
+        <h3 class="card-title">{{ product.name }}</h3>
+        <div class="card-price">
+          ₴ {{ product.variants_for_card.0.price|default:product.price }}
         </div>
       </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
+
+      <!-- BACK -->
       <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
+        <a href="{{ product.get_absolute_url|default:'#' }}">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+          {% endif %}
+          <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
+          <h3 class="card-title">{{ product.name }}</h3>
+        </a>
+<!--        <span class="v-price">₴ {{ v.price }}</span>-->
+<!--        <ul class="card-details">-->
+<!--          <li>Бренд: {{ product.brand.name|default:'—' }}</li>-->
+<!--          <li>Категорія: {{ product.category.name|default:'—' }}</li>-->
+<!--        </ul>-->
 
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
+        {# --- варіанти товару з таблиці products_product_variant --- #}
+        {% if product.variants_for_card %}
+          <ul class="variants">
+            {% for v in product.variants_for_card|slice:":4" %}
+              <li class="variant-row">
+                <span class="v-meta">
+                  {% if v.weight %}{{ v.weight }} г{% endif %}
+                  {% if v.size %}{% if v.weight %} / {% endif %}{{ v.size }}{% endif %}
+                  {% if v.color %} — {{ v.color }}{% endif %}
+                  {% if not v.weight and not v.size and not v.color %}SKU: {{ v.sku }}{% endif %}
+                </span>
+
+                {% if v.stock|default:0 > 0 %}
+                  <a class="btn add-to-cart" href="{% url 'orders:add' product.id %}">В кошик</a>
+
+                {% else %}
+                  <button class="btn" disabled>Немає</button>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="no-variants">
+            <div class="card-price">₴ {{ product.price }}</div>
+<!--            <a class="btn add-to-cart" href="{% url 'orders:add' product.id %}">В кошик</a>-->
+
+          </div>
+        {% endif %}
+
+        <div class="card-actions">  <!-- єдина спільна лінійка кнопок -->
+          <a class="btn add-to-cart" href="{% url 'orders:add' product.id %}">В кошик</a>
+          <button class="btn-fav js-fav {% if product.id in fav_ids %}is-on{% endif %}"
+                  data-url="{% url 'favourites:toggle' product.id %}"
+                  aria-pressed="{% if product.id in fav_ids %}true{% else %}false{% endif %}">
+            ❤️
+          </button>
+
+
+
         </div>
+        <div class="card-info">
+          Виробник:
+          {% if product.brand %}
+            <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">
+              {{ product.brand.name }}
+            </a>
+          {% else %} — {% endif %}
+        </div>
+        <div class="card-info">
+          Країна:
+          {% if product.brand and product.brand.country_slug %}
+            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">
+              {{ product.brand.country }}
+            </a>
+          {% else %} — {% endif %}
+        </div>
+
       </div>
     </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
+    {% endwith %}
+  {% empty %}
+    <p>Популярні товари ще не обрані.</p>
+  {% endfor %}
+</div>
 
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-    <div class="prod-card">
-      <div class="card-front">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-          <div class="card-article">Артикул: 31786</div>
-          <h3 class="card-title">Корм для котів зі смаком риби</h3>
-          <div class="card-price">₴ 120.00</div>
-      </div>
-      <!-- ===== 2) Деталізований вигляд (card-back), спочатку ховаємо ===== -->
-      <div class="card-back">
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="Пауч для котів">
-        <div class="card-article">Артикул: 31786</div>
-        <h3 class="card-title">Корм для котів зі смаком риби</h3>
-        <div class="card-price">₴ 120.00</div>
-        <ul class="card-details">
-          <li>Фасування: 100 г</li>
-          <li>Бренд: Whiskas</li>
-        </ul>
-
-        <div class="card-actions">
-          <button class="btn-primary">Купити</button>
-          <button class="btn-fav" aria-label="В улюблені">❤️</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
   </div>
   <button class="slide-btn right">&gt;</button>
     </div>
@@ -794,198 +509,237 @@
 {% include 'zoosvit/core/partials/footer.html' %}
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  initProductSlider();
-});
+(function () {
+  'use strict';
 
+  /* ---------- УТИЛІТИ ---------- */
+  const log = (...a) => console.debug('[card-height]', ...a);
+  const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-/**
- * 1) Продуктовий слайдер
- */
-function initProductSlider() {
-  const wrapper = document.querySelector('.product-slider');
-  if (!wrapper) return;
+  function debounce(fn, ms = 120){ let t; return (...a)=>{clearTimeout(t); t=setTimeout(()=>fn(...a),ms);} }
+  const rerun = debounce(() => requestAnimationFrame(recomputeCardHeights), 60);
 
-  const slider   = wrapper.querySelector('.grid-slider');
-  const cards    = wrapper.querySelectorAll('.prod-card');
-  const leftBtn  = wrapper.querySelector('.slide-btn.left');
-  const rightBtn = wrapper.querySelector('.slide-btn.right');
+  /* ---------- СЛАЙДЕР ТОВАРІВ ---------- */
+  function initProductSlider() {
+    const w = document.querySelector('.product-slider');
+    if (!w) return;
+    const slider   = w.querySelector('.grid-slider');
+    const leftBtn  = w.querySelector('.slide-btn.left');
+    const rightBtn = w.querySelector('.slide-btn.right');
 
-  const style      = getComputedStyle(document.documentElement);
-  const cardW      = parseInt(style.getPropertyValue('--prod-card-width'), 10);
-  const gap        = parseInt(style.getPropertyValue('--prod-gap'), 10);
-  const perVisible = parseInt(style.getPropertyValue('--prod-per-page'), 10);
-  const perScroll  = parseInt(style.getPropertyValue('--prod-scroll'), 10);
-  const total      = cards.length;
+    const cs   = getComputedStyle(document.documentElement);
+    const cardW= parseInt(cs.getPropertyValue('--prod-card-width'),10);
+    const gap  = parseInt(cs.getPropertyValue('--prod-gap'),10);
+    const perV = parseInt(cs.getPropertyValue('--prod-per-page'),10);
+    const perS = parseInt(cs.getPropertyValue('--prod-scroll'),10);
+    const total= w.querySelectorAll('.prod-card').length;
 
-  // скільки «сторінок» прокрутки у нас
-  const maxPage = Math.ceil((total - perVisible) / perScroll);
-  let   currentPage = 0;
+    const maxPage = Math.max(0, Math.ceil((total - perV) / perS));
+    let page = 0;
 
-  function updateButtons() {
-    leftBtn.style.display  = currentPage === 0      ? 'none' : 'block';
-    rightBtn.style.display = currentPage >= maxPage ? 'none' : 'block';
+    function go(delta){
+      page = Math.min(maxPage, Math.max(0, page + delta));
+      slider.style.transform = `translateX(-${page * perS * (cardW + gap)}px)`;
+      leftBtn.style.display  = page === 0 ? 'none' : 'block';
+      rightBtn.style.display = page >= maxPage ? 'none' : 'block';
+      requestAnimationFrame(recomputeCardHeights); // після зсуву — перерахувати
+    }
+    leftBtn?.addEventListener('click',  ()=>go(-1));
+    rightBtn?.addEventListener('click', ()=>go(+1));
+    // первинний стан
+    leftBtn && (leftBtn.style.display = 'none');
+    rightBtn && (rightBtn.style.display = maxPage ? 'block':'none');
   }
 
-  leftBtn.addEventListener('click', () => {
-    if (currentPage > 0) {
-      currentPage--;
-      slider.style.transform =
-        `translateX(-${currentPage * perScroll * (cardW + gap)}px)`;
-      updateButtons();
-    }
-  });
+  /* ---------- КАРУСЕЛЬ ГЕРОЯ ---------- */
+  function initHeroCarousel() {
+    const slides = $all('.carousel-slide');
+    const nav    = document.querySelector('.carousel-nav');
+    if (!slides.length || !nav) return;
+    const D = 5000;
+    let i = 0, t;
 
-  rightBtn.addEventListener('click', () => {
-    if (currentPage < maxPage) {
-      currentPage++;
-      slider.style.transform =
-        `translateX(-${currentPage * perScroll * (cardW + gap)}px)`;
-      updateButtons();
-    }
-  });
+    slides.forEach((_, idx)=>{
+      const bar = document.createElement('div');
+      bar.className='nav-bar'; bar.innerHTML='<div class="bar-progress"></div>';
+      bar.addEventListener('click', ()=>show(idx)); nav.appendChild(bar);
+    });
+    const bars = $all('.nav-bar', nav);
 
-  updateButtons();
+    function show(idx){
+      slides.forEach(s=>s.classList.remove('active'));
+      bars.forEach(b=>{
+        b.classList.remove('active');
+        b.querySelector('.bar-progress').style.animation='none';
+      });
+      i = idx;
+      slides[i].classList.add('active');
+      const bar = bars[i];
+      bar.classList.add('active');
+      // перезапуск анімації
+      // eslint-disable-next-line no-unused-expressions
+      bar.querySelector('.bar-progress').offsetWidth;
+      bar.querySelector('.bar-progress').style.animation=`fillBar ${D}ms linear forwards`;
+      clearTimeout(t); t=setTimeout(()=>show((i+1)%slides.length), D);
+    }
+    show(0);
+  }
+
+  /* ---------- СЛАЙДЕР КАТЕГОРІЙ ---------- */
+  function initCategorySlider() {
+    const w = document.querySelector('.category-slider');
+    if (!w) return;
+
+    const slider   = w.querySelector('.grid-slider');
+    const leftBtn  = w.querySelector('.slide-btn.left');
+    const rightBtn = w.querySelector('.slide-btn.right');
+
+    const cs   = getComputedStyle(document.documentElement);
+    const cardW= parseInt(cs.getPropertyValue('--cat-card-width'),10);
+    const gap  = parseInt(cs.getPropertyValue('--cat-gap'),10);
+    const perV = parseInt(cs.getPropertyValue('--cat-per-page'),10);
+    const perS = parseInt(cs.getPropertyValue('--cat-scroll'),10);
+    const total= w.querySelectorAll('.cat-card').length;
+
+    const maxPage = Math.max(0, Math.ceil((total - perV) / perS));
+    let page = 0;
+
+    function go(delta){
+      page = Math.min(maxPage, Math.max(0, page + delta));
+      slider.style.transform = `translateX(-${page * perS * (cardW + gap)}px)`;
+      leftBtn.style.display  = page === 0 ? 'none' : 'block';
+      rightBtn.style.display = page >= maxPage ? 'none' : 'block';
+    }
+    leftBtn?.addEventListener('click',  ()=>go(-1));
+    rightBtn?.addEventListener('click', ()=>go(+1));
+    leftBtn && (leftBtn.style.display = 'none');
+    rightBtn && (rightBtn.style.display = maxPage ? 'block':'none');
+  }
+
+/* ---------- ВИМІР ВИСОТИ КАРТКИ ---------- */
+function measureBack(back){
+  // тимчасово робимо видимим для правильного виміру
+  const keep = {
+    display: back.style.display,
+    position: back.style.position,
+    opacity: back.style.opacity,
+    pointerEvents: back.style.pointerEvents,
+    visibility: back.style.visibility,
+    height: back.style.height,
+    maxHeight: back.style.maxHeight
+  };
+  back.style.display       = 'block';
+  back.style.position      = 'static';
+  back.style.opacity       = '0';
+  back.style.pointerEvents = 'none';
+  back.style.visibility    = 'hidden';
+  back.style.height        = 'auto';
+  back.style.maxHeight     = 'none';
+
+  // scrollHeight зазвичай стабільніший на прихованих елементах
+  const h = Math.ceil(back.scrollHeight);
+
+  Object.assign(back.style, keep);
+  return h;
 }
 
+function recomputeCardHeights(){
+  const cs  = getComputedStyle(document.documentElement);
+  const MIN = parseInt(cs.getPropertyValue('--prod-min-height')) || 320;
+  const MAX = parseInt(cs.getPropertyValue('--prod-max-height')) || 520;
 
-/**
- * 2) Карусель героя з «смугами–індикаторами»
- */
-function initHeroCarousel() {
-  const slides = document.querySelectorAll('.carousel-slide');
-  const nav    = document.querySelector('.carousel-nav');
-  const DURATION = 5000; // час одного слайда в мс
-  if (!slides.length || !nav) return;
+  document.querySelectorAll('.prod-card').forEach((card, idx) => {
+    const back = card.querySelector('.card-back');
+    if (!back) return;
 
-  let heroIdx = 0;
-  let timerId;
+    const desired  = measureBack(back);
+    const adjusted = Math.max(0, desired - 30);   // мінус 10px
+    const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
 
-  // 2.1) Генеруємо навігаційні смужки під слайдами
-  slides.forEach((_, i) => {
-    const bar = document.createElement('div');
-    bar.className = 'nav-bar';
-    bar.dataset.index = i;
-    bar.innerHTML = '<div class="bar-progress"></div>';
-    nav.appendChild(bar);
-
-    bar.addEventListener('click', () => showHeroSlide(i));
+    card.style.setProperty('--hover-height', clamped + 'px');
+    // console.log(`card #${idx}: desired=${desired} → adjusted=${adjusted} → ${clamped}`);
   });
+}
 
-  const bars = nav.querySelectorAll('.nav-bar');
+  /* ---------- ТРИГЕРИ ПЕРЕРАХУНКУ ---------- */
+  function initCardHeightAutofit(){
+    // 1) коли все завантажилось (включно з картинками)
+    if (document.readyState === 'complete') rerun();
+    else window.addEventListener('load', rerun, {once:true});
 
-  // 2.2) Функція показу слайда + запуск прогрес-бару
-  function showHeroSlide(i) {
-    // зняти активність з усіх
-    slides.forEach(s => s.classList.remove('active'));
-    bars.forEach(b => {
-      b.classList.remove('active');
-      const prog = b.querySelector('.bar-progress');
-      prog.style.animation = 'none';
+    // 2) коли підтягнуться шрифти (змінюється перенесення рядків)
+    if (document.fonts?.ready) document.fonts.ready.then(rerun);
+
+    // 3) коли дозавантажиться будь-яка картинка у картках
+    $all('.prod-card img').forEach(img=>{
+      if (!img.complete) {
+        img.addEventListener('load',  rerun, {once:true});
+        img.addEventListener('error', rerun, {once:true});
+      }
     });
 
-    // активувати потрібний
-    heroIdx = i;
-    slides[heroIdx].classList.add('active');
-    const activeBar = bars[heroIdx];
-    activeBar.classList.add('active');
+    // 4) на зміну розміру/орієнтації
+    window.addEventListener('resize', rerun);
+    window.addEventListener('orientationchange', rerun);
 
-    // перезапустити анімацію fillBar
-    const prog = activeBar.querySelector('.bar-progress');
-    // трюк для перезапуску CSS-анімації
-    // eslint-disable-next-line no-unused-expressions
-    prog.offsetWidth;
-    prog.style.animation = `fillBar ${DURATION}ms linear forwards`;
-
-    // встановити таймер на наступний
-    clearTimeout(timerId);
-    timerId = setTimeout(() => showHeroSlide((heroIdx + 1) % slides.length), DURATION);
-  }
-  // 2.3) Стартуємо з першого
-  showHeroSlide(0);
-}
-
-
-function initCategorySlider() {
-  const wrapper = document.querySelector('.category-slider');
-  if (!wrapper) return;
-
-  const slider    = wrapper.querySelector('.grid-slider');
-  const cards     = wrapper.querySelectorAll('.cat-card');
-  const leftBtn   = wrapper.querySelector('.slide-btn.left');
-  const rightBtn  = wrapper.querySelector('.slide-btn.right');
-
-  const style       = getComputedStyle(document.documentElement);
-  const cardW       = parseInt(style.getPropertyValue('--cat-card-width'), 10);
-  const gap         = parseInt(style.getPropertyValue('--cat-gap'), 10);
-  const perVisible  = parseInt(style.getPropertyValue('--cat-per-page'), 10);
-  const perScroll   = parseInt(style.getPropertyValue('--cat-scroll'), 10);
-  const total       = cards.length;
-
-  // Скільки сторінок прокрутки реально є
-  const maxPage = Math.ceil((total - perVisible) / perScroll);
-  let   currentPage = 0;
-
-  function updateButtons() {
-    leftBtn.style.display  = currentPage === 0      ? 'none' : 'block';
-    rightBtn.style.display = currentPage >= maxPage ? 'none' : 'block';
-  }
-
-  leftBtn.addEventListener('click', () => {
-    if (currentPage > 0) {
-      currentPage--;
-      slider.style.transform = `translateX(-${currentPage * perScroll * (cardW + gap)}px)`;
-      updateButtons();
+    // 5) реагуємо на пізні зміни контенту всередині .card-back
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(rerun);
+      $all('.prod-card .card-back').forEach(el => ro.observe(el));
     }
+
+    // 6) перший прохід + невелика страховка
+    rerun();
+    setTimeout(rerun, 800);
+  }
+
+  /* ---------- КНОПКА «ПОКАЗАТИ ЩЕ» У БРЕНДАХ ---------- */
+  function initBrandsToggle(){
+    const section = document.getElementById('brands');
+    const grid    = section?.querySelector('.brands-grid.extra');
+    const btn     = document.getElementById('toggle-brands');
+    if (!section || !grid || !btn) return;
+
+    btn.addEventListener('click', ()=>{
+      const collapsed = section.classList.contains('collapsed');
+      grid.style.transition = `max-height 0.3s ${collapsed ? 'ease-out' : 'ease-in'}`;
+      grid.style.maxHeight  = collapsed ? grid.scrollHeight + 'px' : '0px';
+      btn.textContent       = collapsed ? 'Згорнути' : 'Показати ще';
+      section.classList.toggle('collapsed');
+    });
+  }
+
+  /* ---------- ТОЧКА ВХОДУ ---------- */
+  document.addEventListener('DOMContentLoaded', ()=>{
+    initProductSlider();
+    initHeroCarousel();
+    initCategorySlider();
+    initBrandsToggle();
+    initCardHeightAutofit();
   });
 
-  rightBtn.addEventListener('click', () => {
-    if (currentPage < maxPage) {
-      currentPage++;
-      slider.style.transform = `translateX(-${currentPage * perScroll * (cardW + gap)}px)`;
-      updateButtons();
-    }
+
+  // делегований слухач на весь документ
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.js-fav');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFav(btn);
   });
 
-  updateButtons();
-}
+  // щоб кнопки гарантовано були над лінком всередині card-back
+  document.addEventListener('DOMContentLoaded', ()=>{
+    document.querySelectorAll('.prod-card .card-back a').forEach(a=>{
+      a.style.position = 'relative';
+      a.style.zIndex   = 1;
+    });
+  });
 
-document.addEventListener('DOMContentLoaded', () => {
-  initProductSlider();
-  initHeroCarousel();
-  initCategorySlider();
-});
-
-const section = document.getElementById('brands');
-const grid    = section.querySelector('.brands-grid.extra');
-const btn     = document.getElementById('toggle-brands');
-
-btn.addEventListener('click', () => {
-  const isCollapsed = section.classList.contains('collapsed');
-
-  if (isCollapsed) {
-    // 1) готуємося ДО розгортання:
-    // задаємо повільніше розгортання
-    grid.style.transition = 'max-height 0.3s ease-out';
-    // потім розгортаємо на фактичну висоту:
-    grid.style.maxHeight = grid.scrollHeight + 'px';
-    btn.textContent = 'Згорнути';
-  } else {
-    // 2) готуємося ДО згортання:
-    // задаємо швидше згортання
-    grid.style.transition = 'max-height 0.3s ease-in';
-    // і згортаємо до 0
-    grid.style.maxHeight = '0px';
-    btn.textContent = 'Показати ще';
-  }
-
-  // змінимо клас у будь-якому разі, щоб за потреби мати індикатор стану
-  section.classList.toggle('collapsed');
-});
-
-
-
+})();
 </script>
+
+
 
 <!--доабвить картинки-->
 <!--  <div class="floating-buttons">-->

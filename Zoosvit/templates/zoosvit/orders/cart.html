@@ -1,0 +1,38 @@
+<h1>Кошик</h1>
+
+{% if messages %}
+  <ul class="messages">
+    {% for m in messages %}<li>{{ m }}</li>{% endfor %}
+  </ul>
+{% endif %}
+
+{% if order and order.items.count %}
+  <table>
+    <thead>
+      <tr><th>Товар</th><th>Ціна</th><th>К-сть</th><th>Сума</th></tr>
+    </thead>
+    <tbody>
+      {% for item in order.items.all %}
+        <tr>
+          <td>
+            {{ item.product.name }}
+            {% if item.variant %}<br><small>SKU: {{ item.variant.sku }}</small>{% endif %}
+          </td>
+          <td>{{ item.price }} грн</td>
+          <td>{{ item.quantity }}</td>
+          <td>{{ item.line_total }} грн</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p><b>Всього:</b> {{ total }} грн</p>
+  <p>
+    <a href="{% url 'orders:checkout' %}">Оформити замовлення</a>
+    {% comment %} Переконайся, що шлях orders:clear існує у urls.py {% endcomment %}
+    <a href="{% url 'orders:clear' %}">Очистити кошик</a>
+  </p>
+{% else %}
+  <p>Кошик порожній</p>
+{% endif %}
+

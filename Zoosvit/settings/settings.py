@@ -65,7 +65,11 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+
+                'apps.favourites.context_processors.fav_counter',
+                'apps.orders.context_processors.cart_summary',
                 'apps.users.context_processors.auth_forms',
+
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -121,6 +125,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+# де фізично лежатимуть завантажені файли
+MEDIA_ROOT = BASE_DIR / 'media/'
+
+# публічний префікс для доступу до них
+MEDIA_URL = '/media/'
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [

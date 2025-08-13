@@ -35,9 +35,10 @@ class Category(models.Model):
 
 class Brand(models.Model):
     name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True)
+    brand_slug = models.SlugField(max_length=255, unique=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
-
+    country_slug = models.SlugField(max_length=255)
+    country = models.CharField(max_length=255)
     def __str__(self):
         return self.name
 
@@ -85,3 +86,25 @@ class Product_Variant(models.Model):
 
     def __str__(self):
         return f"{self.product.name} — {self.sku}"
+
+class PopularProduct(models.Model):
+    product   = models.OneToOneField(
+        Product, on_delete=models.CASCADE, related_name='popular'
+    )
+    position  = models.PositiveIntegerField(default=0, help_text='Чим менше — тим вище')
+    is_active = models.BooleanField(default=True)
+    label     = models.CharField(max_length=30, blank=True)  # напр., «Хіт»
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'products_popular'
+        ordering = ['position', '-created_at']
+        verbose_name = 'Популярний товар'
+        verbose_name_plural = 'Популярні товари'
+        indexes = [
+            models.Index(fields=['is_active', 'position']),
+        ]
+
+    def __str__(self):
+        return f'{self.product} (#{self.position})'

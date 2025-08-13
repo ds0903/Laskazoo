@@ -5,6 +5,8 @@ from . import views
 app_name = 'products'
 
 urlpatterns = [
+    path('categories/brand/<slug:brand_slug>/', views.catalog_by_brand, name='brand'),
+    path('categories/country/<slug:country_slug>/', views.catalog_by_country, name='country'),
     # 1) /categories/ — головні категорії
     path(
         '',

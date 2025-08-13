@@ -104,7 +104,7 @@ html {
 /* ===== “Чому саме ми” бар ===== */
 .why-us-bar {
   height: 200px;          /* тут підбери свою бажану висоту */
-  margin: 50px 0;
+  margin: 45px 0;
   width: 100%;
   background-color: #fff;      /* такий же колір, як у site-mainheader */
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -475,7 +475,7 @@ h2 { font-size:2rem; margin:40px 0 20px; text-align:center; color:#095e56; }
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 0;
+  padding: 20px 0;
 }
 
 .slider-window {
@@ -508,7 +508,6 @@ h2 { font-size:2rem; margin:40px 0 20px; text-align:center; color:#095e56; }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 420px;
   padding: 16px;
   box-sizing: border-box;
 }
@@ -954,12 +953,7 @@ background-color: #1c7f73;
   pointer-events: none;  /* не клікабельний */
 }
 
-/* при hover - міняємо висоту картки та комутуємо front/back */
-.prod-card:hover {
-  height: 350px;  /* підбираєте самі за дизайном */
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  z-index: 5;     /* щоб заїжджало поверх сусідніх */
-}
+
 
 .prod-card:hover .card-front {
   opacity: 0;
@@ -972,7 +966,7 @@ background-color: #1c7f73;
   pointer-events: auto;
 }
 /* Артикул */
-.card-article {
+.card-article  {
   font-size: 0.85rem;
   color: #666;
   text-align: center;
@@ -1534,7 +1528,7 @@ section#mega-categories.container {
 }
 .category-slider .slider-window {
   height: auto;                  /* нехай підлаштовується */
-  padding: 20px 0;               /* 10px зверху і знизу */
+  padding: 10px 0;               /* 10px зверху і знизу */
 
   overflow-y: visible;
   width: 107%;
@@ -1695,3 +1689,377 @@ section#mega-categories.container {
   border-left: 3px solid red;
   padding-left: 6px;
 }
+/* static/zoosvit/css/styles.css */
+.variants { margin: .5rem 0; padding: 0; list-style: none; }
+.variant-row { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.35rem 0; }
+.variant-row .v-meta { color:#555; font-size:.95rem; }
+.variant-row .v-price { font-weight:700; color:#222; }
+.variant-row .btn { padding:.35rem .7rem; border-radius:6px; background:#0d6efd; color:#fff; text-decoration:none; }
+.variant-row .btn[disabled] { background:#adb5bd; cursor:not-allowed; }
+
+.btn-cart { display:inline-flex; align-items:center; gap:.45rem; text-decoration:none; }
+.btn-cart .cart-count {
+  min-width: 18px; height: 18px; padding: 0 6px; border-radius: 999px;
+  background:#27ae60; color:#fff; font-weight:700; font-size:11px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.btn-cart .cart-total { color:#444; font-weight:400; }
+
+/* базова висота (як раніше 420) */
+.prod-card { height: var(--prod-base-height, 320px); }
+
+/* на ховері беремо пораховану висоту беку */
+.prod-card:hover { height: var(--hover-height, var(--prod-base-height, 120px)); }
+
+/* піднімаємо весь блок товарів над наступними секціями */
+#products { position: relative; z-index: 10; }
+
+/* сам слайдер — ще вище */
+.product-slider { position: relative; z-index: 20; overflow: visible; }
+
+/* viewport теж не обрізає */
+.product-slider .slider-window { overflow: visible; }
+
+/* трек з transform має свій stacking context — піднімаємо його */
+.product-slider .grid-slider { position: relative; z-index: 21; }
+
+/* наступна секція гарантовано нижче (або просто без z-index) */
+.why-us-bar { position: relative; z-index: 0; }
+
+/* рядок з кнопками */
+.card-actions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin-top:12px;
+  flex-wrap:nowrap;
+  position:relative; z-index:4;   /* поверх покривного лінка картки */
+}
+
+/* “В кошик” */
+.add-to-cart{
+  padding:10px 16px;
+  min-width: 80px;               /* щоб виглядала як кнопка, а не чип */
+  background:#0b8a7a; border:2px solid #0b8a7a; color:#fff;
+  border-radius:10px; font-weight:400;
+  display:inline-flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 6px rgba(11,138,122,.25);
+  transition:transform .12s, box-shadow .2s, background .2s, border-color .2s;
+}
+.add-to-cart:hover{ background:#0a7d6e; border-color:#0a7d6e; transform:translateY(-1px); }
+.add-to-cart:active{ transform:translateY(0); box-shadow:none; }
+
+/* “В бажане” — кругла справа від кнопки */
+.btn-fav{
+  width:48px; height:48px; border-radius:50%;
+  border:2px solid var(--color-primary);
+  background:#fff; color:#e63946; font-size:1.2rem;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:transform .12s, background .2s, color .2s, border-color .2s;
+}
+.btn-fav:hover{ background:var(--color-primary); color:#fff; transform:translateY(-1px); }
+.btn-fav:active{ transform:translateY(0); }
+
+/* кнопка-лінк без підкреслення */
+.add-to-cart{
+  text-decoration: none;
+}
+
+/* назва товару як лінк, без підкреслення */
+.card-title a{
+  color: inherit;
+  text-decoration: none;
+}
+.card-title a:hover{
+  opacity:.85; /* або свій hover */
+}
+
+a {
+  text-decoration: none;
+}
+:root{
+  --prod-min-height: 320px;
+  --prod-max-height: 520px;
+}
+
+/* базовий стан */
+.prod-card{
+  height: var(--prod-min-height);
+  overflow: hidden;
+  transition: height .25s ease, box-shadow .25s ease;
+  /* без scale на :hover */
+}
+
+/* ріст картки тільки за рахунок контенту в межах MIN..MAX */
+.prod-card:hover{
+  height: clamp(var(--prod-min-height),
+                var(--hover-height, var(--prod-min-height)),
+                var(--prod-max-height));
+}
+.card-info  {
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+  margin-top: 8px;
+  text-decoration: none;
+}
+/* Посилання у картці товару */
+a.info-link,
+a.info-link:visited{
+  color: var(--link);
+  text-decoration: none;
+}
+a.info-link:hover{
+  color: var(--link-hover);
+}
+
+.header-icon { position: relative; display:inline-flex; align-items:center; }
+.header-icon .badge{
+  position:absolute; top:-6px; right:-8px;
+  min-width:18px; height:18px; padding:0 4px;
+  border-radius:9px; background:#46c266; color:#fff;
+  font-size:11px; line-height:18px; text-align:center;
+}
+
+/* === однаковий колір бейджів (кошик + обране) === */
+:root{
+  --badge-green: #27ae60; /* салатовий як у кошика */
+}
+
+/* кошик: залишаємо той самий стиль, але через змінну */
+.btn-cart .cart-count{
+  background: var(--badge-green) !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+
+/* обране: робимо абсолютно ідентичним */
+.header-icon .badge,
+.icon-badge{
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--badge-green) !important;
+  color: #fff !important;
+  font-size: 12px;
+  line-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+/* щоб бейдж не зникав/мінявся на hover кнопки */
+.icon-btn:hover .icon-badge{ filter: none; }
+
+/* ховаємо, коли 0 */
+.icon-badge[hidden]{ display: none; }
+
+.profile-main {
+  overflow: visible;                 /* щоб ніщо не обрізалось */
+  min-height: unset;                 /* переб’ємо можливий великий min-height з profile.css */
+}
+
+/* FAVS: контейнер з картками */
+.page-favourites .profile-main{
+  overflow: visible;
+}
+
+/* Контейнер карток у "Обраному" завжди достатньо високий */
+.favourites-page .product-grid {
+  position: relative;
+  overflow: visible;
+  min-height: calc(var(--prod-max-height, 520px) - 50px);
+  padding-bottom: 32px;
+  z-index: 2;
+}
+
+/* Порожній стан – така ж висота, щоб не було дірки перед футером */
+.favourites-page .product-grid.is-empty{
+  display: grid;
+  place-items: center;
+  min-height: calc(var(--prod-max-height, 520px) - 100px);
+  padding: 32px 0;
+}
+
+/* Додаємо технічний відступ під сіткою */
+section.catalog .product-grid::after{
+  content: "";
+  display: block;
+  height: calc(var(--prod-max-height, 520px) - 150px); /* підлаштовується під картку */
+}
+
+
+/* базовий (ще не у вибраному): порожня, без підсвітки */
+.btn-fav{
+  width:48px; height:48px;
+  border-radius:50%;
+  border:2px solid var(--color-primary);
+  background:#fff;
+  color:#e63946;            /* червоне сердечко */
+  display:inline-flex; align-items:center; justify-content:center;
+  transition: background .2s, color .2s, border-color .2s, box-shadow .2s, transform .12s;
+  box-shadow: none;         /* без фіолетового ореолу */
+}
+.btn-fav:hover{ background: var(--color-primary); color:#fff; transform: translateY(-1px); }
+.btn-fav:active{ transform: translateY(0); }
+
+/* активний (у вибраному): зелений фон + “ореол” по краю */
+.btn-fav.active{
+  background: var(--color-primary);
+  color:#fff;
+  border-color: var(--color-primary);
+}
+.btn-fav.active:hover{ filter: none; transform: translateY(-1px); }
+
+/* гарантуємо, що кнопки над покривним <a> у card-back */
+.prod-card .card-actions{ position: relative; z-index: 5; }
+
+:root{
+  --badge-green: #27ae60; /* той самий салатовий, що на бейджах */
+}
+
+/* База */
+.btn-fav{
+  width:48px; height:48px; border-radius:50%;
+  border:2px solid var(--color-primary);
+  background:#fff;
+  color:#e63946;             /* колір сердечка у вимкн. стані */
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:1.2rem; line-height:1;
+  transition:background .2s, border-color .2s, color .2s, transform .12s, box-shadow .2s;
+}
+
+/* наведення у вимкненому стані — як було */
+.btn-fav:hover{
+  background: var(--color-primary);
+  color:#fff;
+}
+
+/* УВІМКНЕНО (в обраному) — салатова заливка як у бейджів */
+.btn-fav.is-on,
+.btn-fav.active{                 /* лишив сумісність зі старим .active */
+  background: var(--badge-green);
+  border-color: var(--badge-green);
+  color: #fff;
+  box-shadow: none;              /* прибираємо підсвітки */
+  transform: none;
+}
+
+/* наведеня коли увімкнено — трохи темніше */
+.btn-fav.is-on:hover,
+.btn-fav.active:hover{
+  background: #23a255;
+  border-color:#23a255;
+}
+
+/* Прибрати стару “фіолетову” підсвітку, якщо десь лишилась */
+.btn-fav.active{ filter: none !important; }
+
+:root{ --badge-green:#27ae60; }
+
+/* базовий вигляд */
+.btn-fav{
+  width:48px; height:48px; border-radius:50%;
+  border:2px solid var(--color-primary);
+  background:#fff; color:#e63946;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:1.2rem; line-height:1;
+  transition:background .2s, border-color .2s, color .2s, transform .12s, box-shadow .2s;
+}
+
+/* звичайний hover (для вимкненої) */
+.btn-fav:hover{ background:var(--color-primary); color:#fff; }
+
+/* 👉 активний стан ПОВНІСТЮ перекриває все, включно з :hover */
+.btn-fav.is-on,
+.btn-fav.is-on:hover,
+.btn-fav.active,
+.btn-fav.active:hover{
+  background: var(--badge-green);
+  border-color: var(--badge-green);
+  color:#fff;
+  box-shadow:none;
+  transform:none;
+}
+
+/* прибираємо старі ефекти, якщо десь лишились */
+.btn-fav.active{ filter:none !important; }
+
+
+/* === Каталог + Обране — фон росте поверх, сітка не стрибає === */
+
+/* контейнер решітки не обрізає картки */
+section.catalog .product-grid,
+.favourites-page .product-grid{
+  overflow: visible !important;
+  position: relative;
+}
+
+/* сама картка фіксована у потоці; фон перенесемо в ::before */
+section.catalog .prod-card,
+.favourites-page .prod-card{
+  height: var(--prod-min-height) !important;   /* фіксуємо */
+  overflow: visible !important;
+  position: relative;
+  background: transparent !important;          /* фон приберемо звідси */
+  box-shadow: none !important;
+  transform: none !important;                  /* без scale, щоб не «дригалось» */
+  z-index: 1;
+}
+
+/* БІЛИЙ ФОН, що росте за рахунок змінної --hover-height */
+section.catalog .prod-card::before,
+.favourites-page .prod-card::before{
+  content:"";
+  position:absolute; top:0; left:0; right:0;
+  height: var(--prod-min-height);              /* базова висота */
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  transition: height .25s ease, box-shadow .25s ease;
+  z-index:0;                                   /* під контентом картки */
+}
+
+/* на ховері збільшуємо тільки фон */
+section.catalog .prod-card:hover::before,
+.favourites-page .prod-card:hover::before{
+  height: clamp(var(--prod-min-height),
+                var(--hover-height, var(--prod-min-height)),
+                var(--prod-max-height));
+  box-shadow:0 12px 24px rgba(0,0,0,.18);
+}
+
+/* піднімаємо картку вище сусідів */
+section.catalog .prod-card:hover,
+.favourites-page .prod-card:hover{
+  z-index: 30;
+}
+
+/* front/back — абсолютні, завжди над фоном */
+section.catalog .prod-card .card-front,
+section.catalog .prod-card .card-back,
+.favourites-page .prod-card .card-front,
+.favourites-page .prod-card .card-back{
+  position:absolute; inset:0;
+  z-index:1;
+  overflow: visible;
+}
+
+/* показ/приховування контенту лишається як було */
+section.catalog .prod-card .card-back,
+.favourites-page .prod-card .card-back{
+  opacity:0; transform: translateY(20px); pointer-events:none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+section.catalog .prod-card:hover .card-front,
+.favourites-page .prod-card:hover .card-front{ opacity:0; transform: translateY(-20px); }
+section.catalog .prod-card:hover .card-back,
+.favourites-page .prod-card:hover .card-back{ opacity:1; transform: translateY(0); pointer-events:auto; }
+
+/* стилі що дійсно допомогли :)

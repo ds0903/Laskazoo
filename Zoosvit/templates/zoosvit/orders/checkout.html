@@ -1,0 +1,11 @@
+<h1>Оформлення замовлення</h1>
+{% if messages %}
+  <ul class="messages">
+    {% for m in messages %}<li>{{ m }}</li>{% endfor %}
+  </ul>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Підтвердити</button>
+</form>

@@ -1,0 +1,62 @@
+{% load static %}
+<div class="cm-header">
+  <h3>Кошик</h3>
+  <button class="cm-close" aria-label="Закрити">×</button>
+</div>
+
+{% if order and order.items.exists %}
+  <ul class="cm-items">
+    {% for item in order.items.all %}
+      <li class="cm-row" data-item="{{ item.id }}">
+        <div class="cm-thumb">
+          {% if item.variant and item.variant.image %}
+            <img src="{{ item.variant.image.url }}" alt="{{ item.product.name }}">
+          {% elif item.product.image %}
+            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/placeholder.jpg' %}" alt="{{ item.product.name }}">
+          {% endif %}
+        </div>
+        <div class="cm-info">
+          <div class="cm-title">{{ item.product.name }}</div>
+          {% if item.variant %}
+            <div class="cm-meta">
+              SKU: {{ item.variant.sku }}
+              {% if item.variant.weight %} · {{ item.variant.weight }} г{% endif %}
+              {% if item.variant.size %} · Розмір {{ item.variant.size }}{% endif %}
+            </div>
+          {% endif %}
+        </div>
+        <div class="cm-qty">
+          <a href="{% url 'orders:item_dec' item.id %}?ajax=1" class="cm-btn js-cart">−</a>
+          <input
+            type="number"
+            class="cm-qty-input"
+            value="{{ item.quantity }}"
+            min="1"
+            {% if item.variant and item.variant.stock %}max="{{ item.variant.stock }}"{% endif %}
+            data-item="{{ item.id }}"
+            inputmode="numeric"
+          >
+          <a href="{% url 'orders:item_inc' item.id %}?ajax=1" class="cm-btn js-cart">+</a>
+        </div>
+<!--        <div class="cm-price">{{ item.price }} грн</div>-->
+<!--        <div class="cm-sum">{{ item.quantity|add:"0" }} × {{ item.price }} = <b>{{ item.quantity|floatformat:0|add:""|safe }}</b></div>-->
+        <div class="cm-sum"><b>{{ item.line_total|floatformat:2 }} грн</b></div>
+        <a href="{% url 'orders:item_remove' item.id %}?ajax=1" class="cm-remove js-cart" aria-label="Видалити">×</a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="cm-footer">
+    <div class="cm-total">Всього: <b>{{ total }} грн</b></div>
+    <div class="cm-actions">
+      <a href="{% url 'orders:checkout' %}" class="cm-checkout">Оформити замовлення</a>
+      <a href="{% url 'orders:clear' %}?ajax=1" class="cm-clear js-cart">Очистити кошик</a>
+    </div>
+  </div>
+{% else %}
+  <div class="cm-empty">
+    <p>Кошик порожній</p>
+  </div>
+{% endif %}

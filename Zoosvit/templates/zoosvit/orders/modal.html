@@ -1,0 +1,20 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'zoosvit/css/orders/cart-modal.css' %}">
+
+<!-- Контейнер модалки -->
+<div id="cart-modal" class="cm-overlay hidden">
+  <div class="cm-panel">
+    <div id="cart-modal-body"></div>
+  </div>
+</div>
+
+<!-- Прокидаємо URL-и з Django у JS -->
+<script>
+  window.ZOOSVIT_URLS = {
+    cartModal: "{% url 'orders:cart_modal' %}",
+    cartCount: "{% url 'orders:api_cart_summary' %}"
+  };
+</script>
+
+<!-- Підключаємо JS саме за твоїм шляхом -->
+<script src="{% static 'zoosvit/js/cart-modal.js' %}"></script>
