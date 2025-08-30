@@ -28,7 +28,7 @@ def upsert_products(items, photos_reader=None, photos_dir=None):
             barcode=it.get("barcode"),
             name=it.get("name"),
             qty=it.get("qty"),
-            price=it.get("price"),
+            retail_price=it.get("retail_price"),
             wholesale_price=it.get("wholesale_price"),
             description=it.get("description"),
             is_active=True,

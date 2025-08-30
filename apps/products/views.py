@@ -13,8 +13,8 @@ def catalog(request):
 
     variants_qs = (
         Product_Variant.objects
-        .only('id', 'product_id', 'sku', 'price', 'weight', 'size', 'image', 'stock')
-        .order_by('price')   # або як тобі треба
+        .only('id', 'product_id', 'sku', 'retail_price', 'weight', 'size', 'image', 'warehouse_quantity')
+        .order_by('retail_price')   # або як тобі треба
     )
 
     base_qs = (

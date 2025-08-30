@@ -20,7 +20,7 @@ def _cart_math(user):
         return 0, 0, Decimal('0')
     qty = order.items.aggregate(q=Sum('quantity'))['q'] or 0
     line_total = ExpressionWrapper(
-        F('quantity') * F('price'),
+        F('quantity') * F('retail_price'),
         output_field=DecimalField(max_digits=12, decimal_places=2)
     )
     total = order.items.aggregate(t=Sum(line_total))['t'] or Decimal('0')
@@ -38,7 +38,7 @@ def api_cart_summary(request):
 def add_variant_to_cart(request, variant_id: int):
     variant = get_object_or_404(Product_Variant, pk=variant_id)
 
-    if variant.stock is not None and variant.stock <= 0:
+    if variant.warehouse_quantity is not None and variant.warehouse_quantity <= 0:
         if _is_ajax(request):
             return JsonResponse({'ok': False, 'message': 'Немає в наявності'}, status=400)
         messages.warning(request, 'Немає в наявності.')
@@ -47,18 +47,18 @@ def add_variant_to_cart(request, variant_id: int):
     order, _ = Order.objects.get_or_create(user=request.user, status=Order.STATUS_CART)
     item, _ = OrderItem.objects.get_or_create(
         order=order, product=variant.product, variant=variant,
-        defaults={'price': variant.price, 'quantity': 0}
+        defaults={'retail_price': variant.retail_price, 'quantity': 0}
     )
     new_qty = item.quantity + 1
-    if variant.stock is not None and new_qty > variant.stock:
+    if variant.warehouse_quantity is not None and new_qty > variant.warehouse_quantity:
         if _is_ajax(request):
-            return JsonResponse({'ok': False, 'message': f'Доступно лише {variant.stock} шт.'}, status=400)
-        messages.warning(request, f'Доступно лише {variant.stock} шт.')
+            return JsonResponse({'ok': False, 'message': f'Доступно лише {variant.warehouse_quantity} шт.'}, status=400)
+        messages.warning(request, f'Доступно лише {variant.warehouse_quantity} шт.')
         return redirect('orders:cart')
 
     item.quantity = new_qty
-    item.price = variant.price
-    item.save(update_fields=['quantity', 'price'])
+    item.retail_price = variant.retail_price
+    item.save(update_fields=['quantity', 'retail_price'])
 
     if _is_ajax(request):
         lines, qty = _cart_numbers(request.user)
@@ -78,21 +78,21 @@ def add_to_cart(request, product_id: int):
     # якщо є варіанти — делегуємо
     v = (Product_Variant.objects
          .filter(product=product)
-         .order_by('price')
+         .order_by('retail_price')
          .filter(stock__gt=0).first()
-         or Product_Variant.objects.filter(product=product).order_by('price').first())
+         or Product_Variant.objects.filter(product=product).order_by('retail_price').first())
     if v:
         return add_variant_to_cart(request, v.id)
 
     order, _ = Order.objects.get_or_create(user=request.user, status=Order.STATUS_CART)
     item, _ = OrderItem.objects.get_or_create(
         order=order, product=product, variant=None,
-        defaults={'price': product.price, 'quantity': 0}
+        defaults={'retail_price': product.retail_price, 'quantity': 0}
     )
     item.quantity += 1
-    if product.price is not None:
-        item.price = product.price
-    item.save(update_fields=['quantity', 'price'])
+    if product.retail_price is not None:
+        item.retail_price = product.retail_price
+    item.save(update_fields=['quantity', 'retail_price'])
 
     if _is_ajax(request):
         order, _ = _cart_tuple(request.user)
@@ -114,8 +114,8 @@ def item_set_qty(request, item_id):
         qty = 1
     if qty < 1:
         qty = 1
-    if item.variant and item.variant.stock is not None:
-        qty = min(qty, int(item.variant.stock))
+    if item.variant and item.variant.warehouse_quantity is not None:
+        qty = min(qty, int(item.variant.warehouse_quantity))
 
     item.quantity = qty
     item.save(update_fields=['quantity'])
@@ -128,7 +128,7 @@ def cart_detail(request):
     order = Order.objects.filter(user=request.user, status=Order.STATUS_CART).first()
     total = Decimal('0')
     if order:
-        line_total = ExpressionWrapper(F('quantity') * F('price'),
+        line_total = ExpressionWrapper(F('quantity') * F('retail_price'),
                                        output_field=DecimalField(max_digits=12, decimal_places=2))
         total = order.items.aggregate(total=Sum(line_total))['total'] or 0
     return render(request, 'zoosvit/orders/cart.html', {'order': order, 'total': total})
@@ -219,7 +219,7 @@ def _cart_tuple(user):
     total = Decimal('0')
     if order:
         line_total = ExpressionWrapper(
-            F('quantity') * F('price'),
+            F('quantity') * F('retail_price'),
             output_field=DecimalField(max_digits=12, decimal_places=2)
         )
         total = order.items.aggregate(total=Sum(line_total))['total'] or Decimal('0')
@@ -251,7 +251,7 @@ def cart_detail(request):
 def cart_item_inc(request, item_id):
     item = get_object_or_404(OrderItem, id=item_id, order__user=request.user, order__status=Order.STATUS_CART)
     # перевірка складу для варіанта
-    if item.variant and item.variant.stock is not None and item.quantity + 1 > item.variant.stock:
+    if item.variant and item.variant.warehouse_quantity is not None and item.quantity + 1 > item.variant.warehouse_quantity:
         if _is_ajax(request):
             return JsonResponse({'ok': False, 'message': 'Перевищено доступний склад'}, status=400)
         messages.warning(request, 'Перевищено доступний склад')

@@ -48,7 +48,7 @@ class OrderItem(models.Model):
                                 on_delete=models.CASCADE)
     variant = models.ForeignKey(Product_Variant, null=True, blank=True, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(default=1)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    retail_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def save(self, *args, **kwargs):
         # гарантуємо консистентність: варіант належить продукту
@@ -58,8 +58,8 @@ class OrderItem(models.Model):
 
     @property
     def line_total(self):
-        price = self.price or Decimal('0')
-        return price * self.quantity
+        retail_price = self.retail_price or Decimal('0')
+        return retail_price * self.quantity
 
     def __str__(self):
         suffix = f' / {self.variant.sku}' if self.variant_id else ''

@@ -1,4 +1,5 @@
-/Zoosvit/static/zoosvit/img/
+/Laskazoo/static/zoosvit/img/
 .idea/
 .env
-/Zoosvit/db.sqlite3
+/Laskazoo/db.sqlite3
+/Laskazoo/media

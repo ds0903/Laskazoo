@@ -65,7 +65,7 @@ def import_products_variants_from_trs():
 
     # 1) читаємо файл
     raw = sftp.read_bytes(trs_path) if mode == "sftp" else open(trs_path, "rb").read()
-    rows = parse_rows(raw)  # список dict, у яких МОЖУТЬ бути ключі: parent_id, variant_id, name, sku, barcode, price, qty, brand, category, photo, weight, size, color, characteristic
+    rows = parse_rows(raw)  # список dict, у яких МОЖУТЬ бути ключі: parent_id, variant_id, name, sku, barcode, retail_price, qty, brand, category, photo, weight, size, color, characteristic
 
     # 2) нормалізуємо: намагаємося вийняти parent_id/variant_id з полів, що прийшли
     def get_parent_id(r):
@@ -97,7 +97,7 @@ def import_products_variants_from_trs():
                 name=name,
                 slug=_slug_unique(name),
                 sku=r.get("sku") or "",
-                price=Decimal(r.get("price") or "0"),
+                retail_price=Decimal(r.get("retail_price") or "0"),
                 category=category,
                 brand=brand,
                 description=r.get("description") or "",
@@ -129,7 +129,7 @@ def import_products_variants_from_trs():
         size   = r.get("size")
         color  = r.get("color")
         qty    = r.get("qty") or 0
-        price  = r.get("price") or 0
+        retail_price  = r.get("retail_price") or 0
 
         v_qs = Product_Variant.objects.filter(product=prod)
         if variant_id:
@@ -142,7 +142,7 @@ def import_products_variants_from_trs():
             v = Product_Variant(
                 product=prod,
                 sku=sku[:255],
-                price=Decimal(str(price)),
+                retail_price=Decimal(str(retail_price)),
                 weight=Decimal(str(weight or 0)),
                 stock=int(qty),
                 size=(str(size) if size else None),
@@ -153,15 +153,15 @@ def import_products_variants_from_trs():
             upserted_variants += 1
         else:
             changed = False
-            new_price = Decimal(str(price))
+            new_price = Decimal(str(retail_price))
             new_weight = Decimal(str(weight or 0))
             new_stock = int(qty)
-            if v.price != new_price:
-                v.price = new_price; changed = True
+            if v.retail_price != new_price:
+                v.retail_price = new_price; changed = True
             if v.weight != new_weight:
                 v.weight = new_weight; changed = True
-            if v.stock != new_stock:
-                v.stock = new_stock; changed = True
+            if v.warehouse_quantity != new_stock:
+                v.warehouse_quantity = new_stock; changed = True
             if size and v.size != str(size):
                 v.size = str(size); changed = True
             if color and v.color != str(color):

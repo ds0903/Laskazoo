@@ -1,5 +1,5 @@
 """
-URL configuration for Zoosvit project.
+URL configuration for Laskazoo project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from Zoosvit import views
+from Laskazoo import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.templatetags.static import static as static_url

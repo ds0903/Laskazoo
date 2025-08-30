@@ -1,4 +1,4 @@
-# Zoosvit/views.py (або де у тебе home)
+# Laskazoo/views.py (або де у тебе home)
 from apps.products.models import PopularProduct, Product_Variant
 from apps.favourites.models import Favourite
 from django.shortcuts import render, redirect
@@ -76,8 +76,8 @@ def home(request):
     product_ids = [pp.product_id for pp in populars]
     variants = (Product_Variant.objects
                 .filter(product_id__in=product_ids)
-                .only('id', 'product_id', 'sku', 'price', 'weight', 'size', 'image', 'stock')
-                .order_by('price'))  # або як хочеш сортувати
+                .only('id', 'product_id', 'sku', 'retail_price', 'weight', 'size', 'image', 'warehouse_quantity')
+                .order_by('retail_price'))  # або як хочеш сортувати
 
     by_pid = {}
     for v in variants:

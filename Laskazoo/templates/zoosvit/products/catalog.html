@@ -189,7 +189,7 @@
     </h3>
         </a>
 
-        <div class="card-price">₴ {{ v0.price|default:product.price }}</div>
+        <div class="card-price">₴ {{ v0.retail_price|default:product.retail_price }}</div>
 
         {# Пігулки варіантів (як на головній) #}
         {% if product.variants_for_card|length > 1 %}
@@ -204,7 +204,7 @@
                     type="button"
                     class="variant-pill {% if forloop.first %}active{% endif %}"
                     data-vid="{{ v.id }}"
-                    data-price="{{ v.price }}"
+                    data-price="{{ v.retail_price }}"
                     data-sku="{{ v.sku }}"
                     data-weight="{{ v.weight|default:'' }}"
                     data-size="{{ v.size|default:'' }}"

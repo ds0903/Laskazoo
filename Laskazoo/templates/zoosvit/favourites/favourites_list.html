@@ -50,7 +50,7 @@
           {% endif %}
         </h3>
 
-        <div class="card-price">₴ {{ v.price|default:product.price }}</div>
+        <div class="card-price">₴ {{ v.retail_price|default:product.retail_price }}</div>
       </div>
 
       <!-- BACK (без пігулок, лише обраний варіант) -->
@@ -71,7 +71,7 @@
           </h3>
         </a>
 
-        <div class="card-price">₴ {{ v.price|default:product.price }}</div>
+        <div class="card-price">₴ {{ v.retail_price|default:product.retail_price }}</div>
 
         <div class="card-actions">
           <a class="btn add-to-cart"
