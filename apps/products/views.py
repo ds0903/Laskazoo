@@ -1,13 +1,49 @@
 # apps/products/views.py
 from django.shortcuts import render, get_object_or_404
-from .models import Main_Categories, Category, Product, Brand
-from django.db.models import Count, Q
+from .models import Main_Categories, Category, Product, Brand, Product_Variant
+from django.db.models import Count, Q, Prefetch
 
-def main_category_list(request):
+try:
+    from apps.favourites.models import Favourite
+except Exception:
+    Favourite = None
+
+def catalog(request):
     mains = Main_Categories.objects.all()
-    return render(request, 'zoosvit/products/main_category_list.html', {
-        'mains': mains,
-    })
+
+    variants_qs = (
+        Product_Variant.objects
+        .only('id', 'product_id', 'sku', 'price', 'weight', 'size', 'image', 'stock')
+        .order_by('price')   # або як тобі треба
+    )
+
+    base_qs = (
+        Product.objects
+        .select_related('brand', 'category')
+        .prefetch_related(
+            Prefetch('variants', queryset=variants_qs, to_attr='variants_for_card')
+        )
+    )
+
+    products, filt_ctx = _apply_filters(request, base_qs)
+
+    if request.user.is_authenticated:
+        fav_variant_ids = list(
+            Favourite.objects
+            .filter(user=request.user, variant__isnull=False)
+            .values_list('variant_id', flat=True)
+        )
+    else:
+        fav_variant_ids = list(map(int, request.session.get('fav_variant_ids', [])))
+
+    ctx = {
+        'title':    'Каталог',
+        'mains':    mains,
+        'products': products,   # уже має product.variants_for_card
+        'fav_variant_ids':  list(fav_variant_ids),
+        **filt_ctx,
+    }
+    return render(request, 'zoosvit/products/catalog.html', ctx)
 
 def subcategory_list(request, main_slug):
     main = get_object_or_404(Main_Categories, slug=main_slug)
@@ -24,15 +60,22 @@ def category_list(request, main_slug, slug):
         main_category__slug=main_slug
     )
 
-    qs = Product.objects.filter(category=category)
+    # базовий QS — тільки товари цієї категорії
+    base_qs = (
+        Product.objects
+        .filter(category=category)
+        .select_related('brand', 'category')
+        .prefetch_related('variants')
+    )
 
-    brands = Brand.objects.annotate(count=Count('products'))
+    # ⬇️ головне — застосувати ті самі фільтри, що й у каталозі
+    products, filt_ctx = _apply_filters(request, base_qs)
+
     return render(request, 'zoosvit/products/category_list.html', {
-        'main':     category.main_category,   # за бажанням
+        'main':     category.main_category,
         'category': category,
-        'products': qs,
-        'brands':   brands,
-        # …
+        'products': products,
+        **filt_ctx,                 # brands, price_min, price_max, in_stock, selected_brands
     })
 
 def product_detail(request, main_slug, slug, product_slug):
@@ -68,7 +111,7 @@ def _apply_filters(request, base_qs):
     in_stock        = request.GET.get('in_stock')
 
     if selected_brands:
-        qs = qs.filter(brand__slug__in=selected_brands)
+        qs = qs.filter(brand__brand_slug__in=selected_brands)
 
     if price_min:
         qs = qs.filter(price__gte=price_min)
@@ -80,7 +123,7 @@ def _apply_filters(request, base_qs):
 
     # Бренди та їх кількість САМЕ в межах відфільтрованого списку
     brands_agg = (
-        qs.values('brand__slug', 'brand__name')
+        qs.values('brand__brand_slug', 'brand__name')
           .annotate(count=Count('id'))
           .order_by('brand__name')
     )
@@ -88,12 +131,12 @@ def _apply_filters(request, base_qs):
     # Помітимо вибрані бренди (для чекбоксів)
     brands_ctx = [
         {
-            'slug':  b['brand__slug'],
+            'slug':    b['brand__brand_slug'],
             'name':  b['brand__name'],
             'count': b['count'],
-            'checked': b['brand__slug'] in selected_brands
+            'checked': b['brand__brand_slug'] in selected_brands
         }
-        for b in brands_agg if b['brand__slug']  # захист від None
+        for b in brands_agg if b['brand__brand_slug']  # захист від None
     ]
 
     return qs, {

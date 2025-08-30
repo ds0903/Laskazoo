@@ -1,5 +1,23 @@
 from django.db import models
 from django.urls import reverse
+from django.utils.text import slugify
+from django.core.validators import MinValueValidator
+from decimal import Decimal
+
+def unique_slugify(model_cls, base_slug, pk=None, slug_field='slug'):
+    """
+    Генерує унікальний slug: base, base-2, base-3, ...
+    Ігнорує поточний запис за pk (для оновлень).
+    """
+    slug = base_slug
+    i = 2
+    qs = model_cls.objects.all()
+    if pk:
+        qs = qs.exclude(pk=pk)
+    while qs.filter(**{slug_field: slug}).exists():
+        slug = f"{base_slug}-{i}"
+        i += 1
+    return slug
 
 class Main_Categories(models.Model):
     """ 08.07.2024 Danylo Fedorenko
@@ -43,14 +61,40 @@ class Brand(models.Model):
         return self.name
 
 class Product(models.Model):
+    torgsoft_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    barcode = models.CharField(max_length=128, blank=True, null=True)
     name     = models.CharField(max_length=255)
-    slug     = models.SlugField(max_length=255, unique=True)
     sku      = models.CharField("Артикул", max_length=64)
-    price    = models.DecimalField(max_digits=10, decimal_places=2)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
+    # price    = models.DecimalField(max_digits=10, decimal_places=2)
     image    = models.ImageField(upload_to='products/', blank=True, null=True)
+    weight = models.PositiveIntegerField("Вага (г)", validators=[MinValueValidator(1)], default=0)
+    # stock = models.IntegerField("Наявність")
+    color = models.CharField("Колір", max_length=32, blank=True, null=True)
+    size = models.CharField("Розмір", max_length=32, blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     brand    = models.ForeignKey(Brand,    on_delete=models.CASCADE, related_name='products')
-    description = models.TextField("Опис", blank=True)
+    description = models.TextField("Опис", blank=True, null=True)
+    prime_cost = models.DecimalField("Собівартість", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    retail_price = models.DecimalField("Ціна роздрібна", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    wholesale_price = models.DecimalField("Оптова ціна", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    retail_price_with_discount = models.DecimalField("Ціна роздрібна зі знижкою", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    warehouse_quantity = models.IntegerField("Наявність", default=0)
+
+    def weight_kg(self):
+        return self.weight / 1000
+
+    def weight_label(self):
+        # 500 → "500g", 1000 → "1kg", 1500 → "1.5kg"
+        g = self.weight
+        return f"{g}g" if g < 1000 or g % 1000 != 0 else f"{g // 1000}kg"
+
+    def save(self, *args, **kwargs):
+        # Генеруємо тільки якщо порожній або якщо змінили name/sku (опц.)
+        if not self.slug:
+            base = slugify(f"{self.name}-{self.sku}") if self.sku else slugify(self.name)
+            self.slug = unique_slugify(Product, base, pk=self.pk)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -69,17 +113,39 @@ class Product(models.Model):
         )
 
 class Product_Variant(models.Model):
-    product   = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
+    torgsoft_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    barcode = models.CharField(max_length=128, blank=True, null=True)
     sku       = models.CharField("Артикул",max_length=255)
-    price     = models.DecimalField("Ціна",max_digits=10, decimal_places=2)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
+    product   = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
+#     price     = models.DecimalField("Ціна",max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
-    weight    = models.DecimalField("Вага",max_digits=10, decimal_places=2)
-    stock     = models.IntegerField("Наявність")
+    weight = models.PositiveIntegerField("Вага (г)", validators=[MinValueValidator(1)], default=0)
+    # stock     = models.IntegerField("Наявність")
     color = models.CharField("Колір", max_length=32, blank=True, null=True)
     size = models.CharField("Розмір", max_length=32, blank=True, null=True)
+    prime_cost = models.DecimalField("Собівартість", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    retail_price = models.DecimalField("Ціна роздрібна", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    wholesale_price = models.DecimalField("Оптова ціна", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    retail_price_with_discount = models.DecimalField("Ціна роздрібна зі знижкою", max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    warehouse_quantity = models.IntegerField("Наявність", default=0)
+
+    def weight_kg(self):
+        return self.weight / 1000
+
+    def weight_label(self):
+        # 500 → "500g", 1000 → "1kg", 1500 → "1.5kg"
+        g = self.weight
+        return f"{g}g" if g < 1000 or g % 1000 != 0 else f"{g // 1000}kg"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_parts = [self.product.name, self.weight or '', self.color or '', self.size or '']
+            base = slugify("-".join([p for p in base_parts if p]))
+            self.slug = unique_slugify(Product_Variant, base, pk=self.pk)
+        super().save(*args, **kwargs)
 
     class Meta:
-        unique_together = (('product', 'sku'),)
         ordering = ['product', 'sku']
         verbose_name = "Варіант товару"
         verbose_name_plural = "Варіанти товарів"

@@ -351,7 +351,7 @@
   width: 80px;
   height: 80px;
   object-fit: cover;
-  border-radius: 50%; /* або 8px, як вам подобається */
+  border-radius: 5%; /* або 8px, як вам подобається */
   margin-bottom: 12px;
 }
 
@@ -390,7 +390,7 @@
   width: 80px;
   height: 80px;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: 5%;
   margin-bottom: 12px;
 }
 
@@ -643,4 +643,82 @@
   font-size: 0.85rem;
   color: #666;
   padding: 0 16px 16px;
+}
+
+/* === Каталог + Обране — фон росте поверх, сітка не стрибає === */
+
+/* контейнер решітки не обрізає картки */
+section.catalog .product-grid,
+.favourites-page .product-grid{
+  overflow: visible !important;
+  position: relative;
+}
+
+/* сама картка фіксована у потоці; фон перенесемо в ::before */
+section.catalog .prod-card,
+.favourites-page .prod-card{
+  height: var(--prod-min-height) !important;   /* фіксуємо */
+  overflow: visible !important;
+  position: relative;
+  background: transparent !important;          /* фон приберемо звідси */
+  box-shadow: none !important;
+  transform: none !important;                  /* без scale, щоб не «дригалось» */
+  z-index: 1;
+}
+
+/* БІЛИЙ ФОН, що росте за рахунок змінної --hover-height */
+section.catalog .prod-card::before,
+.favourites-page .prod-card::before{
+  content:"";
+  position:absolute; top:0; left:0; right:0;
+  height: var(--prod-min-height);              /* базова висота */
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  transition: height .25s ease, box-shadow .25s ease;
+  z-index:0;                                   /* під контентом картки */
+}
+
+/* на ховері збільшуємо тільки фон */
+section.catalog .prod-card:hover::before,
+.favourites-page .prod-card:hover::before{
+  height: clamp(var(--prod-min-height),
+                var(--hover-height, var(--prod-min-height)),
+                var(--prod-max-height));
+  box-shadow:0 12px 24px rgba(0,0,0,.18);
+}
+
+/* піднімаємо картку вище сусідів */
+section.catalog .prod-card:hover,
+.favourites-page .prod-card:hover{
+  z-index: 30;
+}
+
+/* front/back — абсолютні, завжди над фоном */
+section.catalog .prod-card .card-front,
+section.catalog .prod-card .card-back,
+.favourites-page .prod-card .card-front,
+.favourites-page .prod-card .card-back{
+  position:absolute; inset:0;
+  z-index:1;
+  overflow: visible;
+}
+
+/* показ/приховування контенту лишається як було */
+section.catalog .prod-card .card-back,
+.favourites-page .prod-card .card-back{
+  opacity:0; transform: translateY(20px); pointer-events:none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+section.catalog .prod-card:hover .card-front,
+.favourites-page .prod-card:hover .card-front{ opacity:0; transform: translateY(-20px); }
+section.catalog .prod-card:hover .card-back,
+.favourites-page .prod-card:hover .card-back{ opacity:1; transform: translateY(0); pointer-events:auto; }
+
+/* стилі що дійсно допомогли :)
+
+/* 2) Додатково/альтернатива – тільки для лівої колонки */
+.filter-sidebar{
+  align-self: flex-start;   /* примусити тримати власну висоту */
+  height: auto;             /* на випадок, якщо десь було задано height */
 }

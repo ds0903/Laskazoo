@@ -1,4 +1,4 @@
 /Zoosvit/static/zoosvit/img/
 .idea/
 .env
-
+/Zoosvit/db.sqlite3

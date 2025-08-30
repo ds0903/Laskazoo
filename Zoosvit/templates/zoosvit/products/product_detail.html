@@ -1,7 +1,7 @@
 {% extends 'zoosvit/core/base.html' %}
 {% load static %}
 
-{% block title %}{{ product.name }} – Зоосвіт{% endblock %}
+{% block title %}{{ product.name }} – Ласка{% endblock %}
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
@@ -13,7 +13,7 @@
   <a href="{% url 'home' %}">Головна</a>
   <span class="separator">›</span>
 
-  <a href="{% url 'products:main_category_list' %}">Каталог</a>
+  <a href="{% url 'products:catalog' %}">Каталог</a>
   <span class="separator">›</span>
 
   <a href="{% url 'products:subcategory_list' main_slug %}">

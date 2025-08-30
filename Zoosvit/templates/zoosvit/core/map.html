@@ -1,0 +1,153 @@
+{% extends 'zoosvit/core/base.html' %}
+
+{% load static %}
+
+{% block title %}Магазини Ласка у Києві{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    .stores-page{display:grid; grid-template-columns: 380px 1fr; gap:16px; align-items:start;}
+    .stores-sidebar{
+      background:#fff; border:1px solid #e6e6e6; border-radius:12px; padding:12px; max-height: calc(100vh - 220px); overflow:auto;
+    }
+    .stores-search{display:flex; gap:8px; margin-bottom:10px;}
+    .stores-search input{flex:1; padding:10px 12px; border:1px solid #d5d5d5; border-radius:8px;}
+    .store-card{border:1px solid #eee; border-radius:10px; padding:10px; margin:8px 0; background:#fafafa;}
+    .store-card h4{margin:0 0 6px; font-size:1rem;}
+    .store-meta{color:#666; font-size:.92rem; margin:4px 0;}
+    .store-actions{display:flex; gap:8px; margin-top:8px;}
+    .store-actions .btn{padding:6px 10px; border-radius:8px; border:1px solid var(--color-primary,#0a5e56); color:#0a5e56; background:#fff; font-weight:600; text-decoration:none;}
+    .store-actions .btn:hover{background:rgba(10,94,86,.08);}
+    #map{height: calc(100vh - 220px); min-height: 520px; width:100%; border-radius:12px; border:1px solid #e6e6e6; overflow:hidden;}
+    .leaflet-popup-content h5{margin:0 0 6px; font-size:1rem;}
+    .leaflet-popup-content .meta{color:#666; font-size:.92rem;}
+    @media (max-width: 920px){
+      .stores-page{grid-template-columns: 1fr; grid-auto-rows:min-content;}
+      #map{order: -1;}
+    }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'home' %}">Головна</a>
+  <span class="separator">›</span>
+  <span class="current">Магазини Київ/Київ. область</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="container">
+  <h1>Зоо магазини <span class="muted">— Мережі Ласка</span></h1>
+
+  <div class="stores-page">
+    <!-- Сайдбар зі списком -->
+    <aside class="stores-sidebar">
+      <div class="stores-search">
+        <input id="store-search" type="search" placeholder="Пошук за назвою або адресою…">
+      </div>
+      <div id="store-list">
+        {% for s in stores %}
+          <article class="store-card" data-id="{{ s.id }}" data-name="{{ s.name|lower }}" data-addr="{{ s.addr|lower }}">
+            <h4>{{ s.name }}</h4>
+            <div class="store-meta">{{ s.addr }}</div>
+            <div class="store-meta">⏰ {{ s.hours }} &nbsp;•&nbsp; ☎ {{ s.phone }}</div>
+            <div class="store-actions">
+              <a href="#" class="btn js-fly" data-id="{{ s.id }}">Переглянути на карті</a>
+              <a class="btn" target="_blank"
+                 href="https://www.google.com/maps/dir/?api=1&destination={{ s.lat }},{{ s.lng }}">
+                 Прокласти маршрут
+              </a>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </aside>
+
+    <!-- Карта -->
+    <div id="map" role="region" aria-label="Мапа магазинів Києва"></div>
+  </div>
+</section>
+
+<!-- JSON з магазинами (безпечно для JS) -->
+{{ stores|json_script:"stores-data" }}
+{% endblock %}
+
+{% block extra_js %}
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script>
+    (function(){
+      'use strict';
+
+      const STORES = JSON.parse(document.getElementById('stores-data').textContent || '[]');
+
+      // Центр Києва
+      const KYIV_CENTER = [50.4501, 30.5234];
+      const map = L.map('map', {scrollWheelZoom:true}).setView(KYIV_CENTER, 11);
+
+      // Тайл-лейєр (OSM)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Маркери
+      const markersById = new Map();
+      const group = L.featureGroup().addTo(map);
+
+      STORES.forEach(s => {
+        const marker = L.marker([s.lat, s.lng]).addTo(group);
+        marker.bindPopup(`
+          <h5>${s.name}</h5>
+          <div class="meta">${s.addr}</div>
+          <div class="meta">⏰ ${s.hours} • ☎ ${s.phone}</div>
+          <p style="margin-top:8px">
+            <a target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}">
+              Прокласти маршрут у Google Maps
+            </a>
+          </p>
+        `);
+        markersById.set(s.id, marker);
+      });
+
+      // Автофіт по всіх точках (якщо є)
+      if (STORES.length){ map.fitBounds(group.getBounds().pad(0.15)); }
+
+      // Клік по “Переглянути на карті”
+      document.addEventListener('click', (e)=>{
+        const a = e.target.closest('.js-fly'); if(!a) return;
+        e.preventDefault();
+        const id = Number(a.dataset.id);
+        const m = markersById.get(id);
+        if (m){
+          map.flyTo(m.getLatLng(), 15, {duration:0.5});
+          m.openPopup();
+        }
+      });
+
+      // Фільтр у списку
+      const search = document.getElementById('store-search');
+      search?.addEventListener('input', ()=>{
+        const q = (search.value || '').trim().toLowerCase();
+        document.querySelectorAll('#store-list .store-card').forEach(card=>{
+          const hay = (card.dataset.name + ' ' + card.dataset.addr);
+          card.style.display = hay.includes(q) ? '' : 'none';
+        });
+      });
+
+    })();
+  </script>
+{% endblock %}

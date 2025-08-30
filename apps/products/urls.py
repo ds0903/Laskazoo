@@ -10,8 +10,8 @@ urlpatterns = [
     # 1) /categories/ — головні категорії
     path(
         '',
-        views.main_category_list,
-        name='main_category_list'
+        views.catalog,
+        name='catalog'
     ),
 
     # 2) /categories/cats/ — підкатегорії для головної "cats"

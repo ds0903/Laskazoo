@@ -19,6 +19,8 @@ from django.urls import path, include
 from Zoosvit import views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.templatetags.static import static as static_url
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +29,11 @@ urlpatterns = [
     path('users/', include(('apps.users.urls','users'), namespace='users')),
     path('orders/',     include('apps.orders.urls',     namespace='orders')),
     path('favourites/', include('apps.favourites.urls', namespace='favourites')),
+    path('stores/', views.stores_map, name='stores_map'),
+    path('info/<slug:slug>/', views.info_page, name='info_page'),
+    path("api/torgsoft/", include("apps.ts_ftps.urls")),
+    path("favicon.ico",RedirectView.as_view(url=static_url("zoosvit/img/favicon.ico"), permanent=True)),
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

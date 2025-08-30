@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>{% block title %}Зоосвіт{% endblock %}</title>
+  <title>{% block title %}Ласка{% endblock %}</title>
 
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/products/catalog.css' %}">
@@ -26,7 +26,7 @@
     cartCount: "{% url 'orders:api_cart_summary' %}"
   };
 </script>
-<script defer src="{% static 'zoosvit/js/cart-modal.js' %}"></script>
+
 <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
 
 

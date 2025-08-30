@@ -10,8 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 from decouple import config
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,7 +44,34 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.favourites',
     'apps.cart',
+    'apps.ts_ftps',
 ]
+
+TS_SYNC = {
+    "MODE": os.getenv("TS_MODE", "ftps"),     # ftps | ftp | local
+    "FTP": {
+        "HOST": os.getenv("TS_FTP_HOST", ""),
+        "PORT": int(os.getenv("TS_FTP_PORT", "21")),
+        "USER": os.getenv("TS_FTP_USER", ""),
+        "PASS": os.getenv("TS_FTP_PASS", ""),
+        "INCOMING_DIR": os.getenv("TS_FTP_INCOMING_DIR", "/incoming"),
+        "PASSIVE": os.getenv("TS_FTP_PASSIVE", "true").lower() in ("1","true","yes"),
+        "TIMEOUT": int(os.getenv("TS_FTP_TIMEOUT", "60")),
+        "IMPLICIT_TLS": os.getenv("TS_FTPS_IMPLICIT", "false").lower() in ("1","true","yes"),  # для порту 990
+    },
+    "LOCAL": {
+        "INCOMING_DIR": os.getenv("TS_LOCAL_INCOMING_DIR", "C:/incoming"),
+    },
+    "FILE": {
+        "ENCODING": os.getenv("TS_TRS_ENCODING", "utf-8"),
+        "DELIMITER": os.getenv("TS_TRS_DELIMITER", "auto"),
+        "NAME": os.getenv("TS_FILE_NAME", "TSGoods.trs"),
+    },
+
+    # модель продукту: можна підставити свою, напр. "products.Product"
+    "PRODUCT_MODEL": os.getenv("TS_PRODUCT_MODEL", "products.Product"),
+    "INBOUND_TOKEN": os.getenv("TS_INBOUND_TOKEN", "change_me"),
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -85,10 +116,27 @@ WSGI_APPLICATION = 'Zoosvit.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
+    # НОВА дефолтна БД (Postgres)
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('PG_NAME', 'laska_db'),
+        'USER': os.getenv('PG_USER', 'danil'),
+        'PASSWORD': os.getenv('PG_PASS', 'danilus15'),
+        'HOST': os.getenv('PG_HOST', '127.0.0.1'),
+        'PORT': os.getenv('PG_PORT', '5432'),
+        'CONN_MAX_AGE': 60,  # простий keep-alive
+
+        # 'OPTIONS': {
+        #     # приклад: увімкнути ssl, якщо треба
+        #     # 'sslmode': 'require',
+        # }
+    },
+
+    # СТАРА SQLite (лише для зчитування даних під час міграції)
+    # 'sqlite': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    # },
 }
 
 

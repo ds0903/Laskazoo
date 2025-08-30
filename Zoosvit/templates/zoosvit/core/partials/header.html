@@ -2,22 +2,25 @@
 {% include 'zoosvit/users/modal.html' with form=form %}
 {% include 'zoosvit/orders/modal.html' %}
 <script src="{% static 'zoosvit/js/login_modal.js' %}"></script>
+
 <header class="site-header">
     <div class="site-topbar">
       <div class="container topbar-inner">
         <nav class="topbar-nav">
-          <a href="#stores">Магазини Zoosvit</a>
-          <a href="#about">Про нас</a>
+          <a href="{% url 'stores_map' %}">Магазини Ласка</a>
           <a href="#payment">Оплата та доставка</a>
           <a href="#exchange">Обмін та повернення</a>
-          <a href="#help">Допомога</a>
           <a href="#contact">Контакти</a>
+          <a href="{% url 'products:catalog' %}">Каталог</a>
         </nav>
       </div>
     </div>
     <div class="site-mainheader">
       <div class="container header-inner">
-        <a href="/" class="logo">Зоосвіт</a>
+        <a class="logo" href="{% url 'home' %}">
+          <img src="{% static 'zoosvit/img/laska_white3__.png' %}?v=4"
+               alt="Ласка" width="190" height="50" />
+        </a>
         <form class="search-form">
           <input type="text" placeholder="пошук товарів">
           <button type="submit">🔍</button>

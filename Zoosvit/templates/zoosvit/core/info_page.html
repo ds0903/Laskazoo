@@ -1,0 +1,56 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+<style>
+  .info-wrap   {display:grid; grid-template-columns: 260px 1fr; gap:24px;}
+  .info-nav    {background:#fff; border:1px solid #e9e9e9; border-radius:12px; padding:12px;}
+  .info-nav a  {display:block; padding:10px 12px; border-radius:8px; color:#333; text-decoration:none; font-weight:600;}
+  .info-nav a.active,
+  .info-nav a:hover {background:rgba(10,94,86,.08); color:#0a5e56;}
+  .info-main   {background:#fff; border:1px solid #e9e9e9; border-radius:12px; padding:18px 20px;}
+  .info-main h1{margin:0 0 8px;}
+  .info-meta   {color:#777; font-size:.9rem; margin-bottom:18px;}
+  .info-main h2, .info-main h3, .info-main h4 {margin-top:18px}
+  .info-main ol{padding-left:18px}
+  .info-main ul{padding-left:18px; list-style:disc}
+  @media (max-width: 900px){
+    .info-wrap {grid-template-columns: 1fr; gap:12px;}
+  }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'home' %}">Головна</a>
+  <span class="separator">›</span>
+  <span class="current">{{ page.title }}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<section class="container">
+  <div class="info-wrap">
+    <!-- Ліва колонка -->
+    <aside class="info-nav">
+      {% for slug, title in left_nav %}
+        <a href="{% url 'info_page' slug %}" class="{% if slug == active %}active{% endif %}">
+          {{ title }}
+        </a>
+      {% endfor %}
+    </aside>
+
+    <!-- Правий текстовий блок -->
+    <article class="info-main">
+      <h1>{{ page.title }}</h1>
+      {% if page.date %}<div class="info-meta">Дата публікації: {{ page.date }}</div>{% endif %}
+      <div class="info-body">
+        {{ page.body|safe }}
+      </div>
+    </article>
+  </div>
+</section>
+{% endblock %}

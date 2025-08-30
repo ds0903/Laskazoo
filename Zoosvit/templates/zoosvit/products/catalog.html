@@ -1,0 +1,472 @@
+{# templates/zoosvit/products/catalog.html #}
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Каталог – Ласка{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+
+  <style>
+    /* ── горизонтальна стрічка кнопок категорій під шапкою ───────────── */
+    .top-cats-bar{
+      position: relative;
+      z-index: 3;
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin: 8px auto 18px; padding: 0 16px;
+      max-width: 1200px;
+    }
+    .top-cats-btn{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border:1px solid var(--color-primary);
+      color:var(--color-primary); background:#fff; border-radius:999px;
+      text-decoration:none; font-weight:600; font-size:.95rem;
+      transition: background .2s, color .2s, transform .15s;
+    }
+    .top-cats-btn:hover{ background:rgba(9,94,86,.08); transform:translateY(-1px);}
+    .top-cats-btn img{ width:20px; height:20px; object-fit:contain; }
+
+    /* макет каталогу (ліва колонка + права сітка) */
+    .catalog.container{ position:relative; z-index:2; }
+    .catalog-wrapper{ display:flex; gap:24px; align-items:flex-start; }
+    .filter-sidebar{ width:260px; min-width:240px; }
+    .catalog-main{ flex:1; min-width:0; }
+
+    /* щоб картка “росла” поверх і з білим фоном (як ми зробили вище) */
+    .catalog .product-grid{ overflow:visible; position:relative; }
+    .catalog .prod-card{ height:var(--prod-min-height); overflow:visible; position:relative; background:transparent; box-shadow:none; }
+    .catalog .prod-card::before{
+      content:""; position:absolute; inset:0 auto auto 0; right:0;
+      height:var(--prod-min-height); background:#fff; border-radius:12px;
+      box-shadow:0 2px 6px rgba(0,0,0,.1); transition:height .25s, box-shadow .25s;
+      z-index:0;
+    }
+    .catalog .prod-card:hover{ z-index:30; }
+    .catalog .prod-card:hover::before{
+      height:clamp(var(--prod-min-height),
+                   var(--hover-height, var(--prod-min-height)),
+                   var(--prod-max-height));
+      box-shadow:0 12px 24px rgba(0,0,0,.18);
+    }
+    .catalog .prod-card .card-front,
+    .catalog .prod-card .card-back{ position:absolute; inset:0; z-index:1; }
+
+    .catalog .prod-card:hover::before{
+  height: clamp(var(--prod-min-height),
+                var(--hover-height, var(--prod-min-height)),
+                var(--prod-max-height));
+}
+
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'home' %}">Головна</a>
+  <span class="separator">›</span>
+  <span class="current">Каталог</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h1 class="catalog-page-heading">Каталог</h1>
+
+{# ── Кнопки головних категорій під шапкою ── #}
+<div class="top-cats-bar">
+  {% for m in mains %}
+    <a class="top-cats-btn" href="{% url 'products:subcategory_list' m.slug %}">
+      {% if m.image %}
+        <img src="{{ m.image.url }}" alt="{{ m.name }}">
+      {% endif %}
+      {{ m.name }}
+    </a>
+  {% empty %}
+    <span class="muted">Категорій поки немає</span>
+  {% endfor %}
+</div>
+
+<section class="catalog container">
+  <div class="catalog-wrapper">
+
+    {# ── ЛІВИЙ ФІЛЬТР ── #}
+    <aside class="filter-sidebar">
+      <h3 class="fs-title">Фільтри</h3>
+
+      <div class="fs-group">
+        <p class="fs-group-title">Виробник</p>
+        {% for b in brands %}
+          <label>
+            <input type="checkbox" name="brand" value="{{ b.slug }}"
+                   {% if b.checked %}checked{% endif %}>
+            {{ b.name }} <span>({{ b.count }})</span>
+          </label>
+        {% empty %}
+          <p class="muted">Немає брендів у цій вибірці</p>
+        {% endfor %}
+      </div>
+
+      <div class="fs-group">
+        <p class="fs-group-title">Ціна, грн</p>
+        <div class="range-inputs">
+          <input type="number" name="price_min" placeholder="від" value="{{ price_min }}">
+          <span>–</span>
+          <input type="number" name="price_max" placeholder="до" value="{{ price_max }}">
+        </div>
+        <label class="mt-8">
+          <input type="checkbox" name="in_stock" {% if in_stock %}checked{% endif %}>
+          В наявності
+        </label>
+
+        <button class="btn-secondary btn-filter-apply" onclick="applyFilters()">OK</button>
+      </div>
+    </aside>
+
+    {# ── ПРАВА ЧАСТИНА: УСІ ТОВАРИ ── #}
+    <main class="catalog-main">
+      {% if products %}
+        <div class="product-grid">
+          {% for product in products %}
+  <div class="prod-card">
+    {# ---- FRONT ---- #}
+    <div class="card-front">
+      {% with v0=product.variants_for_card.0 %}
+        <a href="{{ product.get_absolute_url|default:'#' }}">
+          {% if v0 and v0.image %}
+            <img src="{{ v0.image.url }}" alt="{{ product.name }}">
+          {% elif product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+          {% endif %}
+        </a>
+
+        <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
+
+        <h3 class="card-title" data-base-title="{{ product.name }}">
+      {{ product.name }}
+      {% if v0 %}
+  {% if v0.weight or v0.size %}
+    <span class="variant-suffix">
+      {% if v0.weight %} — {{ v0.weight|floatformat:0 }} кг
+      {% elif v0.size %} — {{ v0.size }}{% endif %}
+    </span>
+  {% endif %}
+{% endif %}
+
+
+    </h3>
+
+        <div class="card-price">₴ {{ v0.price|default:product.price }}</div>
+      {% endwith %}
+    </div>
+
+    {# ---- BACK ---- #}
+    <div class="card-back">
+      {% with v0=product.variants_for_card.0 %}
+        <a href="{{ product.get_absolute_url|default:'#' }}">
+          {% if v0 and v0.image %}
+            <img src="{{ v0.image.url }}" alt="{{ product.name }}">
+          {% elif product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+          {% endif %}
+          <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
+          <h3 class="card-title" data-base-title="{{ product.name }}">
+      {{ product.name }}
+      {% if v0 %}
+  {% if v0.weight or v0.size %}
+    <span class="variant-suffix">
+      {% if v0.weight %} — {{ v0.weight|floatformat:0 }} кг
+      {% elif v0.size %} — {{ v0.size }}{% endif %}
+    </span>
+  {% endif %}
+{% endif %}
+
+
+    </h3>
+        </a>
+
+        <div class="card-price">₴ {{ v0.price|default:product.price }}</div>
+
+        {# Пігулки варіантів (як на головній) #}
+        {% if product.variants_for_card|length > 1 %}
+          {% with vfirst=product.variants_for_card.0 %}
+            <div class="variant-group">
+              <div class="variant-label">
+                {% if vfirst.weight %}Фасування{% elif vfirst.size %}Розмір{% else %}Варіанти{% endif %}
+              </div>
+              <div class="variant-pills" role="group" aria-label="Варіанти">
+                {% for v in product.variants_for_card|slice:":3" %}
+                  <button
+                    type="button"
+                    class="variant-pill {% if forloop.first %}active{% endif %}"
+                    data-vid="{{ v.id }}"
+                    data-price="{{ v.price }}"
+                    data-sku="{{ v.sku }}"
+                    data-weight="{{ v.weight|default:'' }}"
+                    data-size="{{ v.size|default:'' }}"
+                    data-image="{% if v.image %}{{ v.image.url }}{% elif product.image %}{{ product.image.url }}{% else %}{% static 'zoosvit/img/food1.jpg' %}{% endif %}">
+                    {% if v.weight %}{{ v.weight|floatformat:0 }} кг
+                    {% elif v.size %}{{ v.size }}
+                    {% else %}SKU {{ v.sku }}{% endif %}
+                  </button>
+                {% endfor %}
+              </div>
+            </div>
+          {% endwith %}
+        {% endif %}
+
+        <div class="card-actions">
+    {% with v0=product.variants_for_card.0 %}
+  <a class="btn add-to-cart"
+     href="{% url 'orders:add' product.id %}{% if v0 %}?variant={{ v0.id }}{% endif %}"
+     data-add-base="{% url 'orders:add' product.id %}">
+    В кошик
+  </a>
+
+  {# Підсвічуємо лише якщо поточний варіант у вибраному #}
+  <button
+    class="btn-fav js-fav {% if v0 and v0.id in fav_variant_ids %}is-on{% endif %}"
+    data-url="{% url 'favourites:toggle' product.id %}"
+    data-variant="{% if v0 %}{{ v0.id }}{% endif %}"
+    aria-pressed="{% if v0 and v0.id in fav_variant_ids %}true{% else %}false{% endif %}">
+    ❤️
+  </button>
+{% endwith %}
+
+  </div>
+
+        <div class="card-info">
+          Виробник:
+          {% if product.brand %}
+            <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
+          {% else %} — {% endif %}
+        </div>
+        <div class="card-info">
+          Країна:
+          {% if product.brand and product.brand.country_slug %}
+            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>
+          {% else %} — {% endif %}
+        </div>
+      {% endwith %}
+    </div>
+  </div>
+{% endfor %}
+
+        </div>
+      {% else %}
+        <div class="product-grid is-empty">
+          <p class="no-favourites">Немає товарів за обраними фільтрами ;(</p>
+        </div>
+      {% endif %}
+    </main>
+  </div>
+</section>
+
+{# ── JSON зі списком улюблених варіантів ── #}
+{{ fav_variant_ids|json_script:"fav-variant-ids" }}
+
+<script>
+/* ====================== КАТАЛОГ: УТИЛІТИ + ФІЛЬТРИ ====================== */
+(function () {
+  'use strict';
+
+  /* ------- fav set із шаблону (безпечна ініціалізація) ------- */
+  (function initFavSet(){
+    try {
+      const el = document.getElementById('fav-variant-ids');
+      const data = el ? JSON.parse(el.textContent || '[]') : [];
+      window.__favVarSet = new Set((data || []).map(Number));
+    } catch (e) {
+      window.__favVarSet = new Set();
+    }
+  })();
+
+  /* ------- застосувати фільтри ------- */
+  window.applyFilters = function applyFilters() {
+    const url = new URL(window.location.href);
+
+    // бренди (multi)
+    url.searchParams.delete('brand');
+    document.querySelectorAll('input[name="brand"]:checked').forEach(cb => {
+      url.searchParams.append('brand', cb.value);
+    });
+
+    // ціна
+    const min = document.querySelector('input[name="price_min"]')?.value || '';
+    const max = document.querySelector('input[name="price_max"]')?.value || '';
+    const stock = document.querySelector('input[name="in_stock"]')?.checked || false;
+
+    if (min) url.searchParams.set('price_min', min); else url.searchParams.delete('price_min');
+    if (max) url.searchParams.set('price_max', max); else url.searchParams.delete('price_max');
+    if (stock) url.searchParams.set('in_stock', '1'); else url.searchParams.delete('in_stock');
+
+    window.location = url.toString();
+  };
+
+  /* ====================== АВТО-ВИСОТА КАРТОК ====================== */
+  const $all = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const debounce = (fn, ms=120)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+  const rerun = debounce(()=>requestAnimationFrame(recomputeCardHeights), 60);
+
+  function measureBack(back){
+    // тимчасово зробити видимим для коректного виміру
+    const keep = {
+      display: back.style.display, position: back.style.position, opacity: back.style.opacity,
+      pointerEvents: back.style.pointerEvents, visibility: back.style.visibility,
+      height: back.style.height, maxHeight: back.style.maxHeight
+    };
+    back.style.display='block'; back.style.position='static'; back.style.opacity='0';
+    back.style.pointerEvents='none'; back.style.visibility='hidden';
+    back.style.height='auto'; back.style.maxHeight='none';
+    const h = Math.ceil(back.scrollHeight);
+    Object.assign(back.style, keep);
+    return h;
+  }
+
+  function recomputeCardHeights(){
+    const cs = getComputedStyle(document.documentElement);
+    const MIN = parseInt(cs.getPropertyValue('--prod-min-height')) || 320;
+    const MAX = parseInt(cs.getPropertyValue('--prod-max-height')) || 520;
+
+    document.querySelectorAll('.prod-card').forEach(card=>{
+      const back = card.querySelector('.card-back'); if(!back) return;
+      const desired  = measureBack(back);
+      const adjusted = Math.max(0, desired - 10);
+      const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
+      card.style.setProperty('--hover-height', clamped + 'px');
+    });
+  }
+  // зробимо доступним глобально (використовується в apply())
+  window.recomputeCardHeights = recomputeCardHeights;
+
+  function initAutoFit(){
+    if (document.readyState === 'complete') rerun();
+    else window.addEventListener('load', rerun, {once:true});
+
+    if (document.fonts?.ready) document.fonts.ready.then(rerun);
+
+    $all('.prod-card img').forEach(img=>{
+      if(!img.complete){
+        img.addEventListener('load',  rerun, {once:true});
+        img.addEventListener('error', rerun, {once:true});
+      }
+    });
+
+    window.addEventListener('resize', rerun);
+    window.addEventListener('orientationchange', rerun);
+
+    if('ResizeObserver' in window){
+      const ro = new ResizeObserver(rerun);
+      $all('.prod-card .card-back').forEach(el=>ro.observe(el));
+    }
+
+    rerun(); setTimeout(rerun, 800);
+  }
+
+  /* ====================== ПІГУЛКИ ВАРІАНТІВ ====================== */
+  function initVariantPills(ctx = document){
+    ctx.querySelectorAll('.prod-card').forEach(card=>{
+      const pills = card.querySelectorAll('.variant-pill');
+      if (!pills.length) return;
+
+      // FRONT
+      const imgF   = card.querySelector('.card-front img');
+      const priceF = card.querySelector('.card-front .card-price');
+      const skuF   = card.querySelector('.card-front .card-article');
+      const titleF = card.querySelector('.card-front .card-title');
+
+      // BACK
+      const imgB   = card.querySelector('.card-back img');
+      const priceB = card.querySelector('.card-back .card-price');
+      const skuB   = card.querySelector('.card-back .card-article');
+      const titleB = card.querySelector('.card-back .card-title');
+
+      // Кнопки «в кошик» та «в обране»
+      const addBtn  = card.querySelector('.card-actions .add-to-cart');
+      const favBtn  = card.querySelector('.card-actions .js-fav');
+      const addBase = addBtn ? (addBtn.dataset.addBase || addBtn.href.split('?')[0]) : '';
+
+      const baseTitle = (titleF?.dataset.baseTitle || titleF?.textContent || '').trim();
+
+      function suffix(p){
+        const w = p.dataset.weight; const s = p.dataset.size;
+        if (w && !isNaN(Number(w))) return ` — ${Number(w)} кг`;
+        if (s) return ` — ${s}`;
+        return '';
+      }
+      function setText(el, text){ if (el) el.textContent = text; }
+
+      function apply(pill){
+        // активний стан на пігулках
+        pills.forEach(b=>b.classList.remove('active'));
+        pill.classList.add('active');
+
+        const img   = pill.dataset.image;
+        const sku   = pill.dataset.sku || '—';
+        const price = pill.dataset.price;
+        const vid   = pill.dataset.vid;
+
+        // зображення (з cache-busting)
+        if (img) {
+          const bust = `${img}${img.includes('?') ? '&' : '?'}v=${vid}`;
+          if (imgF) { imgF.removeAttribute('srcset'); imgF.src = bust; }
+          if (imgB) { imgB.removeAttribute('srcset'); imgB.src = bust; }
+        }
+
+        // SKU + ціна
+        setText(skuF, `Артикул: ${sku}`);
+        setText(skuB, `Артикул: ${sku}`);
+        if (price){
+          setText(priceF, `₴ ${price}`);
+          setText(priceB, `₴ ${price}`);
+        }
+
+        // заголовок
+        if (titleF) titleF.textContent = baseTitle + suffix(pill);
+        if (titleB) titleB.textContent = baseTitle + suffix(pill);
+
+        // лінк «В кошик»
+        if (addBtn && addBase) addBtn.href = `${addBase}?variant=${vid}`;
+
+        // ❤️ оновити data-variant і підсвітку
+        if (favBtn) {
+          favBtn.dataset.variant = vid;
+          const isOn = !!(window.__favVarSet && window.__favVarSet.has(Number(vid)));
+          favBtn.classList.toggle('is-on', isOn);
+          favBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+        }
+
+        // підправити висоту
+        if (typeof requestAnimationFrame === 'function' && typeof window.recomputeCardHeights === 'function'){
+          requestAnimationFrame(window.recomputeCardHeights);
+        }
+      }
+
+      // кліки по пігулках
+      pills.forEach(p=>p.addEventListener('click', e=>{
+        e.preventDefault(); e.stopPropagation();
+        apply(p);
+      }));
+
+      // первинний стан
+      apply(pills[0]);
+    });
+  }
+
+  /* ====================== ВХІДНА ТОЧКА ====================== */
+  document.addEventListener('DOMContentLoaded', function(){
+    initAutoFit();
+    initVariantPills();
+  });
+
+})();
+</script>
+
+
+
+
+{% endblock %}

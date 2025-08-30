@@ -384,7 +384,8 @@ h1, h2, h3 {
   justify-content: space-between;
 }
 .site-mainheader .logo {
-  font-size: 2.5rem;
+  padding-top: 8px;
+  font-size: 2.1rem
   font-weight: 600;
   color: var(--color-primary);
   text-decoration: none;
@@ -1909,13 +1910,7 @@ section.catalog .product-grid::after{
 .btn-fav:hover{ background: var(--color-primary); color:#fff; transform: translateY(-1px); }
 .btn-fav:active{ transform: translateY(0); }
 
-/* активний (у вибраному): зелений фон + “ореол” по краю */
-.btn-fav.active{
-  background: var(--color-primary);
-  color:#fff;
-  border-color: var(--color-primary);
-}
-.btn-fav.active:hover{ filter: none; transform: translateY(-1px); }
+
 
 /* гарантуємо, що кнопки над покривним <a> у card-back */
 .prod-card .card-actions{ position: relative; z-index: 5; }
@@ -1941,25 +1936,9 @@ section.catalog .product-grid::after{
   color:#fff;
 }
 
-/* УВІМКНЕНО (в обраному) — салатова заливка як у бейджів */
-.btn-fav.is-on,
-.btn-fav.active{                 /* лишив сумісність зі старим .active */
-  background: var(--badge-green);
-  border-color: var(--badge-green);
-  color: #fff;
-  box-shadow: none;              /* прибираємо підсвітки */
-  transform: none;
-}
 
-/* наведеня коли увімкнено — трохи темніше */
-.btn-fav.is-on:hover,
-.btn-fav.active:hover{
-  background: #23a255;
-  border-color:#23a255;
-}
 
-/* Прибрати стару “фіолетову” підсвітку, якщо десь лишилась */
-.btn-fav.active{ filter: none !important; }
+
 
 :root{ --badge-green:#27ae60; }
 
@@ -1971,6 +1950,72 @@ section.catalog .product-grid::after{
   display:inline-flex; align-items:center; justify-content:center;
   font-size:1.2rem; line-height:1;
   transition:background .2s, border-color .2s, color .2s, transform .12s, box-shadow .2s;
+}
+
+
+
+.variant-pills{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  margin-top:8px;
+  flex-wrap:wrap;
+}
+.variant-pill{
+  padding:6px 12px;
+  min-width:46px;
+  border-radius:999px;
+  background:#fff;
+  border:1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  font-size:.85rem;
+  font-weight:600;
+  cursor:pointer;
+  transition: background .2s, color .2s, transform .12s, border-color .2s;
+}
+.variant-pill:hover{ transform: translateY(-1px); }
+.variant-pill.active{
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color:#fff;
+}
+.card-title .variant-suffix{ font-weight:500; }
+
+/* контейнер і підпис */
+.variant-group{ margin-top:8px; text-align:center; }
+.variant-label{
+  font-size:.82rem; color:#666; margin-bottom:6px;
+}
+
+/* пігулки вже є; лише трохи зменшимо їх */
+.variant-pill{
+  padding:5px 10px;
+  font-size:.82rem;
+  border-radius:999px;
+}
+
+.btn-fav{
+  width:48px; height:48px; border-radius:50%;
+  border:2px solid var(--color-primary);
+  background:#fff;
+  color:#e63946;             /* емодзі лишається червоним, це ок */
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:1.2rem; line-height:1;
+  transition: background .2s, border-color .2s, color .2s, transform .12s, box-shadow .2s;
+}
+.btn-fav:hover{
+  background: var(--color-primary);
+  color:#fff;               /* емодзі-колір не зміниться (це норма для emoji) */
+}
+
+/* активний стан — ВИКЛЮЧНО через .is-on */
+.btn-fav.is-on,
+.btn-fav.is-on:hover{
+  background: var(--badge-green);      /* ти її вже задав вище */
+  border-color: var(--badge-green);
+  color:#fff;
+  box-shadow:none;
+  transform:none;
 }
 
 /* звичайний hover (для вимкненої) */
@@ -1991,75 +2036,8 @@ section.catalog .product-grid::after{
 /* прибираємо старі ефекти, якщо десь лишились */
 .btn-fav.active{ filter:none !important; }
 
-
-/* === Каталог + Обране — фон росте поверх, сітка не стрибає === */
-
-/* контейнер решітки не обрізає картки */
-section.catalog .product-grid,
-.favourites-page .product-grid{
-  overflow: visible !important;
-  position: relative;
-}
-
-/* сама картка фіксована у потоці; фон перенесемо в ::before */
-section.catalog .prod-card,
-.favourites-page .prod-card{
-  height: var(--prod-min-height) !important;   /* фіксуємо */
-  overflow: visible !important;
-  position: relative;
-  background: transparent !important;          /* фон приберемо звідси */
-  box-shadow: none !important;
-  transform: none !important;                  /* без scale, щоб не «дригалось» */
-  z-index: 1;
-}
-
-/* БІЛИЙ ФОН, що росте за рахунок змінної --hover-height */
-section.catalog .prod-card::before,
-.favourites-page .prod-card::before{
-  content:"";
-  position:absolute; top:0; left:0; right:0;
-  height: var(--prod-min-height);              /* базова висота */
-  background:#fff;
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-  transition: height .25s ease, box-shadow .25s ease;
-  z-index:0;                                   /* під контентом картки */
-}
-
-/* на ховері збільшуємо тільки фон */
-section.catalog .prod-card:hover::before,
-.favourites-page .prod-card:hover::before{
-  height: clamp(var(--prod-min-height),
-                var(--hover-height, var(--prod-min-height)),
-                var(--prod-max-height));
-  box-shadow:0 12px 24px rgba(0,0,0,.18);
-}
-
-/* піднімаємо картку вище сусідів */
-section.catalog .prod-card:hover,
-.favourites-page .prod-card:hover{
-  z-index: 30;
-}
-
-/* front/back — абсолютні, завжди над фоном */
-section.catalog .prod-card .card-front,
-section.catalog .prod-card .card-back,
-.favourites-page .prod-card .card-front,
-.favourites-page .prod-card .card-back{
-  position:absolute; inset:0;
-  z-index:1;
-  overflow: visible;
-}
-
-/* показ/приховування контенту лишається як було */
-section.catalog .prod-card .card-back,
-.favourites-page .prod-card .card-back{
-  opacity:0; transform: translateY(20px); pointer-events:none;
-  transition: opacity .25s ease, transform .25s ease;
-}
-section.catalog .prod-card:hover .card-front,
-.favourites-page .prod-card:hover .card-front{ opacity:0; transform: translateY(-20px); }
-section.catalog .prod-card:hover .card-back,
-.favourites-page .prod-card:hover .card-back{ opacity:1; transform: translateY(0); pointer-events:auto; }
-
-/* стилі що дійсно допомогли :)
+a.logo {
+  display: block;
+  padding-top: -80px;   /* зрушує вниз */
+  /* або padding-bottom: 8px; */
+}я

@@ -69,6 +69,10 @@ def add_variant_to_cart(request, variant_id: int):
 
 @login_required
 def add_to_cart(request, product_id: int):
+    variant_id = request.GET.get('variant')
+    if variant_id:
+        return add_variant_to_cart(request, variant_id)
+
     product = get_object_or_404(Product, pk=product_id)
 
     # якщо є варіанти — делегуємо

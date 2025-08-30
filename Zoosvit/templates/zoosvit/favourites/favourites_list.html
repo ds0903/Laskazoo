@@ -25,95 +25,74 @@
   <section class="profile-main favourites-page">
     <h1 class="profile-title">Моє обране</h1>
 
-    {% if products %}
+    {% if favs %}
       <div class="product-grid">
-        {% for product in products %}
-          <div class="prod-card">
-            <!-- FRONT -->
-            <div class="card-front">
-              <a href="{{ product.get_absolute_url|default:'#' }}">
-                {% if product.image %}
-                  <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                {% else %}
-                  <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
-                {% endif %}
-              </a>
-              <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
-              <h3 class="card-title">{{ product.name }}</h3>
-              <div class="card-price">
-                ₴ {{ product.variants_for_card.0.price|default:product.price }}
-              </div>
-            </div>
+  {% for f in favs %}
+    {% with product=f.product v=f.variant %}
+    <div class="prod-card">
+      <!-- FRONT -->
+      <div class="card-front">
+        <a href="{{ product.get_absolute_url|default:'#' }}">
+          {% if v and v.image %}
+            <img src="{{ v.image.url }}" alt="{{ product.name }}">
+          {% elif product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+          {% endif %}
+        </a>
 
-            <!-- BACK -->
-            <div class="card-back">
-              <a href="{{ product.get_absolute_url|default:'#' }}">
-                {% if product.image %}
-                  <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                {% else %}
-                  <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
-                {% endif %}
-                <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
-                <h3 class="card-title">{{ product.name }}</h3>
-              </a>
+        <div class="card-article">Артикул: {{ v.sku|default:product.sku|default:'—' }}</div>
 
-              {% if product.variants_for_card %}
-                <ul class="variants">
-                  {% for v in product.variants_for_card|slice:":4" %}
-                    <li class="variant-row">
-                      <span class="v-meta">
-                        {% if v.weight %}{{ v.weight }} г{% endif %}
-                        {% if v.size %}{% if v.weight %} / {% endif %}{{ v.size }}{% endif %}
-                        {% if v.color %} — {{ v.color }}{% endif %}
-                        {% if not v.weight and not v.size and not v.color %}SKU: {{ v.sku }}{% endif %}
-                      </span>
-                      {% if v.stock|default:0 > 0 %}
-                        <a class="btn add-to-cart" href="{% url 'orders:add' product.id %}">В кошик</a>
-                      {% else %}
-                        <button class="btn" disabled>Немає</button>
-                      {% endif %}
-                    </li>
-                  {% endfor %}
-                </ul>
-              {% else %}
-                <div class="no-variants">
-                  <div class="card-price">₴ {{ product.price }}</div>
-                </div>
-              {% endif %}
+        <h3 class="card-title" data-base-title="{{ product.name }}">
+          {{ product.name }}{% if v %}
+            {% if v.weight %} — {{ v.weight|floatformat:0 }} кг{% elif v.size %} — {{ v.size }}{% endif %}
+          {% endif %}
+        </h3>
 
-              <div class="card-actions">
-                <a class="btn add-to-cart" href="{% url 'orders:add' product.id %}">В кошик</a>
-
-                <button
-                  class="btn-fav js-fav {% if product.id in fav_ids %}active{% endif %}"
-                  data-url="{% url 'favourites:toggle' product.id %}"
-                  aria-label="В улюблені"
-                  aria-pressed="{% if product.id in fav_ids %}true{% else %}false{% endif %}">
-                  ❤️
-                </button>
-              </div>
-
-              <div class="card-info">
-                Виробник:
-                {% if product.brand %}
-                  <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">
-                    {{ product.brand.name }}
-                  </a>
-                {% else %} — {% endif %}
-              </div>
-
-              <div class="card-info">
-                Країна:
-                {% if product.brand and product.brand.country_slug %}
-                  <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">
-                    {{ product.brand.country }}
-                  </a>
-                {% else %} — {% endif %}
-              </div>
-            </div>
-          </div>
-        {% endfor %}
+        <div class="card-price">₴ {{ v.price|default:product.price }}</div>
       </div>
+
+      <!-- BACK (без пігулок, лише обраний варіант) -->
+      <div class="card-back">
+        <a href="{{ product.get_absolute_url|default:'#' }}">
+          {% if v and v.image %}
+            <img src="{{ v.image.url }}" alt="{{ product.name }}">
+          {% elif product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+          {% endif %}
+          <div class="card-article">Артикул: {{ v.sku|default:product.sku|default:'—' }}</div>
+          <h3 class="card-title" data-base-title="{{ product.name }}">
+            {{ product.name }}{% if v %}
+              {% if v.weight %} — {{ v.weight|floatformat:0 }} кг{% elif v.size %} — {{ v.size }}{% endif %}
+            {% endif %}
+          </h3>
+        </a>
+
+        <div class="card-price">₴ {{ v.price|default:product.price }}</div>
+
+        <div class="card-actions">
+          <a class="btn add-to-cart"
+             href="{% url 'orders:add' product.id %}{% if v %}?variant={{ v.id }}{% endif %}">
+            В кошик
+          </a>
+          <button class="btn-fav js-fav is-on"
+                  data-url="{% url 'favourites:toggle' product.id %}"
+                  data-variant="{% if v %}{{ v.id }}{% endif %}"
+                  aria-pressed="true">❤️</button>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+  {% empty %}
+    <div class="product-grid is-empty">
+      <p class="no-favourites">У вас поки що немає обраних товарів. ;(</p>
+    </div>
+  {% endfor %}
+</div>
+
     {% else %}
     <div class="product-grid is-empty">
       <p class="no-favourites">У вас поки що немає обраних товарів. ;(</p>
@@ -199,7 +178,7 @@ function recomputeCardHeights(){
     if (!back) return;
 
     const desired  = measureBack(back);
-    const adjusted = Math.max(0, desired - 30);   // мінус 10px
+    const adjusted = Math.max(0, desired - 10);   // мінус 10px
     const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
 
     card.style.setProperty('--hover-height', clamped + 'px');

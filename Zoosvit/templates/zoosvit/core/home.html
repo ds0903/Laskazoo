@@ -5,7 +5,7 @@
   <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Зоосвіт – Все для ваших улюбленців</title>
+  <title>Ласка – Все для ваших улюбленців</title>
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -124,98 +124,121 @@
   {% for pp in populars %}
     {% with product=pp.product %}
     <div class="prod-card">
-      <!-- FRONT -->
-      <div class="card-front">
-        <a href="{{ product.get_absolute_url|default:'#' }}">
-          {% if product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
-          {% else %}
-            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+  {# ---- FRONT ---- #}
+<div class="card-front">
+  {% with v0=product.variants_for_card.0 %}
+    <a href="{{ product.get_absolute_url|default:'#' }}">
+      {% if v0 and v0.image %}
+        <img src="{{ v0.image.url }}" alt="{{ product.name }}">
+      {% elif product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+      {% else %}
+        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+      {% endif %}
+    </a>
+
+    <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
+
+    <h3 class="card-title" data-base-title="{{ product.name }}">
+      {{ product.name }}
+      {% if v0 %}
+  {% if v0.weight or v0.size %}
+    <span class="variant-suffix">
+      {% if v0.weight %} — {{ v0.weight|floatformat:0 }} кг
+      {% elif v0.size %} — {{ v0.size }}{% endif %}
+    </span>
+  {% endif %}
+{% endif %}
+
+
+    </h3>
+
+    <div class="card-price">₴ {{ v0.price|default:product.price }}</div>
+  {% endwith %}
+
+</div>
+
+
+  {# ---- BACK (можеш залишити як було, я трохи підчистив) ---- #}
+  <div class="card-back">
+  {% with v0=product.variants_for_card.0 %}
+    <a href="{{ product.get_absolute_url|default:'#' }}">
+      {% if v0 and v0.image %}
+        <img src="{{ v0.image.url }}" alt="{{ product.name }}">
+      {% elif product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+      {% else %}
+        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+      {% endif %}
+
+      <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
+
+      <h3 class="card-title" data-base-title="{{ product.name }}">
+        {{ product.name }}
+        {% if v0 %}
+          {% if v0.weight or v0.size %}
+            <span class="variant-suffix">
+              {% if v0.weight %} — {{ v0.weight|floatformat:0 }} кг
+              {% elif v0.size %} — {{ v0.size }}{% endif %}
+            </span>
           {% endif %}
-        </a>
-        <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
-        <h3 class="card-title">{{ product.name }}</h3>
-        <div class="card-price">
-          ₴ {{ product.variants_for_card.0.price|default:product.price }}
-        </div>
-      </div>
-
-      <!-- BACK -->
-      <div class="card-back">
-        <a href="{{ product.get_absolute_url|default:'#' }}">
-          {% if product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
-          {% else %}
-            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
-          {% endif %}
-          <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
-          <h3 class="card-title">{{ product.name }}</h3>
-        </a>
-<!--        <span class="v-price">₴ {{ v.price }}</span>-->
-<!--        <ul class="card-details">-->
-<!--          <li>Бренд: {{ product.brand.name|default:'—' }}</li>-->
-<!--          <li>Категорія: {{ product.category.name|default:'—' }}</li>-->
-<!--        </ul>-->
-
-        {# --- варіанти товару з таблиці products_product_variant --- #}
-        {% if product.variants_for_card %}
-          <ul class="variants">
-            {% for v in product.variants_for_card|slice:":4" %}
-              <li class="variant-row">
-                <span class="v-meta">
-                  {% if v.weight %}{{ v.weight }} г{% endif %}
-                  {% if v.size %}{% if v.weight %} / {% endif %}{{ v.size }}{% endif %}
-                  {% if v.color %} — {{ v.color }}{% endif %}
-                  {% if not v.weight and not v.size and not v.color %}SKU: {{ v.sku }}{% endif %}
-                </span>
-
-                {% if v.stock|default:0 > 0 %}
-                  <a class="btn add-to-cart" href="{% url 'orders:add' product.id %}">В кошик</a>
-
-                {% else %}
-                  <button class="btn" disabled>Немає</button>
-                {% endif %}
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <div class="no-variants">
-            <div class="card-price">₴ {{ product.price }}</div>
-<!--            <a class="btn add-to-cart" href="{% url 'orders:add' product.id %}">В кошик</a>-->
-
-          </div>
         {% endif %}
+      </h3>
+    </a>
 
-        <div class="card-actions">  <!-- єдина спільна лінійка кнопок -->
-          <a class="btn add-to-cart" href="{% url 'orders:add' product.id %}">В кошик</a>
-          <button class="btn-fav js-fav {% if product.id in fav_ids %}is-on{% endif %}"
-                  data-url="{% url 'favourites:toggle' product.id %}"
-                  aria-pressed="{% if product.id in fav_ids %}true{% else %}false{% endif %}">
-            ❤️
-          </button>
+    {# ЦІНА на бек-стороні #}
+    <div class="card-price">₴ {{ v0.price|default:product.price }}</div>
 
-
-
+    {# ПІГУЛКИ (тепер тут) #}
+    {% if product.variants_for_card|length > 1 %}
+      {% with vfirst=product.variants_for_card.0 %}
+        <div class="variant-group">
+          <div class="variant-label">
+            {% if vfirst.weight %}Фасування{% elif vfirst.size %}Розмір{% else %}Варіанти{% endif %}
+          </div>
+          <div class="variant-pills" role="group" aria-label="Варіанти">
+            {% for v in product.variants_for_card|slice:":3" %}
+              <button
+                type="button"
+                class="variant-pill {% if forloop.first %}active{% endif %}"
+                data-vid="{{ v.id }}"
+                data-price="{{ v.price }}"
+                data-sku="{{ v.sku }}"
+                data-weight="{{ v.weight|default:'' }}"
+                data-size="{{ v.size|default:'' }}"
+                data-image="{% if v.image %}{{ v.image.url }}{% elif product.image %}{{ product.image.url }}{% else %}{% static 'zoosvit/img/food1.jpg' %}{% endif %}">
+                {% if v.weight %}{{ v.weight|floatformat:0 }} кг
+                {% elif v.size %}{{ v.size }}
+                {% else %}SKU {{ v.sku }}{% endif %}
+              </button>
+            {% endfor %}
+          </div>
         </div>
-        <div class="card-info">
-          Виробник:
-          {% if product.brand %}
-            <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">
-              {{ product.brand.name }}
-            </a>
-          {% else %} — {% endif %}
-        </div>
-        <div class="card-info">
-          Країна:
-          {% if product.brand and product.brand.country_slug %}
-            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">
-              {{ product.brand.country }}
-            </a>
-          {% else %} — {% endif %}
-        </div>
+      {% endwith %}
+    {% endif %}
+  {% endwith %}
 
-      </div>
-    </div>
+  <div class="card-actions">
+    {% with v0=product.variants_for_card.0 %}
+  <a class="btn add-to-cart"
+     href="{% url 'orders:add' product.id %}{% if v0 %}?variant={{ v0.id }}{% endif %}"
+     data-add-base="{% url 'orders:add' product.id %}">
+    В кошик
+  </a>
+
+  {# Підсвічуємо лише якщо поточний варіант у вибраному #}
+  <button
+    class="btn-fav js-fav {% if v0 and v0.id in fav_variant_ids %}is-on{% endif %}"
+    data-url="{% url 'favourites:toggle' product.id %}"
+    data-variant="{% if v0 %}{{ v0.id }}{% endif %}"
+    aria-pressed="{% if v0 and v0.id in fav_variant_ids %}true{% else %}false{% endif %}">
+    ❤️
+  </button>
+{% endwith %}
+
+  </div>
+</div>
+</div>
     {% endwith %}
   {% empty %}
     <p>Популярні товари ще не обрані.</p>
@@ -231,8 +254,8 @@
 <section class="why-us-bar">
   <div class="container why-us-inner">
     <div class="why-us-item">
-      <img src="{% static 'zoosvit/img/other/shop-icon.png' %}" alt="5 зоомаркетів">
-      <p>5 зоомаркетів</p>
+      <img src="{% static 'zoosvit/img/other/shop-icon.png' %}" alt="6 зоомаркетів">
+      <p>6 зоомаркетів</p>
     </div>
     <div class="why-us-item">
       <img src="{% static 'zoosvit/img/other/delivery-icon.png' %}" alt="Швидка доставка">
@@ -646,14 +669,14 @@ function measureBack(back){
 function recomputeCardHeights(){
   const cs  = getComputedStyle(document.documentElement);
   const MIN = parseInt(cs.getPropertyValue('--prod-min-height')) || 320;
-  const MAX = parseInt(cs.getPropertyValue('--prod-max-height')) || 520;
+  const MAX = parseInt(cs.getPropertyValue('--prod-max-height')) || 820;
 
   document.querySelectorAll('.prod-card').forEach((card, idx) => {
     const back = card.querySelector('.card-back');
     if (!back) return;
 
     const desired  = measureBack(back);
-    const adjusted = Math.max(0, desired - 30);   // мінус 10px
+    const adjusted = Math.max(0, desired - 10);   // мінус 10px
     const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
 
     card.style.setProperty('--hover-height', clamped + 'px');
@@ -719,14 +742,7 @@ function recomputeCardHeights(){
   });
 
 
-  // делегований слухач на весь документ
-  document.addEventListener('click', (e)=>{
-    const btn = e.target.closest('.js-fav');
-    if (!btn) return;
-    e.preventDefault();
-    e.stopPropagation();
-    toggleFav(btn);
-  });
+
 
   // щоб кнопки гарантовано були над лінком всередині card-back
   document.addEventListener('DOMContentLoaded', ()=>{
@@ -739,6 +755,110 @@ function recomputeCardHeights(){
 })();
 </script>
 
+<script>
+function initVariantPills(ctx = document){
+  ctx.querySelectorAll('.prod-card').forEach(card=>{
+    const pills = card.querySelectorAll('.variant-pill');
+    if (!pills.length) return;
+
+    // FRONT
+    const imgF   = card.querySelector('.card-front img');
+    const priceF = card.querySelector('.card-front .card-price');
+    const skuF   = card.querySelector('.card-front .card-article');
+    const titleF = card.querySelector('.card-front .card-title');
+
+    // BACK
+    const imgB   = card.querySelector('.card-back img');
+    const priceB = card.querySelector('.card-back .card-price');
+    const skuB   = card.querySelector('.card-back .card-article');
+    const titleB = card.querySelector('.card-back .card-title');
+
+    // Кнопка "В кошик"
+    const addBtn  = card.querySelector('.card-actions .add-to-cart');
+    const addBase = addBtn ? (addBtn.dataset.addBase || addBtn.href.split('?')[0]) : '';
+
+    const baseTitle = (titleF?.dataset.baseTitle || titleF?.textContent || '').trim();
+
+    function suffix(p){
+      const w = p.dataset.weight, s = p.dataset.size;
+      if (w && !isNaN(Number(w))) return ` — ${Number(w)} кг`;
+      if (s) return ` — ${s}`;
+      return '';
+    }
+    function setText(el, text){ if(el){ el.textContent = text; } }
+
+    function apply(pill){
+  pills.forEach(b=>b.classList.remove('active'));
+  pill.classList.add('active');
+
+  const img   = pill.dataset.image;
+  const sku   = pill.dataset.sku || '—';
+  const price = pill.dataset.price;
+  const vid   = pill.dataset.vid;
+
+  if (img) {
+    const bust = `${img}${img.includes('?') ? '&' : '?'}v=${vid}`;
+    if (imgF) { imgF.removeAttribute('srcset'); imgF.src = bust; }
+    if (imgB) { imgB.removeAttribute('srcset'); imgB.src = bust; }
+  }
+
+  setText(skuF, `Артикул: ${sku}`);
+  setText(skuB, `Артикул: ${sku}`);
+
+  if (price){
+    setText(priceF, `₴ ${price}`);
+    setText(priceB, `₴ ${price}`);
+  }
+
+  if (titleF) titleF.textContent = baseTitle + suffix(pill);
+  if (titleB) titleB.textContent = baseTitle + suffix(pill);
+
+  // лінка «В кошик» → саме на цей варіант
+  if (addBtn && addBase) addBtn.href = `${addBase}?variant=${vid}`;
+
+  // ❤️ «обране»: тепер прив'язане до конкретного варіанту
+  const favBtn = card.querySelector('.js-fav');
+  if (favBtn) {
+    favBtn.dataset.variant = vid;
+
+    // якщо у нас є глобальний Set улюблених варіантів — підсвічуємо
+    const isOn = !!(window.__favVarSet && window.__favVarSet.has(Number(vid)));
+    favBtn.classList.toggle('is-on', isOn);
+    favBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+  }
+
+  if (typeof requestAnimationFrame === 'function' && typeof recomputeCardHeights === 'function'){
+    requestAnimationFrame(recomputeCardHeights);
+  }
+}
+
+
+    pills.forEach(p=>p.addEventListener('click', e=>{
+      e.preventDefault(); e.stopPropagation();
+      apply(p);
+    }));
+
+    // первинний стан
+    apply(pills[0]);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', ()=>initVariantPills());
+</script>
+
+{# список id улюблених варіантів, щоб JS міг знати стан при перемиканні пігулок #}
+{{ fav_variant_ids|json_script:"fav-variant-ids" }}
+<script>
+  // Глобальний Set з улюбленими варіантами
+  (function () {
+    try {
+      const data = JSON.parse(document.getElementById('fav-variant-ids').textContent || '[]');
+      window.__favVarSet = new Set((data || []).map(Number));
+    } catch (e) {
+      window.__favVarSet = new Set();
+    }
+  })();
+</script>
 
 
 <!--доабвить картинки-->
