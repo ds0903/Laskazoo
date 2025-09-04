@@ -101,13 +101,13 @@ class Product(models.Model):
         return reverse(name, args=[self.slug])
 
     def get_absolute_url(self):
+        cat = getattr(self, 'category', None)
+        main = getattr(cat, 'main_category', None)
+        if not (self.slug and cat and cat.slug and main and getattr(main, 'slug', None)):
+            return ''  # ← важливо: не викликаємо reverse з порожніми значеннями
         return reverse(
             'products:product_detail',
-            args=[
-                self.category.main_category.slug,
-                self.category.slug,
-                self.slug
-            ]
+            args=[main.slug, cat.slug, self.slug]
         )
 
 class Product_Variant(models.Model):

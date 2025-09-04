@@ -1,3 +1,4 @@
 .idea/
 .env
 /Laskazoo/db.sqlite3
+comand_for_me.py

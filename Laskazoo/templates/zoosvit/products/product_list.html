@@ -72,7 +72,7 @@
               <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
               <h3 class="card-title">{{ product.name }}</h3>
               <div class="card-price">
-                ₴ {{ product.variants_for_card.0.price|default:product.price }}
+                ₴ {{ product.variants_for_card.0.retail_price|default:product.retail_price }}
               </div>
             </div>
 

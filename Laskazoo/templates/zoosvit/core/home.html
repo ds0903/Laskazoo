@@ -237,6 +237,19 @@
 {% endwith %}
 
   </div>
+    <div class="card-info">
+          Виробник:
+          {% if product.brand %}
+            <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
+          {% else %} — {% endif %}
+        </div>
+        <div class="card-info">
+          Країна:
+          {% if product.brand and product.brand.country_slug %}
+            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>
+          {% else %} — {% endif %}
+        </div>
+
 </div>
 </div>
     {% endwith %}
@@ -793,7 +806,7 @@ function initVariantPills(ctx = document){
 
   const img   = pill.dataset.image;
   const sku   = pill.dataset.sku || '—';
-  const price = pill.dataset.price;
+  const price = pill.dataset.retail_price;
   const vid   = pill.dataset.vid;
 
   if (img) {

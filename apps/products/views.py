@@ -119,7 +119,7 @@ def _apply_filters(request, base_qs):
         qs = qs.filter(price__lte=price_max)
     if in_stock:
         # підлаштуй під свою модель складу; приклад через related_name variants.stock
-        qs = qs.filter(variants__stock__gt=0).distinct()
+        qs = qs.filter(variants__warehouse_quantity__gt=0).distinct()
 
     # Бренди та їх кількість САМЕ в межах відфільтрованого списку
     brands_agg = (

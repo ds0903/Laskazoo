@@ -8,9 +8,9 @@
       <div class="container topbar-inner">
         <nav class="topbar-nav">
           <a href="{% url 'stores_map' %}">Магазини Ласка</a>
-          <a href="#payment">Оплата та доставка</a>
-          <a href="#exchange">Обмін та повернення</a>
-          <a href="#contact">Контакти</a>
+          <a href="{% url 'info_page' 'payment-delivery' %}">Оплата та доставка</a>
+          <a href="{% url 'info_page' 'returns' %}">Обмін та повернення</a>
+          <a href="#page-footer">Контакти</a>
           <a href="{% url 'products:catalog' %}">Каталог</a>
         </nav>
       </div>
@@ -90,7 +90,13 @@
             <span class="cart-count">{{ cart_qty|default:0 }}</span>
             <span class="cart-text">Мій кошик</span>
           </a>
-          <span class="cart-total">{% if cart_total %}{{ cart_total }} грн{% else %}0 грн{% endif %}</span>
+          <span class="cart-total" id="cart-total">
+            {% if cart_total|floatformat:2 != "0.00" %}
+              {{ cart_total }} грн
+            {% endif %}
+          </span>
+
+
         </div>
 
 

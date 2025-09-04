@@ -70,31 +70,33 @@ def favourite_list(request):
         favs = (Favourite.objects
                 .filter(user=request.user)
                 .select_related('product', 'variant', 'product__brand', 'product__category'))
-        fav_ids = set(favs.values_list('product_id', flat=True))  # для підсвічування іконок на сторінках
+        fav_ids = set(favs.values_list('product_id', flat=True))
+        fav_variant_ids = [f.variant_id for f in favs if f.variant_id]
     else:
         fav_var_ids = list(map(int, request.session.get('fav_variant_ids', [])))
         fav_prod_ids = list(map(int, request.session.get('fav_product_ids', [])))
 
         favs = []
-        # продукти без варіантів
-        products = {p.id: p for p in Product.objects.filter(id__in=fav_prod_ids).select_related('brand','category')}
+        products = {p.id: p for p in Product.objects.filter(id__in=fav_prod_ids).select_related('brand', 'category')}
         for pid in fav_prod_ids:
             p = products.get(pid)
             if p:
                 favs.append(type('F', (), {'product': p, 'variant': None, 'id': f'p-{pid}'}))
 
-        # варіанти
-        variants = list(Product_Variant.objects.filter(id__in=fav_var_ids).select_related('product','product__brand','product__category'))
+        variants = list(Product_Variant.objects.filter(id__in=fav_var_ids).select_related('product', 'product__brand', 'product__category'))
         for v in variants:
             favs.append(type('F', (), {'product': v.product, 'variant': v, 'id': f'v-{v.id}'}))
 
         fav_ids = set(fav_prod_ids) | set(v.product_id for v in variants)
+        fav_variant_ids = fav_var_ids  # просто передаємо
 
     return render(request, 'zoosvit/favourites/favourites_list.html', {
         'title': 'Моє обране',
-        'favs': favs,        # у шаблоні ти вже ітеруєш favs
-        'fav_ids': fav_ids,  # щоб підсвічувати сердечка на інших сторінках
+        'favs': favs,
+        'fav_ids': fav_ids,
+        'fav_variant_ids': fav_variant_ids,  # <-- ДОДАНО
     })
+
 
 
 def api_count(request):

@@ -1,10 +1,12 @@
 {% load static %}
+
 <div class="cm-header">
   <h3>Кошик</h3>
   <button class="cm-close" aria-label="Закрити">×</button>
 </div>
 
-{% if order and order.items.exists %}
+{# 1) Авторизований користувач з позиціями #}
+{% if order and order.items.all %}
   <ul class="cm-items">
     {% for item in order.items.all %}
       <li class="cm-row" data-item="{{ item.id }}">
@@ -17,6 +19,7 @@
             <img src="{% static 'zoosvit/img/placeholder.jpg' %}" alt="{{ item.product.name }}">
           {% endif %}
         </div>
+
         <div class="cm-info">
           <div class="cm-title">{{ item.product.name }}</div>
           {% if item.variant %}
@@ -27,6 +30,7 @@
             </div>
           {% endif %}
         </div>
+
         <div class="cm-qty">
           <a href="{% url 'orders:item_dec' item.id %}?ajax=1" class="cm-btn js-cart">−</a>
           <input
@@ -55,8 +59,34 @@
       <a href="{% url 'orders:clear' %}?ajax=1" class="cm-clear js-cart">Очистити кошик</a>
     </div>
   </div>
+
+{# 2) Гість: позиції з сесії #}
+{% elif sitems %}
+  <ul class="cm-items">
+    {% for it in sitems %}
+      <li class="cm-row">
+        <div class="cm-info">
+          <div class="cm-title">
+            {{ it.name }}{% if it.sku %} · SKU: {{ it.sku }}{% endif %}
+          </div>
+        </div>
+        <div class="cm-qty">{{ it.qty }}</div>
+        <div class="cm-sum"><b>{{ it.line|floatformat:2 }} грн</b></div>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="cm-footer">
+    <div class="cm-total">Всього: <b>{{ total|floatformat:2 }} грн</b></div>
+    <div class="cm-actions">
+      <a href="{% url 'users:login' %}" class="cm-checkout">Увійти, щоб оформити</a>
+      <a href="#" class="cm-clear" style="pointer-events:none; opacity:.5">Очистити (тільки після входу)</a>
+    </div>
+  </div>
+
+{# 3) Порожній кошик #}
 {% else %}
   <div class="cm-empty">
-    <p>Кошик порожній</p>
+    <p>Ваш кошик порожній.</p>
   </div>
 {% endif %}

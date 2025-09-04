@@ -23,18 +23,34 @@
     };
   }
 
-  async function refreshBadge() {
-    try {
-      const r = await fetch(URLS.badge, { credentials:'include', headers:{'X-Requested-With':'XMLHttpRequest'} });
-      if (!r.ok) return;
-      const data  = await r.json();
-      const qty   = (data.qty ?? data.count ?? 0);
-      const total = data.total ?? 0;
-      const { countEl, totalEl } = getBadgeEls();
-      if (countEl) countEl.textContent = qty;
-      if (totalEl) totalEl.textContent = fmtUAH(total);
-    } catch (e) { console.warn('[cart-modal] refresh badge', e); }
-  }
+  function refreshBadge() {
+  fetch(URLS.badge, {
+    credentials: 'include',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(res => res.ok ? res.json() : null)
+  .then(data => {
+    if (!data) return;
+
+    const qty   = (data.qty ?? data.count ?? 0);
+    const total = parseFloat(data.total ?? 0);
+    const { countEl, totalEl } = getBadgeEls();
+
+    if (countEl) countEl.textContent = qty;
+
+    if (totalEl) {
+      if (total > 0) {
+        totalEl.textContent = `${total.toFixed(2)} грн`;
+        totalEl.hidden = false;
+      } else {
+        totalEl.textContent = '';
+        totalEl.hidden = true;
+      }
+    }
+  })
+  .catch(e => console.warn('[cart-modal] refresh badge error', e));
+}
+
 
   async function loadModal() {
     const r = await fetch(URLS.modal, { credentials:'include' });
@@ -145,3 +161,19 @@
   // первинне оновлення бейджа
   document.addEventListener('DOMContentLoaded', refreshBadge);
 })();
+
+fetch(btn.href, {
+  method: 'POST',
+  headers: {
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-CSRFToken': getCookie('csrftoken'),
+  }
+})
+.then(res => res.json())
+.then(data => {
+  if (data.ok) {
+    updateCartBadge(data.qty);           // оновлення бейджика
+    updateCartTotal(data.total);         // ✅ нова функція!
+  }
+})
+.catch(console.error);

@@ -2040,4 +2040,15 @@ a.logo {
   display: block;
   padding-top: -80px;   /* зрушує вниз */
   /* або padding-bottom: 8px; */
-}я
+}
+.site-subfooter a {
+  color: inherit;        /* такий самий колір як у тексту */
+  text-decoration: none; /* без підкреслення */
+  font-weight: 500;      /* опціонально */
+}
+
+.site-subfooter a:hover {
+  color: #fff;     /* приклад: бірюзовий при наведенні */
+  text-decoration: none; /* теж без підкреслення */
+}
+
