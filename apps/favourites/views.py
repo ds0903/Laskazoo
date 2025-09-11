@@ -27,11 +27,13 @@ def toggle(request, pk):
             state = 'removed'
 
         count = Favourite.objects.filter(user=request.user).count()
+        request.session['fav_count'] = count
         return JsonResponse({
             'ok': True,
             'state': state,
             'count': count,
             'variant': variant.id if variant else None,
+            'product': product.id,
         })
 
     # ----- Гість: тримаємо список variant_id + окремо продукти без варіантів -----
@@ -94,6 +96,7 @@ def favourite_list(request):
         'title': 'Моє обране',
         'favs': favs,
         'fav_ids': fav_ids,
+        'fav_product_ids': list(fav_ids),
         'fav_variant_ids': fav_variant_ids,  # <-- ДОДАНО
     })
 
@@ -104,5 +107,6 @@ def api_count(request):
     if request.user.is_authenticated:
         c = Favourite.objects.filter(user=request.user).count()
     else:
-        c = len(request.session.get('fav_ids', []))
+        c = len(request.session.get('fav_variant_ids', [])) + \
+            len(request.session.get('fav_product_ids', []))
     return JsonResponse({'count': c})

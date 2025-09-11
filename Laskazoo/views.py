@@ -1,5 +1,5 @@
 # Laskazoo/views.py (або де у тебе home)
-from apps.products.models import PopularProduct, Product_Variant
+from apps.products.models import PopularProduct, Product_Variant, PopularCategory
 from apps.favourites.models import Favourite
 from django.shortcuts import render, redirect
 
@@ -68,10 +68,19 @@ def stores_map(request):
     return render(request, 'zoosvit/core/map.html', {"stores": stores})
 
 def home(request):
-    populars = (PopularProduct.objects
-                .select_related('product', 'product__brand', 'product__category')
-                .order_by('position')
-                .filter(is_active=True)[:20])
+    populars = (
+       PopularProduct.objects
+       .select_related('product', 'product__brand', 'product__category')
+       .order_by('position')
+       .filter(is_active=True, product__is_active=True)
+    )[:20]
+
+    popular_cats = (
+        PopularCategory.objects
+        .filter(is_active=True)
+        .select_related('category__main_category')
+        .order_by('position', '-created_at')[:18]
+    )
 
     product_ids = [pp.product_id for pp in populars]
     variants = (Product_Variant.objects
@@ -89,16 +98,22 @@ def home(request):
 
     if request.user.is_authenticated:
         fav_variant_ids = set(
-            Favourite.objects
-            .filter(user=request.user, variant__isnull=False)
+            Favourite.objects.filter(user=request.user, variant__isnull=False)
             .values_list('variant_id', flat=True)
+        )
+        fav_product_ids = set(
+            Favourite.objects.filter(user=request.user, variant__isnull=True)
+            .values_list('product_id', flat=True)
         )
     else:
         fav_variant_ids = set(map(int, request.session.get('fav_variant_ids', [])))
+        fav_product_ids = set(map(int, request.session.get('fav_product_ids', [])))
 
     return render(request, 'zoosvit/core/home.html', {
         'populars': populars,
         'fav_variant_ids': list(fav_variant_ids),
+        'fav_product_ids': list(fav_product_ids),
+        'popular_cats': popular_cats,
     })
 
 

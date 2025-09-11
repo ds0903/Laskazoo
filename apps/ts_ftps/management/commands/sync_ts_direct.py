@@ -107,21 +107,67 @@ class Command(BaseCommand):
                 return
 
             changes = []
+            need_slug = False
+
+            old_slug = getattr(obj, 'slug', None)
+
+            def set_if_has_track(field, value):
+                nonlocal need_slug
+                if not hasattr(obj, field):
+                    return
+                old = getattr(obj, field)
+                if old != value:
+                    setattr(obj, field, value)
+                    changes.append((field, old, value))
+                    # якщо чіпали будь-що з цих полів — перебудувати slug:
+                    if field in ('name', 'sku', 'barcode'):
+                        need_slug = True
 
             # 1) identifiers: оновлюємо ТІЛЬКИ непорожні значення з TS
             ts_barcode = (ts.get('barcode') or '').strip()
             ts_sku     = (ts.get('articul') or '').strip()
+            ts_name = (ts.get('description') or '').strip()
+
+
             if ts_barcode:
-                set_if_has(obj, 'barcode', ts_barcode, changes)
+                set_if_has_track('barcode', ts_barcode)  # <-- важливо
+
             if ts_sku:
-                set_if_has(obj, 'sku', ts_sku, changes)
+                set_if_has_track('sku', ts_sku)  # <-- важливо
+
+            if ts_name:
+                set_if_has_track('name', ts_name)  # <-- важливо
+            #
+            # if ts_barcode:
+            #     set_if_has(obj, 'barcode', ts_barcode, changes)
+            # if ts_sku:
+            #     set_if_has(obj, 'sku', ts_sku, changes)
+            # if ts_name:
+            #     set_if_has(obj, 'name', ts_name, changes)
 
             # 2) money поля (Decimal, 2 знаки) + кількість
-            set_if_has(obj, 'prime_cost',                 money(ts.get('prime_cost')), changes)
-            set_if_has(obj, 'retail_price',               money(ts.get('retail_price')), changes)
-            set_if_has(obj, 'wholesale_price',            money(ts.get('wholesale_price')), changes)
-            set_if_has(obj, 'retail_price_with_discount', money(ts.get('retail_price_with_discount')), changes)
+            # set_if_has(obj, 'prime_cost',                 money(ts.get('prime_cost')), changes)
+            set_if_has(obj, 'retail_price',               money(ts.get('wholesale_price')), changes)
+            # set_if_has(obj, 'wholesale_price',            money(ts.get('wholesale_price')), changes)
+            # set_if_has(obj, 'retail_price_with_discount', money(ts.get('retail_price_with_discount')), changes)
             set_if_has(obj, 'warehouse_quantity',         as_int(ts.get('warehouse_quantity')), changes)
+
+            # 2.x) визначаємо "На вагу" по producer_collection_full
+            ts_prod_coll = (ts.get('good_type_full') or '').strip()
+            tokens = [t.strip().lower() for t in ts_prod_coll.split(',') if t.strip()]
+            is_weighted = any(t == 'на вагу' for t in tokens) or ('на вагу' in ts_prod_coll.lower())
+            self.stdout.write(f"good_type_full={ts_prod_coll} → tokens={tokens} → is_weighted={is_weighted}")
+
+            # якщо вагова -> 0, якщо ні -> None (порожньо)
+            target_bag = Decimal('0') if is_weighted else None
+
+            # встановлюємо для Product і для Variant (поле є в обох)
+            set_if_has(obj, 'original_bag_weight_kg', target_bag, changes)
+
+            # 3) Примусова перебудова slug, якщо потрібно
+            if need_slug and hasattr(obj, 'rebuild_slug'):
+                obj.rebuild_slug()
+                changes.append(('slug', old_slug, getattr(obj, 'slug', None)))
 
             if changes:
                 ident = getattr(obj, 'torgsoft_id', None) or getattr(obj, 'id', None)

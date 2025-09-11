@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/filters.js' %}"></script>
 
   <style>
     /* ── горизонтальна стрічка кнопок категорій під шапкою ───────────── */
@@ -52,12 +54,6 @@
     }
     .catalog .prod-card .card-front,
     .catalog .prod-card .card-back{ position:absolute; inset:0; z-index:1; }
-
-    .catalog .prod-card:hover::before{
-  height: clamp(var(--prod-min-height),
-                var(--hover-height, var(--prod-min-height)),
-                var(--prod-max-height));
-}
 
   </style>
 {% endblock %}
@@ -141,8 +137,8 @@
             <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
           {% endif %}
         </a>
-
-        <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
+        <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
+<!--        <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>-->
 
         <h3 class="card-title" data-base-title="{{ product.name }}">
       {{ product.name }}
@@ -173,7 +169,8 @@
           {% else %}
             <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
           {% endif %}
-          <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
+          <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
+<!--          <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>-->
           <h3 class="card-title" data-base-title="{{ product.name }}">
       {{ product.name }}
       {% if v0 %}
@@ -245,12 +242,12 @@
             <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
           {% else %} — {% endif %}
         </div>
-        <div class="card-info">
-          Країна:
-          {% if product.brand and product.brand.country_slug %}
-            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>
-          {% else %} — {% endif %}
-        </div>
+<!--        <div class="card-info">-->
+<!--          Країна:-->
+<!--          {% if product.brand and product.brand.country_slug %}-->
+<!--            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>-->
+<!--          {% else %} — {% endif %}-->
+<!--        </div>-->
       {% endwith %}
     </div>
   </div>
@@ -265,208 +262,4 @@
     </main>
   </div>
 </section>
-
-{# ── JSON зі списком улюблених варіантів ── #}
-{{ fav_variant_ids|json_script:"fav-variant-ids" }}
-
-<script>
-/* ====================== КАТАЛОГ: УТИЛІТИ + ФІЛЬТРИ ====================== */
-(function () {
-  'use strict';
-
-  /* ------- fav set із шаблону (безпечна ініціалізація) ------- */
-  (function initFavSet(){
-    try {
-      const el = document.getElementById('fav-variant-ids');
-      const data = el ? JSON.parse(el.textContent || '[]') : [];
-      window.__favVarSet = new Set((data || []).map(Number));
-    } catch (e) {
-      window.__favVarSet = new Set();
-    }
-  })();
-
-  /* ------- застосувати фільтри ------- */
-  window.applyFilters = function applyFilters() {
-    const url = new URL(window.location.href);
-
-    // бренди (multi)
-    url.searchParams.delete('brand');
-    document.querySelectorAll('input[name="brand"]:checked').forEach(cb => {
-      url.searchParams.append('brand', cb.value);
-    });
-
-    // ціна
-    const min = document.querySelector('input[name="price_min"]')?.value || '';
-    const max = document.querySelector('input[name="price_max"]')?.value || '';
-    const warehouse_quantity = document.querySelector('input[name="in_stock"]')?.checked || false;
-
-    if (min) url.searchParams.set('price_min', min); else url.searchParams.delete('price_min');
-    if (max) url.searchParams.set('price_max', max); else url.searchParams.delete('price_max');
-    if (warehouse_quantity) url.searchParams.set('in_stock', '1'); else url.searchParams.delete('in_stock');
-
-    window.location = url.toString();
-  };
-
-  /* ====================== АВТО-ВИСОТА КАРТОК ====================== */
-  const $all = (s, r=document) => Array.from(r.querySelectorAll(s));
-  const debounce = (fn, ms=120)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
-  const rerun = debounce(()=>requestAnimationFrame(recomputeCardHeights), 60);
-
-  function measureBack(back){
-    // тимчасово зробити видимим для коректного виміру
-    const keep = {
-      display: back.style.display, position: back.style.position, opacity: back.style.opacity,
-      pointerEvents: back.style.pointerEvents, visibility: back.style.visibility,
-      height: back.style.height, maxHeight: back.style.maxHeight
-    };
-    back.style.display='block'; back.style.position='static'; back.style.opacity='0';
-    back.style.pointerEvents='none'; back.style.visibility='hidden';
-    back.style.height='auto'; back.style.maxHeight='none';
-    const h = Math.ceil(back.scrollHeight);
-    Object.assign(back.style, keep);
-    return h;
-  }
-
-  function recomputeCardHeights(){
-    const cs = getComputedStyle(document.documentElement);
-    const MIN = parseInt(cs.getPropertyValue('--prod-min-height')) || 320;
-    const MAX = parseInt(cs.getPropertyValue('--prod-max-height')) || 520;
-
-    document.querySelectorAll('.prod-card').forEach(card=>{
-      const back = card.querySelector('.card-back'); if(!back) return;
-      const desired  = measureBack(back);
-      const adjusted = Math.max(0, desired - 10);
-      const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
-      card.style.setProperty('--hover-height', clamped + 'px');
-    });
-  }
-  // зробимо доступним глобально (використовується в apply())
-  window.recomputeCardHeights = recomputeCardHeights;
-
-  function initAutoFit(){
-    if (document.readyState === 'complete') rerun();
-    else window.addEventListener('load', rerun, {once:true});
-
-    if (document.fonts?.ready) document.fonts.ready.then(rerun);
-
-    $all('.prod-card img').forEach(img=>{
-      if(!img.complete){
-        img.addEventListener('load',  rerun, {once:true});
-        img.addEventListener('error', rerun, {once:true});
-      }
-    });
-
-    window.addEventListener('resize', rerun);
-    window.addEventListener('orientationchange', rerun);
-
-    if('ResizeObserver' in window){
-      const ro = new ResizeObserver(rerun);
-      $all('.prod-card .card-back').forEach(el=>ro.observe(el));
-    }
-
-    rerun(); setTimeout(rerun, 800);
-  }
-
-  /* ====================== ПІГУЛКИ ВАРІАНТІВ ====================== */
-  function initVariantPills(ctx = document){
-    ctx.querySelectorAll('.prod-card').forEach(card=>{
-      const pills = card.querySelectorAll('.variant-pill');
-      if (!pills.length) return;
-
-      // FRONT
-      const imgF   = card.querySelector('.card-front img');
-      const priceF = card.querySelector('.card-front .card-price');
-      const skuF   = card.querySelector('.card-front .card-article');
-      const titleF = card.querySelector('.card-front .card-title');
-
-      // BACK
-      const imgB   = card.querySelector('.card-back img');
-      const priceB = card.querySelector('.card-back .card-price');
-      const skuB   = card.querySelector('.card-back .card-article');
-      const titleB = card.querySelector('.card-back .card-title');
-
-      // Кнопки «в кошик» та «в обране»
-      const addBtn  = card.querySelector('.card-actions .add-to-cart');
-      const favBtn  = card.querySelector('.card-actions .js-fav');
-      const addBase = addBtn ? (addBtn.dataset.addBase || addBtn.href.split('?')[0]) : '';
-
-      const baseTitle = (titleF?.dataset.baseTitle || titleF?.textContent || '').trim();
-
-      function suffix(p){
-        const w = p.dataset.weight; const s = p.dataset.size;
-        if (w && !isNaN(Number(w))) return ` — ${Number(w)} кг`;
-        if (s) return ` — ${s}`;
-        return '';
-      }
-      function setText(el, text){ if (el) el.textContent = text; }
-
-      function apply(pill){
-        // активний стан на пігулках
-        pills.forEach(b=>b.classList.remove('active'));
-        pill.classList.add('active');
-
-        const img   = pill.dataset.image;
-        const sku   = pill.dataset.sku || '—';
-        const price = pill.dataset.price;
-        const vid   = pill.dataset.vid;
-
-        // зображення (з cache-busting)
-        if (img) {
-          const bust = `${img}${img.includes('?') ? '&' : '?'}v=${vid}`;
-          if (imgF) { imgF.removeAttribute('srcset'); imgF.src = bust; }
-          if (imgB) { imgB.removeAttribute('srcset'); imgB.src = bust; }
-        }
-
-        // SKU + ціна
-        setText(skuF, `Артикул: ${sku}`);
-        setText(skuB, `Артикул: ${sku}`);
-        if (price){
-          setText(priceF, `₴ ${price}`);
-          setText(priceB, `₴ ${price}`);
-        }
-
-        // заголовок
-        if (titleF) titleF.textContent = baseTitle + suffix(pill);
-        if (titleB) titleB.textContent = baseTitle + suffix(pill);
-
-        // лінк «В кошик»
-        if (addBtn && addBase) addBtn.href = `${addBase}?variant=${vid}`;
-
-        // ❤️ оновити data-variant і підсвітку
-        if (favBtn) {
-          favBtn.dataset.variant = vid;
-          const isOn = !!(window.__favVarSet && window.__favVarSet.has(Number(vid)));
-          favBtn.classList.toggle('is-on', isOn);
-          favBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
-        }
-
-        // підправити висоту
-        if (typeof requestAnimationFrame === 'function' && typeof window.recomputeCardHeights === 'function'){
-          requestAnimationFrame(window.recomputeCardHeights);
-        }
-      }
-
-      // кліки по пігулках
-      pills.forEach(p=>p.addEventListener('click', e=>{
-        e.preventDefault(); e.stopPropagation();
-        apply(p);
-      }));
-
-      // первинний стан
-      apply(pills[0]);
-    });
-  }
-
-  /* ====================== ВХІДНА ТОЧКА ====================== */
-  document.addEventListener('DOMContentLoaded', function(){
-    initAutoFit();
-    initVariantPills();
-  });
-
-})();
-</script>
-
-
-
-
 {% endblock %}

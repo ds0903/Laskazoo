@@ -1,10 +1,18 @@
-from .models import Favourite
+# zoosvit/context_processors.py
+from apps.favourites.models import Favourite
 
-def fav_counter(request):
-    try:
-        if request.user.is_authenticated:
-            return {'fav_count': Favourite.objects.filter(user=request.user).count()}
-        ids = request.session.get('fav_ids', [])
-        return {'fav_count': len(ids)}
-    except Exception:
-        return {'fav_count': 0}
+def fav_count(request):
+    # 1) пробуємо взяти з сесії (без БД)
+    s_count = request.session.get('fav_count', None)
+    if s_count is not None:
+        return {'fav_count': s_count}
+
+    # 2) fallback (один раз) → покласти в сесію
+    if request.user.is_authenticated:
+        c = Favourite.objects.filter(user=request.user).count()
+    else:
+        c = len(request.session.get('fav_variant_ids', [])) + \
+            len(request.session.get('fav_product_ids', []))
+
+    request.session['fav_count'] = c
+    return {'fav_count': c}

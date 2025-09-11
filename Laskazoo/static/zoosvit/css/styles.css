@@ -4,19 +4,19 @@
   --topbar-color:   #095e56;
   --topbar-font:    0.75rem; /* 14px */
   --divider:         #e0e0e0;
-  --cat-card-width:   147px;  /* ширина однієї карточки */
+  --cat-card-width:   150px;  /* ширина однієї карточки */
   --cat-card-height:  150px;
   --cat-gap:          10px;   /* відступ між карточками */
   --cat-per-page:     9;
   --cat-scroll:      3;
   /* …інші ваші змінні… */
   /* ширина однієї product-картки */
-  --prod-card-width: 200px;
+  --prod-card-width: 235px;
   --prod-card-height: 300px;
   /* відстань між картками */
   --prod-gap: 10px;
   /* скільки карток поміщається у viewport */
-  --prod-per-page: 6;
+  --prod-per-page: 5;
   /* скільки карток рухається за клік */
   --prod-scroll: 3;
 
@@ -142,14 +142,31 @@ html {
 }
 
 /* базові слайди */
-.carousel-slide {
-  position: absolute; top:0; left:0;
-  width:100%; height:100%;
+/* Контейнер героя */
+.hero-carousel{
+  position: relative;
+  max-width: 1100px;
+  width: 100%;
+  height: 460px;           /* або потрібна висота */
+  margin: 0 auto;          /* центр секції на сторінці */
+  overflow: hidden;
+}
+
+/* Слайди: горизонтальне центрування всередині hero-carousel */
+.hero-carousel > .carousel-slide{
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);  /* ← центр */
+  width: 100%;                   /* зроби 60–90% як треба */
+  height: 100%;
   background-size: cover;
   background-position: center;
   opacity: 0;
-  transition: opacity 1s ease;
+  transition: opacity .8s ease;
 }
+.hero-carousel > .carousel-slide.active{ opacity: 1; }
+
 .carousel-slide.active {
   opacity: 1;
 }
@@ -667,7 +684,7 @@ footer { background:#fff; padding:16px 0; text-align:center; color:#777; font-si
 }
 
 .phone-dropdown .dropdown-contact img {
-  width: 16px;
+  width: 20px;
   margin-right: 6px;
 }
 
@@ -1094,6 +1111,7 @@ background-color: #1c7f73;
 .card-front img {
   width: 100%;
   height: 150px;        /* фіксована висота під вихідний стан */
+  max-height: 200px;
   object-fit: cover;
   display: block;
   margin: 0 auto 12px;
@@ -1103,7 +1121,7 @@ background-color: #1c7f73;
 .card-back img {
   width: 100%;
   height: auto;         /* нехай обчислюється за пропорцією */
-  max-height: 150px;    /* обмежуємо, щоб не виростав вище за front */
+  max-height: 250px;    /* обмежуємо, щоб не виростав вище за front */
   object-fit: cover;
   display: block;
   margin: 0 auto 12px;
@@ -1780,8 +1798,8 @@ a {
   text-decoration: none;
 }
 :root{
-  --prod-min-height: 320px;
-  --prod-max-height: 520px;
+  --prod-min-height: 430px;
+  --prod-max-height: 600px;
 }
 
 /* базовий стан */
@@ -2051,4 +2069,899 @@ a.logo {
   color: #fff;     /* приклад: бірюзовий при наведенні */
   text-decoration: none; /* теж без підкреслення */
 }
+
+/* режим центрування, коли слайдер не потрібен */
+.category-slider.centered .slider-window{
+  width: 100% !important;
+  overflow: hidden;
+}
+.category-slider.centered .grid-slider{
+  width: max-content;
+  margin: 0 auto;            /* <-- центр */
+  transform: none !important;
+}
+.category-slider.centered .slide-btn{
+  display: none !important;  /* стрілки не потрібні */
+}
+
+/* ---- ФІКС МЕГА-КАТЕГОРІЙ ---- */
+
+/* прибиваємо контейнер секції до нормальної ширини (перекриває width:100vw) */
+section#mega-categories.container{
+  max-width: 1200px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 16px !important;
+}
+
+/* 4 колонки + центрування в клітинці */
+.mega-categories{
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
+  column-gap: 56px;
+  row-gap: 28px;
+  align-items: start;
+  justify-items: center;        /* ← центрує вміст кожної колонки */
+}
+
+/* кожна колонка – вертикальний стек */
+#mega-categories .category-col{
+  /* скидаємо старі flex-властивості, якщо були */
+  flex: initial !important;
+
+  width: 100%;
+  max-width: 300px;
+  display: grid;
+  grid-auto-rows: min-content;
+  justify-items: center;        /* і заголовок, і список, і кнопка по центру */
+}
+
+/* список підкатегорій – ширина по контенту, але текст всередині ліворуч */
+#mega-categories .category-col ul{
+  display: inline-block;        /* ← ключ: блочок по контенту */
+  width: auto;
+  margin: 8px 0 12px;
+  padding: 0;
+  text-align: left;             /* читабельний список */
+}
+
+/* чистимо маркери/відступи на всяк випадок */
+#mega-categories .category-col ul li{ list-style: none; margin: 4px 0; }
+
+/* кнопка рівно під списком */
+#mega-categories .category-col .btn-secondary{ margin-top: 4px; }
+
+/* адаптив */
+@media (max-width: 992px){
+  .mega-categories{ grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+}
+@media (max-width: 560px){
+  .mega-categories{ grid-template-columns: 1fr; }
+}
+
+
+/* 7 колонок, рівне вирівнювання */
+.brands-grid.core{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, max-content));
+  justify-content: center;   /* ← центрує всю сітку, якщо вона вужча за контейнер */
+  gap: 100px;
+  align-items: center;
+}
+
+/* Однакова “клітинка” під логотип */
+.brands-grid.core .brand-item{
+  height: 100px;                        /* фіксуємо висоту рядка */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 60px;
+  padding-bottom: 120px;
+                      /* невеликий внутр. відступ */
+}
+
+/* Нормалізуємо розмір логотипів */
+.brands-grid.core .brand-item img{
+  max-height: 100px;                    /* ОДНАКОВА висота логотипів */
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;                 /* вписати без обрізки */
+  display: block;
+}
+
+/* ====================== MOBILE ONLY ====================== */
+@media (max-width: 768px){
+@media (max-width: 768px) {
+
+
+  /* topbar ховаємо на мобілці */
+  .site-topbar { display: none !important; }
+
+  /* основний хедер → компактна сітка */
+  .site-mainheader .header-inner{
+    display: grid !important;
+    grid-template-columns: auto 1fr auto;   /* logo | search | actions */
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "logo actions actions"
+      "search search search";
+    gap: 10px 12px;
+    padding: 8px 12px !important;
+  }
+  .site-mainheader .logo{ grid-area: logo; }
+  .site-mainheader .header-actions{ grid-area: actions; justify-self: end; }
+  .site-mainheader .search-form{
+    grid-area: search;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 36px;
+  }
+  .search-form input{ width: 100% !important; padding: 0 10px; font-size: 14px; }
+  .search-form button{ padding: 0 10px; font-size: 16px; }
+
+  /* іконки менші, щоб усе влізло */
+  .icon-btn, .btn-cart{
+    width: 38px; height: 38px; border-width: 2px;
+  }
+  .icon-btn img, .btn-cart img{ width: 20px; }
+  .header-actions{ gap: 8px !important; }
+
+  /* кошик — без текстів/тотала на мобілці */
+  .btn-cart .cart-text,
+  .cart-total{ display: none !important; }
+  .btn-cart .cart-count{ top: -6px; right: -6px; min-width: 16px; height: 16px; font-size: 10px; }
+
+  /* дропдауни (телефон/логін) позиціонуємо по центру і звужуємо */
+  .phone-btn .phone-dropdown,
+  .login-btn .login-dropdown{
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: min(92vw, 260px) !important;
+  }
+
+  /* нижня навігація — горизонтальний скрол */
+  .site-bottombar .topbar-inner{
+    max-width: 100% !important;
+    padding: 6px 8px !important;
+  }
+  .site-bottombar .topbar-nav{
+    display: flex; gap: 12px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .site-bottombar .topbar-nav::-webkit-scrollbar{ display: none; }
+  .site-bottombar .topbar-nav a{
+    white-space: nowrap;
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+
+  /* герої, каруселі — трішки нижче по висоті */
+  .hero-carousel{ height: 42vh; min-height: 240px; }
+
+  /* бренди — рівна сітка 2–3 в ряд */
+  .brands-grid.core{
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 480px){
+    .brands-grid.core{ grid-template-columns: repeat(2, 1fr); }
+  }
+  .brands-grid.core .brand-item{
+    height: 72px; padding: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brands-grid.core .brand-item img{
+    max-height: 56px; max-width: 100%; object-fit: contain;
+  }
+
+  /* футер: колонки в стовпчик, збільшити відступи */
+  .site-footer{ padding-top: 24px; }
+  .footer-top{
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .footer-col{ min-width: 0; }
+  .footer-col h4{ font-size: 1rem; margin-bottom: 10px; }
+  .footer-links a, .footer-contacts a{ font-size: 0.95rem; }
+  .payment-icons img{ height: 22px; }
+
+  /* чому ми — ущільнюємо */
+  .why-us-bar{ padding: 20px 0; margin: 22px 0; }
+  .why-us-inner{ gap: 16px; }
+  .why-us-item img{ width: 34px; }
+  .why-us-item p{ font-size: .95rem; }
+}
+
+/* ====== HEADER: менший логотип на мобілці ====== */
+.site-mainheader .logo img {
+  height: 48px; width: auto; object-fit: contain;
+}
+@media (max-width: 768px){
+  .site-mainheader .logo img {
+    height: 28px; width: auto; /* влазять 4 іконки праворуч */
+  }
+}
+
+/* ====== ПОПУЛЯРНІ КАТЕГОРІЇ: моб. горизонтальний скрол ====== */
+@media (max-width: 768px){
+  .category-slider .slider-window{
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .category-slider .slider-window::-webkit-scrollbar{ display:none; }
+
+  .category-slider .grid-slider{
+    width: max-content;
+    gap: 12px;
+    transform: none !important; /* відмикаємо translate */
+  }
+  .category-slider .cat-card{
+    scroll-snap-align: start;
+    min-width: 132px;  /* компактніші карточки категорій */
+    padding: 10px;
+  }
+  .category-slider .cat-card img{ width: 80px; height: 80px; }
+  .category-slider .slide-btn{ display: none !important; } /* ховаємо стрілки */
+}
+
+/* ====== ПРОДУКТИ: 2 картки в ряд на мобілці ====== */
+@media (max-width: 768px){
+  :root{
+    --prod-gap: 12px;
+    /* ширина картки так, щоб влізло 2 у viewport (з урахуванням паддингів контейнера) */
+    --prod-card-width: calc((100vw - 2*16px - var(--prod-gap)) / 2);
+    --prod-min-height: 280px;
+    --prod-max-height: 460px;
+  }
+  .card-front img{ height: 120px; }
+  .product-slider .slider-window{
+    width: 100% !important;
+  }
+}
+
+/* ====== МЕГА-КАТЕГОРІЇ: мобільний ряд, лише іконка + назва ====== */
+@media (max-width: 768px){
+  #mega-categories.container{
+    padding: 0 0 10px 0;
+  }
+  .mega-categories{
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0 12px;
+  }
+  .mega-categories::-webkit-scrollbar{ display:none; }
+
+  .mega-categories .category-col{
+    flex: 0 0 auto;
+    min-width: 110px;
+    text-align: center;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.06);
+  }
+  .mega-categories .category-col img{ width: 40px; }
+  .mega-categories .category-col ul,
+  .mega-categories .category-col .btn-secondary{
+    display: none !important; /* підкатегорії і кнопки — лише на ПК */
+  }
+  .category-title{ margin: 6px 0 0; font-size: .95rem; }
+}
+
+/* дрібний фікс: не масштабувати товар на hover на телефонах */
+@media (hover: none){
+  .prod-card:hover{ transform: none; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+}
+
+/* ===== HEADER mobile: 1 рядок з 4-ма колонками ===== */
+@media (max-width: 768px){
+  .site-mainheader .header-inner{
+    display: grid !important;
+    grid-template-columns: auto 1fr auto auto;   /* logo | search | phone | actions */
+    grid-template-areas: "logo search phone actions";
+    align-items: center;
+    gap: 8px 10px;
+    padding: 8px 10px !important;
+  }
+
+  .site-mainheader .logo{ grid-area: logo; }
+  .site-mainheader .search-form{
+    grid-area: search; margin: 0 !important; width: 100% !important; height: 34px;
+  }
+  .phone-btn{ grid-area: phone; justify-self: end; }
+  .header-actions{ grid-area: actions; justify-self: end; gap: 8px !important; }
+
+  /* трішки компактніші кнопки */
+  .icon-btn, .btn-cart{ width: 34px; height: 34px; border-width: 2px; }
+  .icon-btn img, .btn-cart img{ width: 18px; }
+  .btn-cart .cart-count{ min-width: 16px; height: 16px; font-size: 10px; top:-6px; right:-6px; }
+
+  /* логотип ще трохи менший, щоб усе точно влізло */
+  .site-mainheader .logo img{ height: 26px; width: auto; }
+}
+
+/* ===== WHY-US mobile: компактні підписи ===== */
+@media (max-width: 768px){
+  .why-us-inner{ gap: 14px; }
+  .why-us-item img{ width: 30px; }
+  .why-us-item p{
+    font-size: .9rem;      /* було завелике */
+    line-height: 1.15;
+    word-break: break-word; /* щоб не з’їжджало */
+    text-align: center;
+  }
+}
+
+/* ====== HEADER (mobile) ====== */
+@media (max-width: 768px){
+  .site-mainheader .header-inner{
+    display: grid !important;
+    grid-template-columns: auto 1fr auto;      /* logo | (порожньо) | actions */
+    grid-template-rows: auto auto;             /* 1-й ряд: лого+кнопки, 2-й ряд: пошук */
+    grid-template-areas:
+      "logo phone actions"
+      "search search search";
+    align-items: center;
+    gap: 8px 10px;
+    padding: 8px 10px !important;
+  }
+
+  .site-mainheader .logo{ grid-area: logo; }
+  .phone-btn{ grid-area: phone; justify-self: center; }
+  .header-actions{ grid-area: actions; justify-self: end; gap: 8px !important; }
+
+  .site-mainheader .search-form{
+    grid-area: search;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 36px;
+  }
+
+  /* компактніше, щоб все точно влазило */
+  .site-mainheader .logo img{ height: 26px; width: auto; }
+  .icon-btn,.btn-cart{ width: 34px; height: 34px; border-width: 2px; }
+  .icon-btn img,.btn-cart img{ width: 18px; }
+  .btn-cart .cart-count{ min-width:16px; height:16px; font-size:10px; top:-6px; right:-6px; }
+}
+
+/* прибрати горизонтальний скрол */
+html, body{ overflow-x: hidden; }
+
+/* не роздуваємо каруселі на мобілці */
+@media (max-width: 768px){
+  /* Категорії — тільки свайп, без стрілок, без ширини 107% */
+  .category-slider .slider-window{
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+  }
+  .category-slider .grid-slider{ width: max-content; }
+  .category-slider .cat-card{ scroll-snap-align: start; }
+  .category-slider .slide-btn{ display:none !important; }
+
+  /* Товари — так само свайп (і без стрілок) */
+  .product-slider .slider-window{
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .product-slider .grid-slider{ width: max-content; }
+  .product-slider .slide-btn{ display:none !important; }
+}
+
+/* якщо десь лишився “розширювач” */
+.category-slider .slider-window{ width:auto; max-width:100%; }
+
+
+  :root{
+    /* категорії */
+    --cat-card-width: 136px;
+    --cat-card-height: 136px;
+    --cat-gap: 12px;
+
+    /* товари — 2 шт на екрані */
+    --prod-card-width: 168px;
+    --prod-card-height: 280px;
+    --prod-gap: 12px;
+    --prod-per-page: 2;
+  }
+
+  /* трохи менші картинки/шрифти в категоріях */
+  .category-slider .cat-card img{ width:72px; height:72px; }
+  .category-slider .cat-card .cat-title{ font-size:.95rem; }
+
+
+    :root{ --page-pad:16px; }           /* твій бічний відступ сторінки */
+
+    .container{ padding: 0 var(--page-pad); }
+
+    /* секція з категоріями — слайдер на всю ширину екрана */
+    #categories.container{ padding:0; }
+
+    .category-slider .slider-window{
+      width: 100vw;                                  /* розтягуємо до країв */
+      margin-left: calc(50% - 50vw);                 /* виводимо з контейнера */
+      padding-inline: var(--page-pad);               /* повертаємо бокові поля */
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+    }
+
+    /* сам трек — гнучкий та без зайвих ширин */
+    .category-slider .grid-slider{
+      width: max-content;
+      display: flex;
+      gap: var(--cat-gap);
+    }
+
+    /* кожна картка прилипає на початок екрана */
+    .category-slider .cat-card{ scroll-snap-align: start; }
+
+    /* додатковий «спейсер» справа = падінгу сторінки — щоб не було порожнього
+       простору після останньої картки і вона зупинялась рівно біля краю */
+    .category-slider .grid-slider::after{
+      content:"";
+      flex: 0 0 var(--page-pad);
+    }
+
+    /* те саме для слайдера товарів */
+    .product-slider .slider-window{
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      padding-inline: var(--page-pad);
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+    }
+    .product-slider .grid-slider{
+      width: max-content;
+      display: flex;
+      gap: var(--prod-gap);
+    }
+    .product-slider .prod-card{ scroll-snap-align: start; }
+    .product-slider .grid-slider::after{ content:""; flex:0 0 var(--page-pad); }
+
+    /* стрілки приховані на мобілці – тільки свайп */
+    @media (max-width:768px){
+      .category-slider .slide-btn,
+      .product-slider  .slide-btn{ display:none !important; }
+    }
+
+    /* на всяк випадок: прибираємо горизонтальні «хвости» */
+    html,body{ overflow-x:hidden; }
+
+
+/* --- “Чому саме ми”: по центру по вертикалі і компактно --- */
+  .why-us-bar{
+    padding: 18px 0;          /* менше повітря зверху/знизу */
+    margin: 18px 0;           /* не прилипає до сусідів */
+  }
+  .why-us-inner{
+    min-height: 110px;        /* щоб блок мав висоту і контент центрувався */
+    display: grid;
+    grid-auto-flow: column;
+    justify-content: center;
+    align-items: center;      /* центр по вертикалі */
+    gap: 18px;
+  }
+  .why-us-item img{ width: 30px; }
+  .why-us-item p{ font-size: .95rem; line-height: 1.2; }
+
+/* більше місця для розкриття картки на мобілці */
+@media (max-width: 768px){
+  :root{
+    --prod-min-height: 280px;   /* базова */
+    --prod-max-height: 460px;   /* ← дозволяємо рости нижче */
+  }
+
+  /* контейнер не обрізає та дає запас знизу */
+
+  .product-slider .slider-window{ height: auto; padding-bottom: 90px; }
+
+  /* збільшуємо технічний відступ під сіткою товарів */
+  section.catalog .product-grid::after{
+    height: calc(var(--prod-max-height, 600px) - 100px);
+  }
+}
+/* ===== MOBILE fine-tune ===== */
+@media (max-width: 768px){
+
+  /* "В кошик" — трохи менший шрифт і без переносу */
+  .add-to-cart{
+    font-size: .92rem;     /* ↓ було завелике */
+    padding: 8px 8px;     /* трохи вужча */
+    white-space: nowrap;   /* не переносити текст */
+    line-height: 1.1;
+    min-width: auto;       /* дозволяємо підтиснутись */
+  }
+
+  /* Кнопка "В обране" (сердечко) — компактніша */
+  .btn-fav{
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;    /* пропорційно іконці */
+  }
+}
+/* === MOBILE FIX: слайдер "Хіти продаж" не обрізається === */
+@media (max-width: 768px){
+
+  /* секція з товарами вище за сусідів і з запасом знизу */
+  #products{ position: relative; z-index: 10; }
+  .product-slider{
+    position: relative;
+    z-index: 20;
+    overflow: visible !important;
+    padding-bottom: 12px;
+  }
+
+  /* viewport: на всю ширину екрана, свайп, без фіксованої висоти */
+  .product-slider .slider-window{
+    width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important;
+    padding-inline: var(--page-pad,16px) !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    height: auto !important;         /* прибрати 475px */
+  }
+
+  /* трек і картки */
+  .product-slider .grid-slider{
+    width: max-content !important;
+    gap: var(--prod-gap,12px) !important;
+    transform: none !important;
+    position: relative; z-index: 21;
+  }
+  .product-slider .prod-card{
+    scroll-snap-align: start;
+  }
+
+  /* стрілки не потрібні на мобілці */
+  .product-slider .slide-btn{ display: none !important; }
+
+
+
+  /* наступний блок нижче за товарами */
+  .why-us-bar{ position: relative; z-index: 1; }
+}
+@media (max-width: 768px){
+  .product-slider .grid-slider{
+    transform: none !important;   /* прибираємо зсув */
+    margin-left: 0 !important;    /* обнуляємо якщо був */
+  }
+  .product-slider .slider-window{
+    margin-left: 0 !important;    /* щоб не тягнув вправо */
+  }
+}
+
+.prod-card img { display:block; }
+
+
+.prod-card img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;        /* під свої зображення; 1/1 якщо квадратні */
+  object-fit: contain;
+  background: #f8f8f8;        /* легкий плейсхолдер */
+}
+
+/* ЄДИНЕ джерело правди для висоти картки */
+:root{
+  --prod-min-height: 430px;
+  /* збільши MAX, бо довгі назви легко перевищують 600px */
+  --prod-max-height: 720px;  /* було 600 — цього часто не вистачає */
+}
+
+/* базовий стан */
+.prod-card{
+  height: var(--prod-min-height);
+  overflow: hidden;
+  transition: height .25s ease, box-shadow .25s ease;
+}
+
+/* ріст картки ТІЛЬКИ по висоті */
+.prod-card:hover{
+  height: clamp(var(--prod-min-height),
+                var(--hover-height, var(--prod-min-height)),
+                var(--prod-max-height));
+}
+
+/* !!! повністю прибити масштабування */
+.prod-card:hover{
+  transform: none !important;
+}
+
+/* якщо десь лишилися старі правила масштабу — нейтралізуємо */
+.prod-card { transform: none !important; }
+
+/* базова висота */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+/* робимо сторінку flex-контейнером */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* контент займає всю доступну висоту */
+.site-content {
+  flex: 1 0 auto;
+}
+
+/* футер прилипає до дна */
+.site-footer,
+.site-subfooter {
+  flex-shrink: 0;
+}
+
+/* ===== 1) Сторінка завжди = висота вікна (grid layout) ===== */
+html, body { height: 100%; margin: 0; }
+
+body{
+  min-height: 100dvh;                 /* стабільна висота на мобілках */
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;  /* header | content | footer | subfooter */
+}
+
+/* те, що між header і футерами, має тягнутись і скролитись */
+.site-content,
+.site-main { min-height: 0; }
+
+/* ===== 2) ГАРАНТОВАНО прибиваємо все fixed у футерів ===== */
+.site-footer,
+.site-subfooter{
+  position: static !important;
+  inset: auto !important;
+  width: 100%;
+  /* якщо раптом були transform/z-index — обнуляємо */
+  transform: none !important;
+  z-index: auto !important;
+}
+
+/* ===== 3) Якщо раніше вмикав «пейнтер»/бекграунд низу — вимкни на малих ===== */
+@media (max-height: 720px){
+  body::after{ display: none !important; }
+}
+
+/* ===== 4) Робимо футер компактнішим на малих екранах ===== */
+@media (max-width: 768px), (max-height: 720px){
+  .site-footer { padding-top: 20px; }
+  .footer-top  { gap: 16px; }
+  .footer-col  { min-width: 0; }
+}
+
+/* На всякий: не обрізати сторінку по висоті */
+html, body { overflow-y: auto; }
+/* пошук */
+/* десктоп: пошук має фіксовану ширину, не росте */
+.site-mainheader .header-inner{
+  display:flex; align-items:center; gap:24px;
+}
+.site-mainheader .header-inner > .logo{ flex:0 0 auto; }
+.site-mainheader .header-inner > form.search-form{
+  flex: 0 0 560px !important;   /* фікс 560px */
+  max-width: 560px !important;
+  width: 100%;
+  min-width: 280px;
+}
+.site-mainheader .header-inner > .header-actions{ margin-left:auto; }
+
+/* мобілка: тягнеться на всю ширину другого рядка */
+@media (max-width: 768px){
+  .site-mainheader .header-inner{
+    display:grid !important;
+    grid-template-columns:auto 1fr auto;
+    grid-template-areas:
+      "logo  actions actions"
+      "search search  search";
+    gap:10px 12px;
+  }
+  .site-mainheader .header-inner > form.search-form{
+    grid-area:search;
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+}
+/* === SEARCH PORTAL (акуратний, не ширше в'юпорту) === */
+html, body{ overflow-x:hidden; }
+html.no-scroll, body.no-scroll{ overflow:hidden !important; }
+
+.s-portal[hidden]{ display:none; }
+.s-portal{ position:fixed; inset:0; z-index:4000; }
+.s-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
+
+/* сірий фон панелі, всередині біла картка */
+.s-panel{
+  position:absolute; left:50%; top:8vh; transform:translateX(-50%);
+  box-sizing:border-box;
+  width:min(920px, 94vw);
+  max-height:84vh; overflow:auto;
+  background:#f6f8f9;
+  border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,.28);
+  padding:16px;
+}
+.s-close{ position:absolute; right:10px; top:8px; font-size:22px; background:transparent; border:0; cursor:pointer; }
+
+.s-head{ padding:4px 6px 10px; }
+.s-query{ color:#667; font-size:.95rem; }
+.s-query #sq{ color:#0a5e56; font-weight:700; }
+
+/* біла «рамка-картка» зі списком */
+.s-card{
+  background:#fff;
+  border:1px solid #e8ecef;
+  border-radius:14px;
+  padding:12px;
+  width:min(760px, 100%);
+  margin:8px auto 0;
+  box-shadow:0 12px 28px rgba(0,0,0,.08);
+
+  /* сітка рядків: [фото | назва | ціна] */
+  display:grid;
+  grid-template-columns:72px 1fr auto;
+  gap:12px;
+}
+.s-row{ display:contents; }
+.s-img{
+  width:64px; height:64px; object-fit:contain;
+  border-radius:8px; background:#f3f3f3;
+}
+.s-title{
+  font-weight:600; color:#0a5e56; line-height:1.25;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.s-price{ justify-self:end; font-weight:700; color:#222; white-space:nowrap; }
+.s-empty{ padding:14px; color:#666; }
+
+@media (max-width:680px){
+  .s-panel{ width:min(720px, 92vw); padding:12px; }
+  .s-card{ grid-template-columns:56px 1fr auto; padding:10px; }
+  .s-img{ width:56px; height:56px; }
+}
+/* ── Search: фіксована ширина на десктопі, не росте */
+#main-search{
+  flex: none !important;
+  width: 560px !important;
+  max-width: 560px !important;
+  min-width: 560px !important;
+  margin: 0 24px;
+}
+#main-search input[name="q"]{
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* мобілка – тягнеться на всю ширину другого рядка */
+@media (max-width:768px){
+  #main-search{
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+}
+/* ── INLINE пошукова картка під інпутом */
+.s-portal--inline[hidden]{ display:none; }
+.s-portal--inline{ position:fixed; inset:0; pointer-events:none; z-index:4000; }
+.s-portal--inline .s-backdrop{ display:none; } /* без затемнення сторінки */
+
+.s-portal--inline .s-panel{
+  position:fixed; /* координати виставляємо з JS під інпут */
+  left: 0; top: 0;
+  z-index: 5000;
+  width: 420px;                 /* реальна ширина виставиться JS */
+  max-width: min(760px, 96vw);
+  max-height: 60vh;
+  overflow:auto;
+  pointer-events:auto;
+  margin:0;
+  padding: 8px 8px 10px;
+  background:#fff;
+  border:1px solid #e8ecef;
+  border-radius:14px;
+  box-shadow:0 16px 40px rgba(0,0,0,.18);
+}
+
+/* всередині — охайна сітка рядків */
+.s-portal--inline .s-head{ display:none; } /* заголовок не потрібен у дропдауні */
+.s-portal--inline .s-body{
+  display:grid;
+  grid-template-columns: 64px 1fr auto;
+  gap:10px;
+}
+.s-portal--inline .s-row{ display:contents; }
+.s-portal--inline .s-img{
+  width:64px; height:64px; object-fit:contain;
+  background:#f3f3f3; border-radius:8px;
+}
+.s-portal--inline .s-title{
+  font-weight:600; color:#0a5e56; line-height:1.25;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.s-portal--inline .s-price{ justify-self:end; font-weight:700; white-space:nowrap; }
+
+@media (max-width:680px){
+  .s-portal--inline .s-body{ grid-template-columns:56px 1fr auto; }
+  .s-portal--inline .s-img{ width:56px; height:56px; }
+}
+
+/*Тут допиляти пошук*/
+
+
+
+
+/* Кнопки в модалці кошика */
+.cm-actions {
+  display: flex;
+  gap: 12px;              /* відступ між кнопками */
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: #13876F;      /* той самий зелений, що на "В кошик" */
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: filter .15s ease-in-out, transform .02s;
+}
+.btn-green:hover { filter: brightness(1.05); }
+.btn-green:active { transform: translateY(1px); }
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid #d0d7d5;
+  color: #222;
+  background: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.btn-outline:hover {
+  border-color: #b2bbb8;
+  background: #fafafa;
+}
+
+/* cart-modal.css — мінімум, що нам треба */
+.cm-actions{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.btn-green{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:10px 18px; border-radius:10px; background:#13876F; color:#fff;
+  font-weight:600; text-decoration:none; transition:filter .15s, transform .02s;
+}
+.btn-green:hover{ filter:brightness(1.05); }
+.btn-green:active{ transform:translateY(1px); }
+.btn-outline{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:10px 18px; border-radius:10px; border:1.5px solid #d0d7d5;
+  color:#222; background:#fff; font-weight:600; text-decoration:none;
+  transition:background .15s, color .15s, border-color .15s;
+}
+.btn-outline:hover{ border-color:#b2bbb8; background:#fafafa; }
 

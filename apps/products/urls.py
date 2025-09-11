@@ -5,6 +5,8 @@ from . import views
 app_name = 'products'
 
 urlpatterns = [
+    path("search/quick/", views.quick_search, name="quick_search"),
+    path("search/suggest/", views.search_suggest, name="search_suggest"),
     path('categories/brand/<slug:brand_slug>/', views.catalog_by_brand, name='brand'),
     path('categories/country/<slug:country_slug>/', views.catalog_by_country, name='country'),
     # 1) /categories/ — головні категорії
