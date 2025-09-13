@@ -2,8 +2,9 @@
 # TODO: команда аби імпортувати файл python manage.py loaddata /home/torgsoft/incoming/data.json --settings=Laskazoo.settings.prod
 # TODO: команда аби забекапить базу python manage.py dumpdata --natural-foreign --natural-primary --indent 2 --output data.json
 # TODO: команда аби перекинуть файл scp C:\ftp\torgsoft\incoming\data.json danil@laskazoo.com.ua:/home/torgsoft/incoming/
-# TODO: підкчлючення до сервера "ssh danil@178.158.244.87" source .venv/bin/activate source venv/bin/activate
+# TODO: підкчлючення до сервера ssh danil@178.158.244.87 source .venv/bin/activate source venv/bin/activate
 # TODO: перезавантаженян сервера !!!
+# python manage.py flush очистить базу на проді
 # 1) бекенд (gunicorn або твій unit, наприклад laskazoo.service)
 # sudo systemctl restart gunicorn        # якщо сервіс називається gunicorn
 # # або
