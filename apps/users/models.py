@@ -5,7 +5,6 @@ class CustomUser(AbstractUser):
     email        = models.EmailField("Email", max_length=254, unique=True)
     phone_number = models.CharField("Телефон", max_length=20, blank=True)
 
-    # Переоприділяємо M2M, щоб не було двох user_set
     groups = models.ManyToManyField(
         Group,
         related_name="customuser_set",

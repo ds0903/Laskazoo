@@ -15,8 +15,12 @@
   <!-- Сайдбар -->
   <aside class="profile-sidebar">
     <ul class="profile-nav">
-      <li><a href="{% url 'users:profile' %}">Особисті дані</a></li>
-      <li><a href="{% url 'orders:list' %}">Замовлення</a></li>
+      {% if user.is_authenticated %}
+        <li><a href="{% url 'users:profile' %}">Особисті дані</a></li>
+        <li><a href="{% url 'orders:list' %}">Замовлення</a></li>
+      {% endif %}
+
+      {# Обране – завжди #}
       <li class="active"><a href="{% url 'favourites:list' %}">Обране</a></li>
     </ul>
   </aside>
@@ -89,12 +93,12 @@
             <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
           {% else %} — {% endif %}
         </div>
-        <div class="card-info">
-          Країна:
-          {% if product.brand and product.brand.country_slug %}
-            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>
-          {% else %} — {% endif %}
-        </div>
+<!--        <div class="card-info">-->
+<!--          Країна:-->
+<!--          {% if product.brand and product.brand.country_slug %}-->
+<!--            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>-->
+<!--          {% else %} — {% endif %}-->
+<!--        </div>-->
       </div>
     </div>
     {% endwith %}
@@ -190,7 +194,7 @@ function recomputeCardHeights(){
     if (!back) return;
 
     const desired  = measureBack(back);
-    const adjusted = Math.max(0, desired - 10);   // мінус 10px
+    const adjusted = Math.max(0, desired + 20);   // мінус 10px
     const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
 
     card.style.setProperty('--hover-height', clamped + 'px');

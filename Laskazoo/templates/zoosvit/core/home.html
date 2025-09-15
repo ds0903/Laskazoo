@@ -3,6 +3,9 @@
 <html lang="uk">
 <head>
   <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/variant_pills.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/home_sliders.js' %}"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ласка – Все для ваших улюбленців</title>
@@ -39,81 +42,38 @@
 </section>
 
 <section id="categories" class="categories container">
-<h2>Популярні категорії</h2>
-<div class="category-slider">
-  <button class="slide-btn left" aria-label="Назад">&lt;</button>
+  <h2>Популярні категорії</h2>
+
+  <div class="category-slider">
+    <button class="slide-btn left" aria-label="Назад">&lt;</button>
+
     <div class="slider-window">
-    <div class="grid-slider">
-      <a href="/categories/cats/korm-dlya-kotiv/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм">
-        <p class="cat-title">Корм для котів</p>
-      </a>
-      <a href="/categories/dogs/korm-dlya-sobak/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для собак</p>
-      </a>
-      <a href="/categories/dogs/igrashki-dlya-sobak/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Іграшки для собак</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Засоби для догляду</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Ветеринарні припарати</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Ласощі</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Амуніція</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Клітки, миски, поїлки</p>
-      </a>
-<!--        -->
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для котів</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для котів</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для котів</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для котів</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для котів</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для котів</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для котів</p>
-      </a>
-      <a href="/categories/dogs/feed_for_cats/" class="cat-card">
-        <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Корм для котів">
-        <p class="cat-title">Корм для котів</p>
-      </a>
+      <div class="grid-slider">
+
+        {% for pc in popular_cats %}
+          <a href="{{ pc.url }}" class="cat-card">
+            {% if pc.image %}
+              <img src="{{ pc.image.url }}" alt="{{ pc.title }}">
+            {% else %}
+              {# fallback, якщо в Category немає картинки #}
+              <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="{{ pc.title }}">
+            {% endif %}
+            <p class="cat-title">{{ pc.title }}</p>
+          </a>
+        {% empty %}
+          <a href="#" class="cat-card">
+            <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Категорія">
+            <p class="cat-title">В базі відсутні популряні категорії!</p>
+          </a>
+        {% endfor %}
+
+      </div>
     </div>
+
+    <button class="slide-btn right" aria-label="Вперед">&gt;</button>
   </div>
-  <button class="slide-btn right" aria-label="Вперед">&gt;</button>
-</div>
 </section>
+
 
 <section id="products" class="products container">
 <h2>Хіти продаж</h2>
@@ -136,23 +96,20 @@
         <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
       {% endif %}
     </a>
-
-    <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
-
+    {% if v0.sku %}
+      <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
+    {% endif %}
     <h3 class="card-title" data-base-title="{{ product.name }}">
       {{ product.name }}
       {% if v0 %}
-  {% if v0.weight or v0.size %}
-    <span class="variant-suffix">
-      {% if v0.weight %} — {{ v0.weight|floatformat:0 }} кг
-      {% elif v0.size %} — {{ v0.size }}{% endif %}
-    </span>
-  {% endif %}
-{% endif %}
-
-
+        {% if v0.weight or v0.size %}
+          <span class="variant-suffix">
+            {% if v0.weight %} — {{ v0.weight|floatformat:0 }} кг
+            {% elif v0.size %} — {{ v0.size }}{% endif %}
+          </span>
+        {% endif %}
+      {% endif %}
     </h3>
-
     <div class="card-price">₴ {{ v0.retail_price|default:product.retail_price }}</div>
   {% endwith %}
 
@@ -170,9 +127,9 @@
       {% else %}
         <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
       {% endif %}
-
-      <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
-
+      {% if v0.sku %}
+        <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
+      {% endif %}
       <h3 class="card-title" data-base-title="{{ product.name }}">
         {{ product.name }}
         {% if v0 %}
@@ -243,12 +200,12 @@
             <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
           {% else %} — {% endif %}
         </div>
-        <div class="card-info">
-          Країна:
-          {% if product.brand and product.brand.country_slug %}
-            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>
-          {% else %} — {% endif %}
-        </div>
+<!--        <div class="card-info">-->
+<!--          Країна:-->
+<!--          {% if product.brand and product.brand.country_slug %}-->
+<!--            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>-->
+<!--          {% else %} — {% endif %}-->
+<!--        </div>-->
 
 </div>
 </div>
@@ -312,12 +269,12 @@
       </a>
     </h3>
     <ul>
-      <li><a href="#">Корм для собак</a></li>
-      <li><a href="#">Ласощі для собак</a></li>
-      <li><a href="#">Іграшки для собак</a></li>
-      <li><a href="#">Амуніція для собак</a></li>
-      <li><a href="#">Вітаміни та добавки</a></li>
-      <li><a href="#">Сумки, переноски</a></li>
+      <li><a href="/categories/dogs/korm-dlya-sobak/">Корм для собак</a></li>
+      <li><a href="/categories/dogs/lasoshhi-dlya-sobak/">Ласощі для собак</a></li>
+<!--      <li><a href="#">Іграшки для собак</a></li>-->
+<!--      <li><a href="#">Амуніція для собак</a></li>-->
+<!--      <li><a href="#">Вітаміни та добавки</a></li>-->
+<!--      <li><a href="#">Сумки, переноски</a></li>-->
     </ul>
     <a href="{% url 'products:subcategory_list' 'dogs' %}" class="btn-secondary">Всі категорії</a>
   </div>
@@ -330,84 +287,84 @@
       </a>
     </h3>
     <ul>
-      <li><a href="#">Корм для котів</a></li>
-      <li><a href="#">Сумки, переноски</a></li>
-      <li><a href="#">Іграшки для котів</a></li>
-      <li><a href="#">Дряпки та когтеточки</a></li>
-      <li><a href="#">Ласощі для котів</a></li>
-      <li><a href="#">Аксесуари</a></li>
+      <li><a href="/categories/cats/korm-dlya-kotiv/">Корм для котів</a></li>
+      <li><a href="/categories/cats/lasoshhi-dlya-kotiv/">Ласощі для котів</a></li>
+      <!--      <li><a href="#">Сумки, переноски</a></li>-->
+      <!--      <li><a href="#">Іграшки для котів</a></li>-->
+      <!--      <li><a href="#">Дряпки та когтеточки</a></li>-->
+<!--      <li><a href="#">Аксесуари</a></li>-->
     </ul>
     <a href="{% url 'products:subcategory_list' 'cats' %}" class="btn-secondary">Всі категорії</a>
   </div>
 
-  <div class="category-col">
-    <h3 class="category-title">
-      <a href="{% url 'products:subcategory_list' 'birds' %}" class="category-link">
-        <img src="{% static 'zoosvit/img/category-detailed/bird-icon.png' %}" alt="Птахи">
-        Птахи
-      </a>
-    </h3>
-    <ul>
-      <li><a href="#">Корм для птахів</a></li>
-      <li><a href="#">Іграшки для птахів</a></li>
-      <li><a href="#">Клітки та наповнювачі</a></li>
-      <li><a href="#">Годівниці та аксесуари</a></li>
-      <li><a href="#">Вітаміни та ветпрепарати</a></li>
-      <li><a href="#">Ласощі для птахів</a></li>
-    </ul>
-    <a href="{% url 'products:subcategory_list' 'birds' %}" class="btn-secondary">Всі категорії</a>
-  </div>
+<!--  <div class="category-col">-->
+<!--    <h3 class="category-title">-->
+<!--      <a href="{% url 'products:subcategory_list' 'birds' %}" class="category-link">-->
+<!--        <img src="{% static 'zoosvit/img/category-detailed/bird-icon.png' %}" alt="Птахи">-->
+<!--        Птахи-->
+<!--      </a>-->
+<!--    </h3>-->
+<!--    <ul>-->
+<!--      <li><a href="#">Корм для птахів</a></li>-->
+<!--      <li><a href="#">Іграшки для птахів</a></li>-->
+<!--      <li><a href="#">Клітки та наповнювачі</a></li>-->
+<!--      <li><a href="#">Годівниці та аксесуари</a></li>-->
+<!--      <li><a href="#">Вітаміни та ветпрепарати</a></li>-->
+<!--      <li><a href="#">Ласощі для птахів</a></li>-->
+<!--    </ul>-->
+<!--    <a href="{% url 'products:subcategory_list' 'birds' %}" class="btn-secondary">Всі категорії</a>-->
+<!--  </div>-->
 
-  <div class="category-col">
-    <h3 class="category-title">
-      <a href="{% url 'products:subcategory_list' 'rodents' %}" class="category-link">
-        <img src="{% static 'zoosvit/img/category-detailed/hamster-icon.png' %}" alt="Гризуни">
-        Гризуни
-      </a>
-    </h3>
-    <ul>
-      <li><a href="#">Корм для гризунів</a></li>
-      <li><a href="#">Клітки та наповнювачі</a></li>
-      <li><a href="#">Іграшки для гризунів</a></li>
-      <li><a href="#">Годівниці та аксесуари</a></li>
-      <li><a href="#">Ласощі для гризунів</a></li>
-    </ul>
-    <a href="{% url 'products:subcategory_list' 'rodents' %}" class="btn-secondary">Всі категорії</a>
-  </div>
+<!--  <div class="category-col">-->
+<!--    <h3 class="category-title">-->
+<!--      <a href="{% url 'products:subcategory_list' 'rodents' %}" class="category-link">-->
+<!--        <img src="{% static 'zoosvit/img/category-detailed/hamster-icon.png' %}" alt="Гризуни">-->
+<!--        Гризуни-->
+<!--      </a>-->
+<!--    </h3>-->
+<!--    <ul>-->
+<!--      <li><a href="#">Корм для гризунів</a></li>-->
+<!--      <li><a href="#">Клітки та наповнювачі</a></li>-->
+<!--      <li><a href="#">Іграшки для гризунів</a></li>-->
+<!--      <li><a href="#">Годівниці та аксесуари</a></li>-->
+<!--      <li><a href="#">Ласощі для гризунів</a></li>-->
+<!--    </ul>-->
+<!--    <a href="{% url 'products:subcategory_list' 'rodents' %}" class="btn-secondary">Всі категорії</a>-->
+<!--  </div>-->
 
-  <div class="category-col">
-    <h3 class="category-title">
-      <a href="{% url 'products:subcategory_list' 'aquarium' %}" class="category-link">
-        <img src="{% static 'zoosvit/img/category-detailed/fish-icon.png' %}" alt="Акваріум">
-        Акваріум
-      </a>
-    </h3>
-    <ul>
-      <li><a href="#">Товари для ставка</a></li>
-      <li><a href="#">Акваріуми та декорації</a></li>
-      <li><a href="#">Грунти та субстрати</a></li>
-      <li><a href="#">Освітлення та фільтри</a></li>
-      <li><a href="#">Корм для рибок</a></li>
-    </ul>
-    <a href="{% url 'products:subcategory_list' 'aquarium' %}" class="btn-secondary">Всі категорії</a>
-  </div>
+<!--  <div class="category-col">-->
+<!--    <h3 class="category-title">-->
+<!--      <a href="{% url 'products:subcategory_list' 'aquarium' %}" class="category-link">-->
+<!--        <img src="{% static 'zoosvit/img/category-detailed/fish-icon.png' %}" alt="Акваріум">-->
+<!--        Акваріум-->
+<!--      </a>-->
+<!--    </h3>-->
+<!--    <ul>-->
+<!--      <li><a href="#">Товари для ставка</a></li>-->
+<!--      <li><a href="#">Акваріуми та декорації</a></li>-->
+<!--      <li><a href="#">Грунти та субстрати</a></li>-->
+<!--      <li><a href="#">Освітлення та фільтри</a></li>-->
+<!--      <li><a href="#">Корм для рибок</a></li>-->
+<!--    </ul>-->
+<!--    <a href="{% url 'products:subcategory_list' 'aquarium' %}" class="btn-secondary">Всі категорії</a>-->
+<!--  </div>-->
 
-  <div class="category-col">
-    <h3 class="category-title">
-      <a href="{% url 'products:subcategory_list' 'terrarium' %}" class="category-link">
-        <img src="{% static 'zoosvit/img/category-detailed/turtle-icon.png' %}" alt="Тераріум">
-        Тераріум
-      </a>
-    </h3>
-    <ul>
-      <li><a href="#">Корма та добавки</a></li>
-      <li><a href="#">Грот та декорації</a></li>
-      <li><a href="#">Грунти та підложки</a></li>
-      <li><a href="#">Освітлення та підігрів</a></li>
-      <li><a href="#">Наповнювачі для плазунів</a></li>
-    </ul>
-    <a href="{% url 'products:subcategory_list' 'terrarium' %}" class="btn-secondary">Всі категорії</a>
-  </div>
+<!--  <div class="category-col">-->
+<!--    <h3 class="category-title">-->
+<!--      <a href="{% url 'products:subcategory_list' 'terrarium' %}" class="category-link">-->
+<!--        <img src="{% static 'zoosvit/img/category-detailed/turtle-icon.png' %}" alt="Тераріум">-->
+<!--        Тераріум-->
+<!--      </a>-->
+<!--    </h3>-->
+<!--    <ul>-->
+<!--      <li><a href="#">Корма та добавки</a></li>-->
+<!--      <li><a href="#">Грот та декорації</a></li>-->
+<!--      <li><a href="#">Грунти та підложки</a></li>-->
+<!--      <li><a href="#">Освітлення та підігрів</a></li>-->
+<!--      <li><a href="#">Наповнювачі для плазунів</a></li>-->
+<!--    </ul>-->
+<!--    <a href="{% url 'products:subcategory_list' 'terrarium' %}" class="btn-secondary">Всі категорії</a>-->
+<!--  </div>-->
 </section>
 
 <section id="brands" class="brands container collapsed">
@@ -415,463 +372,70 @@
 
   <div class="brands-grid core">
     <div class="brand-item">
-      <a href="/brands/brand1/" title="club4paws.png">
+      <a href="/categories/categories/brand/club4paws/" title="club4paws.png">
         <img src="{% static 'zoosvit/img/brands/club4paws.png' %}"    alt="club4paws.png">
       </a>
     </div>
     <div class="brand-item">
-      <a href="/brands/brand2/" title="optimeal.png">
+      <a href="/categories/categories/brand/optimeal/" title="optimeal.png">
         <img src="{% static 'zoosvit/img/brands/optimeal.png' %}"    alt="optimeal.png">
       </a>
     </div>
+<!--    <div class="brand-item">-->
+<!--      <a href="/categories/categories/brand/delickcious/" title="delickcious_Logo.png">-->
+<!--        <img src="{% static 'zoosvit/img/brands/delickcious_Logo.png' %}"    alt="delickcious_Logo.png">-->
+<!--      </a>-->
+<!--    </div>-->
     <div class="brand-item">
-      <a href="/brands/brand1/" title="delickcious_Logo.png">
-        <img src="{% static 'zoosvit/img/brands/delickcious_Logo.png' %}"    alt="delickcious_Logo.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="savory.png">
-        <img src="{% static 'zoosvit/img/brands/savory.png' %}"    alt="savory.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="myau.png">
+      <a href="/categories/categories/brand/myau/" title="myau.png">
         <img src="{% static 'zoosvit/img/brands/myau.png' %}"    alt="myau.png">
       </a>
     </div>
     <div class="brand-item">
-      <a href="/brands/brand1/" title="gav.png">
+      <a href="/categories/categories/brand/gav/" title="gav.png">
         <img src="{% static 'zoosvit/img/brands/gav.png' %}"    alt="gav.png">
       </a>
     </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
+<!--    <div class="brand-item">-->
+<!--      <a href="/brands/brand1/" title="gav.png">-->
+<!--        <img src="{% static 'zoosvit/img/brands/leopold.png' %}"    alt="gav.png">-->
+<!--      </a>-->
+<!--    </div>-->
   </div>
 
-  <div class="brands-grid extra">
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand2/" title="Brand 2">
-        <img src="…/brand2.png" alt="Brand 2">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="…/brand1.png" alt="Brand 1">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand2/" title="Brand 2">
-        <img src="…/brand2.png" alt="Brand 2">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="…/brand1.png" alt="Brand 1">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand2/" title="Brand 2">
-        <img src="…/brand2.png" alt="Brand 2">
-      </a>
-    </div>
-    <div class="brand-item">
-      <a href="/brands/brand1/" title="Brand 1">
-        <img src="…/brand1.png" alt="Brand 1">
-      </a>
-    </div>
-    <div class="brand-item brand-all">
-      <a href="/brands/" title="Всі бренди">
-        Всі бренди <span class="arrow">→</span>
-      </a>
-    </div>
-  </div>
+<!--  <div class="brands-grid extra">-->
+<!--    <div class="brand-item">-->
+<!--      <a href="/brands/brand1/" title="Brand 1">-->
+<!--        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">-->
+<!--      </a>-->
+<!--    </div>-->
+<!--    <div class="brand-item">-->
+<!--      <a href="/brands/brand2/" title="Brand 2">-->
+<!--        <img src="…/brand2.png" alt="Brand 2">-->
+<!--      </a>-->
+<!--    </div>-->
+<!--    <div class="brand-item">-->
+<!--      <a href="/brands/brand1/" title="Brand 1">-->
+<!--        <img src="…/brand1.png" alt="Brand 1">-->
+<!--      </a>-->
+<!--    </div>-->
 
-  <button id="toggle-brands" class="btn-secondary">Показати ще</button>
+<!--  <button id="toggle-brands" class="btn-secondary">Показати ще</button>-->
 </section>
 
 {% include 'zoosvit/core/partials/footer.html' %}
 
-<script>
-(function () {
-  'use strict';
-
-  /* ---------- УТИЛІТИ ---------- */
-  const log = (...a) => console.debug('[card-height]', ...a);
-  const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-  function debounce(fn, ms = 120){ let t; return (...a)=>{clearTimeout(t); t=setTimeout(()=>fn(...a),ms);} }
-  const rerun = debounce(() => requestAnimationFrame(recomputeCardHeights), 60);
-
-  /* ---------- СЛАЙДЕР ТОВАРІВ ---------- */
-  function initProductSlider() {
-    const w = document.querySelector('.product-slider');
-    if (!w) return;
-    const slider   = w.querySelector('.grid-slider');
-    const leftBtn  = w.querySelector('.slide-btn.left');
-    const rightBtn = w.querySelector('.slide-btn.right');
-
-    const cs   = getComputedStyle(document.documentElement);
-    const cardW= parseInt(cs.getPropertyValue('--prod-card-width'),10);
-    const gap  = parseInt(cs.getPropertyValue('--prod-gap'),10);
-    const perV = parseInt(cs.getPropertyValue('--prod-per-page'),10);
-    const perS = parseInt(cs.getPropertyValue('--prod-scroll'),10);
-    const total= w.querySelectorAll('.prod-card').length;
-
-    const maxPage = Math.max(0, Math.ceil((total - perV) / perS));
-    let page = 0;
-
-    function go(delta){
-      page = Math.min(maxPage, Math.max(0, page + delta));
-      slider.style.transform = `translateX(-${page * perS * (cardW + gap)}px)`;
-      leftBtn.style.display  = page === 0 ? 'none' : 'block';
-      rightBtn.style.display = page >= maxPage ? 'none' : 'block';
-      requestAnimationFrame(recomputeCardHeights); // після зсуву — перерахувати
-    }
-    leftBtn?.addEventListener('click',  ()=>go(-1));
-    rightBtn?.addEventListener('click', ()=>go(+1));
-    // первинний стан
-    leftBtn && (leftBtn.style.display = 'none');
-    rightBtn && (rightBtn.style.display = maxPage ? 'block':'none');
-  }
-
-  /* ---------- КАРУСЕЛЬ ГЕРОЯ ---------- */
-  function initHeroCarousel() {
-    const slides = $all('.carousel-slide');
-    const nav    = document.querySelector('.carousel-nav');
-    if (!slides.length || !nav) return;
-    const D = 5000;
-    let i = 0, t;
-
-    slides.forEach((_, idx)=>{
-      const bar = document.createElement('div');
-      bar.className='nav-bar'; bar.innerHTML='<div class="bar-progress"></div>';
-      bar.addEventListener('click', ()=>show(idx)); nav.appendChild(bar);
-    });
-    const bars = $all('.nav-bar', nav);
-
-    function show(idx){
-      slides.forEach(s=>s.classList.remove('active'));
-      bars.forEach(b=>{
-        b.classList.remove('active');
-        b.querySelector('.bar-progress').style.animation='none';
-      });
-      i = idx;
-      slides[i].classList.add('active');
-      const bar = bars[i];
-      bar.classList.add('active');
-      // перезапуск анімації
-      // eslint-disable-next-line no-unused-expressions
-      bar.querySelector('.bar-progress').offsetWidth;
-      bar.querySelector('.bar-progress').style.animation=`fillBar ${D}ms linear forwards`;
-      clearTimeout(t); t=setTimeout(()=>show((i+1)%slides.length), D);
-    }
-    show(0);
-  }
-
-  /* ---------- СЛАЙДЕР КАТЕГОРІЙ ---------- */
-  function initCategorySlider() {
-    const w = document.querySelector('.category-slider');
-    if (!w) return;
-
-    const slider   = w.querySelector('.grid-slider');
-    const leftBtn  = w.querySelector('.slide-btn.left');
-    const rightBtn = w.querySelector('.slide-btn.right');
-
-    const cs   = getComputedStyle(document.documentElement);
-    const cardW= parseInt(cs.getPropertyValue('--cat-card-width'),10);
-    const gap  = parseInt(cs.getPropertyValue('--cat-gap'),10);
-    const perV = parseInt(cs.getPropertyValue('--cat-per-page'),10);
-    const perS = parseInt(cs.getPropertyValue('--cat-scroll'),10);
-    const total= w.querySelectorAll('.cat-card').length;
-
-    const maxPage = Math.max(0, Math.ceil((total - perV) / perS));
-    let page = 0;
-
-    function go(delta){
-      page = Math.min(maxPage, Math.max(0, page + delta));
-      slider.style.transform = `translateX(-${page * perS * (cardW + gap)}px)`;
-      leftBtn.style.display  = page === 0 ? 'none' : 'block';
-      rightBtn.style.display = page >= maxPage ? 'none' : 'block';
-    }
-    leftBtn?.addEventListener('click',  ()=>go(-1));
-    rightBtn?.addEventListener('click', ()=>go(+1));
-    leftBtn && (leftBtn.style.display = 'none');
-    rightBtn && (rightBtn.style.display = maxPage ? 'block':'none');
-  }
-
-/* ---------- ВИМІР ВИСОТИ КАРТКИ ---------- */
-function measureBack(back){
-  // тимчасово робимо видимим для правильного виміру
-  const keep = {
-    display: back.style.display,
-    position: back.style.position,
-    opacity: back.style.opacity,
-    pointerEvents: back.style.pointerEvents,
-    visibility: back.style.visibility,
-    height: back.style.height,
-    maxHeight: back.style.maxHeight
-  };
-  back.style.display       = 'block';
-  back.style.position      = 'static';
-  back.style.opacity       = '0';
-  back.style.pointerEvents = 'none';
-  back.style.visibility    = 'hidden';
-  back.style.height        = 'auto';
-  back.style.maxHeight     = 'none';
-
-  // scrollHeight зазвичай стабільніший на прихованих елементах
-  const h = Math.ceil(back.scrollHeight);
-
-  Object.assign(back.style, keep);
-  return h;
-}
-
-function recomputeCardHeights(){
-  const cs  = getComputedStyle(document.documentElement);
-  const MIN = parseInt(cs.getPropertyValue('--prod-min-height')) || 320;
-  const MAX = parseInt(cs.getPropertyValue('--prod-max-height')) || 820;
-
-  document.querySelectorAll('.prod-card').forEach((card, idx) => {
-    const back = card.querySelector('.card-back');
-    if (!back) return;
-
-    const desired  = measureBack(back);
-    const adjusted = Math.max(0, desired - 10);   // мінус 10px
-    const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
-
-    card.style.setProperty('--hover-height', clamped + 'px');
-    // console.log(`card #${idx}: desired=${desired} → adjusted=${adjusted} → ${clamped}`);
-  });
-}
-
-  /* ---------- ТРИГЕРИ ПЕРЕРАХУНКУ ---------- */
-  function initCardHeightAutofit(){
-    // 1) коли все завантажилось (включно з картинками)
-    if (document.readyState === 'complete') rerun();
-    else window.addEventListener('load', rerun, {once:true});
-
-    // 2) коли підтягнуться шрифти (змінюється перенесення рядків)
-    if (document.fonts?.ready) document.fonts.ready.then(rerun);
-
-    // 3) коли дозавантажиться будь-яка картинка у картках
-    $all('.prod-card img').forEach(img=>{
-      if (!img.complete) {
-        img.addEventListener('load',  rerun, {once:true});
-        img.addEventListener('error', rerun, {once:true});
-      }
-    });
-
-    // 4) на зміну розміру/орієнтації
-    window.addEventListener('resize', rerun);
-    window.addEventListener('orientationchange', rerun);
-
-    // 5) реагуємо на пізні зміни контенту всередині .card-back
-    if ('ResizeObserver' in window) {
-      const ro = new ResizeObserver(rerun);
-      $all('.prod-card .card-back').forEach(el => ro.observe(el));
-    }
-
-    // 6) перший прохід + невелика страховка
-    rerun();
-    setTimeout(rerun, 800);
-  }
-
-  /* ---------- КНОПКА «ПОКАЗАТИ ЩЕ» У БРЕНДАХ ---------- */
-  function initBrandsToggle(){
-    const section = document.getElementById('brands');
-    const grid    = section?.querySelector('.brands-grid.extra');
-    const btn     = document.getElementById('toggle-brands');
-    if (!section || !grid || !btn) return;
-
-    btn.addEventListener('click', ()=>{
-      const collapsed = section.classList.contains('collapsed');
-      grid.style.transition = `max-height 0.3s ${collapsed ? 'ease-out' : 'ease-in'}`;
-      grid.style.maxHeight  = collapsed ? grid.scrollHeight + 'px' : '0px';
-      btn.textContent       = collapsed ? 'Згорнути' : 'Показати ще';
-      section.classList.toggle('collapsed');
-    });
-  }
-
-  /* ---------- ТОЧКА ВХОДУ ---------- */
-  document.addEventListener('DOMContentLoaded', ()=>{
-    initProductSlider();
-    initHeroCarousel();
-    initCategorySlider();
-    initBrandsToggle();
-    initCardHeightAutofit();
-  });
-
-
-
-
-  // щоб кнопки гарантовано були над лінком всередині card-back
-  document.addEventListener('DOMContentLoaded', ()=>{
-    document.querySelectorAll('.prod-card .card-back a').forEach(a=>{
-      a.style.position = 'relative';
-      a.style.zIndex   = 1;
-    });
-  });
-
-})();
-</script>
-
-<script>
-function initVariantPills(ctx = document){
-  ctx.querySelectorAll('.prod-card').forEach(card=>{
-    const pills = card.querySelectorAll('.variant-pill');
-    if (!pills.length) return;
-
-    // FRONT
-    const imgF   = card.querySelector('.card-front img');
-    const priceF = card.querySelector('.card-front .card-price');
-    const skuF   = card.querySelector('.card-front .card-article');
-    const titleF = card.querySelector('.card-front .card-title');
-
-    // BACK
-    const imgB   = card.querySelector('.card-back img');
-    const priceB = card.querySelector('.card-back .card-price');
-    const skuB   = card.querySelector('.card-back .card-article');
-    const titleB = card.querySelector('.card-back .card-title');
-
-    // Кнопка "В кошик"
-    const addBtn  = card.querySelector('.card-actions .add-to-cart');
-    const addBase = addBtn ? (addBtn.dataset.addBase || addBtn.href.split('?')[0]) : '';
-
-    const baseTitle = (titleF?.dataset.baseTitle || titleF?.textContent || '').trim();
-
-    function suffix(p){
-      const w = p.dataset.weight, s = p.dataset.size;
-      if (w && !isNaN(Number(w))) return ` — ${Number(w)} кг`;
-      if (s) return ` — ${s}`;
-      return '';
-    }
-    function setText(el, text){ if(el){ el.textContent = text; } }
-
-    function apply(pill){
-  pills.forEach(b=>b.classList.remove('active'));
-  pill.classList.add('active');
-
-  const img   = pill.dataset.image;
-  const sku   = pill.dataset.sku || '—';
-  const price = pill.dataset.retail_price;
-  const vid   = pill.dataset.vid;
-
-  if (img) {
-    const bust = `${img}${img.includes('?') ? '&' : '?'}v=${vid}`;
-    if (imgF) { imgF.removeAttribute('srcset'); imgF.src = bust; }
-    if (imgB) { imgB.removeAttribute('srcset'); imgB.src = bust; }
-  }
-
-  setText(skuF, `Артикул: ${sku}`);
-  setText(skuB, `Артикул: ${sku}`);
-
-  if (price){
-    setText(priceF, `₴ ${price}`);
-    setText(priceB, `₴ ${price}`);
-  }
-
-  if (titleF) titleF.textContent = baseTitle + suffix(pill);
-  if (titleB) titleB.textContent = baseTitle + suffix(pill);
-
-  // лінка «В кошик» → саме на цей варіант
-  if (addBtn && addBase) addBtn.href = `${addBase}?variant=${vid}`;
-
-  // ❤️ «обране»: тепер прив'язане до конкретного варіанту
-  const favBtn = card.querySelector('.js-fav');
-  if (favBtn) {
-    favBtn.dataset.variant = vid;
-
-    // якщо у нас є глобальний Set улюблених варіантів — підсвічуємо
-    const isOn = !!(window.__favVarSet && window.__favVarSet.has(Number(vid)));
-    favBtn.classList.toggle('is-on', isOn);
-    favBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
-  }
-
-  if (typeof requestAnimationFrame === 'function' && typeof recomputeCardHeights === 'function'){
-    requestAnimationFrame(recomputeCardHeights);
-  }
-}
-
-
-    pills.forEach(p=>p.addEventListener('click', e=>{
-      e.preventDefault(); e.stopPropagation();
-      apply(p);
-    }));
-
-    // первинний стан
-    apply(pills[0]);
-  });
-}
-
-document.addEventListener('DOMContentLoaded', ()=>initVariantPills());
-</script>
-
-{# список id улюблених варіантів, щоб JS міг знати стан при перемиканні пігулок #}
 {{ fav_variant_ids|json_script:"fav-variant-ids" }}
 <script>
-  // Глобальний Set з улюбленими варіантами
   (function () {
     try {
       const data = JSON.parse(document.getElementById('fav-variant-ids').textContent || '[]');
       window.__favVarSet = new Set((data || []).map(Number));
-    } catch (e) {
-      window.__favVarSet = new Set();
-    }
+    } catch (e) { window.__favVarSet = new Set(); }
   })();
 </script>
+
+
 
 
 <!--доабвить картинки-->

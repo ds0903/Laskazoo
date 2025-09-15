@@ -43,8 +43,10 @@
     {# --- ПРАВА КОЛОНКА: ІНФОРМАЦІЯ --- #}
     <div class="detail-info">
       <h1 class="detail-title">{{ product.name }}</h1>
-      <p class="detail-sku">Артикул: {{ product.sku }}</p>
-      <p class="detail-price">₴ {{ product.price }}</p>
+      {% if product.sku %}
+        <p class="detail-sku">Артикул: {{ product.sku }}</p>
+      {% endif %}
+      <p class="detail-price">₴ {{ product.retail_price }}</p>
 
       {% if variants %}
         <h3>Варіанти:</h3>
@@ -61,7 +63,11 @@
         </div>
       {% endif %}
 
-      <button class="btn-primary">Додати в кошик</button>
+      <a class="btn add-to-cart"
+     href="{% url 'orders:add' product.id %}{% if v0 %}?variant={{ v0.id }}{% endif %}"
+     data-add-base="{% url 'orders:add' product.id %}">
+    В кошик
+  </a>
     </div>
   </div>
 </section>

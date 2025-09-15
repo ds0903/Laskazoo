@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.orders',
     'apps.favourites',
-    'apps.cart',
     'apps.ts_ftps',
 ]
 
@@ -97,7 +96,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
 
-                'apps.favourites.context_processors.fav_counter',
+                'apps.favourites.context_processors.fav_count',
                 'apps.orders.context_processors.cart_summary',
                 'apps.users.context_processors.auth_forms',
 

@@ -1,4 +1,3 @@
-# apps/favourites/models.py
 from django.db import models
 from django.conf import settings
 
@@ -9,7 +8,6 @@ class Favourite(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # було: ('user', 'product')
         unique_together = ('user', 'product', 'variant')
         indexes = [
             models.Index(fields=['user', 'variant']),

@@ -6,6 +6,9 @@
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/filters.js' %}"></script>
 {% endblock %}
 {% block breadcrumbs %}
 <nav class="breadcrumbs" aria-label="Breadcrumb">
@@ -89,12 +92,12 @@
             <div class="card-front">
               <a href="{{ product.get_absolute_url|default:'#' }}">
                 {% if product.image %}
-                  <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                  <div class="media"><img src="{{ product.image.url }}" alt="{{ product.name }}"></div>
                 {% else %}
                   <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
                 {% endif %}
               </a>
-              <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
+                  <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
               <h3 class="card-title">{{ product.name }}</h3>
               <div class="card-price">
                 ₴ {{ product.variants_for_card.0.retail_price|default:product.retail_price }}
@@ -109,7 +112,7 @@
                 {% else %}
                   <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
                 {% endif %}
-                <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
+                  <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
                 <h3 class="card-title">{{ product.name }}</h3>
               </a>
 
@@ -133,7 +136,7 @@
                 </ul>
               {% else %}
                 <div class="no-variants">
-                  <div class="card-price">₴ {{ product.price }}</div>
+                  <div class="card-price">₴ {{ product.retail_price }}</div>
                 </div>
               {% endif %}
 
@@ -158,14 +161,14 @@
                 {% else %} — {% endif %}
               </div>
 
-              <div class="card-info">
-                Країна:
-                {% if product.brand and product.brand.country_slug %}
-                  <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">
-                    {{ product.brand.country }}
-                  </a>
-                {% else %} — {% endif %}
-              </div>
+<!--              <div class="card-info">-->
+<!--                Країна:-->
+<!--                {% if product.brand and product.brand.country_slug %}-->
+<!--                  <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">-->
+<!--                    {{ product.brand.country }}-->
+<!--                  </a>-->
+<!--                {% else %} — {% endif %}-->
+<!--              </div>-->
             </div>
           </div>
         {% endfor %}
@@ -179,154 +182,7 @@
     </main>
   </div>
 
-<script>
-(function () {
-  'use strict';
 
-  /* ---------- УТИЛІТИ ---------- */
-  const log = (...a) => console.debug('[card-height]', ...a);
-  const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-  function debounce(fn, ms = 120){ let t; return (...a)=>{clearTimeout(t); t=setTimeout(()=>fn(...a),ms);} }
-  const rerun = debounce(() => requestAnimationFrame(recomputeCardHeights), 60);
-
-  /* ---------- СЛАЙДЕР ТОВАРІВ ---------- */
-  function initProductSlider() {
-    const w = document.querySelector('.product-slider');
-    if (!w) return;
-    const slider   = w.querySelector('.grid-slider');
-    const leftBtn  = w.querySelector('.slide-btn.left');
-    const rightBtn = w.querySelector('.slide-btn.right');
-
-    const cs   = getComputedStyle(document.documentElement);
-    const cardW= parseInt(cs.getPropertyValue('--prod-card-width'),10);
-    const gap  = parseInt(cs.getPropertyValue('--prod-gap'),10);
-    const perV = parseInt(cs.getPropertyValue('--prod-per-page'),10);
-    const perS = parseInt(cs.getPropertyValue('--prod-scroll'),10);
-    const total= w.querySelectorAll('.prod-card').length;
-
-    const maxPage = Math.max(0, Math.ceil((total - perV) / perS));
-    let page = 0;
-
-    function go(delta){
-      page = Math.min(maxPage, Math.max(0, page + delta));
-      slider.style.transform = `translateX(-${page * perS * (cardW + gap)}px)`;
-      leftBtn.style.display  = page === 0 ? 'none' : 'block';
-      rightBtn.style.display = page >= maxPage ? 'none' : 'block';
-      requestAnimationFrame(recomputeCardHeights); // після зсуву — перерахувати
-    }
-    leftBtn?.addEventListener('click',  ()=>go(-1));
-    rightBtn?.addEventListener('click', ()=>go(+1));
-    // первинний стан
-    leftBtn && (leftBtn.style.display = 'none');
-    rightBtn && (rightBtn.style.display = maxPage ? 'block':'none');
-  }
-
-/* ---------- ВИМІР ВИСОТИ КАРТКИ ---------- */
-function measureBack(back){
-  // тимчасово робимо видимим для правильного виміру
-  const keep = {
-    display: back.style.display,
-    position: back.style.position,
-    opacity: back.style.opacity,
-    pointerEvents: back.style.pointerEvents,
-    visibility: back.style.visibility,
-    height: back.style.height,
-    maxHeight: back.style.maxHeight
-  };
-  back.style.display       = 'block';
-  back.style.position      = 'static';
-  back.style.opacity       = '0';
-  back.style.pointerEvents = 'none';
-  back.style.visibility    = 'hidden';
-  back.style.height        = 'auto';
-  back.style.maxHeight     = 'none';
-
-  // scrollHeight зазвичай стабільніший на прихованих елементах
-  const h = Math.ceil(back.scrollHeight);
-
-  Object.assign(back.style, keep);
-  return h;
-}
-
-function recomputeCardHeights(){
-  const cs  = getComputedStyle(document.documentElement);
-  const MIN = parseInt(cs.getPropertyValue('--prod-min-height')) || 320;
-  const MAX = parseInt(cs.getPropertyValue('--prod-max-height')) || 520;
-
-  document.querySelectorAll('.prod-card').forEach((card, idx) => {
-    const back = card.querySelector('.card-back');
-    if (!back) return;
-
-    const desired  = measureBack(back);
-    const adjusted = Math.max(0, desired - 30);   // мінус 10px
-    const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
-
-    card.style.setProperty('--hover-height', clamped + 'px');
-    // console.log(`card #${idx}: desired=${desired} → adjusted=${adjusted} → ${clamped}`);
-  });
-}
-
-  /* ---------- ТРИГЕРИ ПЕРЕРАХУНКУ ---------- */
-  function initCardHeightAutofit(){
-    // 1) коли все завантажилось (включно з картинками)
-    if (document.readyState === 'complete') rerun();
-    else window.addEventListener('load', rerun, {once:true});
-
-    // 2) коли підтягнуться шрифти (змінюється перенесення рядків)
-    if (document.fonts?.ready) document.fonts.ready.then(rerun);
-
-    // 3) коли дозавантажиться будь-яка картинка у картках
-    $all('.prod-card img').forEach(img=>{
-      if (!img.complete) {
-        img.addEventListener('load',  rerun, {once:true});
-        img.addEventListener('error', rerun, {once:true});
-      }
-    });
-
-    // 4) на зміну розміру/орієнтації
-    window.addEventListener('resize', rerun);
-    window.addEventListener('orientationchange', rerun);
-
-    // 5) реагуємо на пізні зміни контенту всередині .card-back
-    if ('ResizeObserver' in window) {
-      const ro = new ResizeObserver(rerun);
-      $all('.prod-card .card-back').forEach(el => ro.observe(el));
-    }
-
-    // 6) перший прохід + невелика страховка
-    rerun();
-    setTimeout(rerun, 800);
-  }
-
-  /* ---------- ТОЧКА ВХОДУ ---------- */
-  document.addEventListener('DOMContentLoaded', ()=>{
-    initProductSlider();
-    initCardHeightAutofit();
-  });
-})();
-</script>
-
-<script>
-  function applyFilters() {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('brand');
-
-    document.querySelectorAll('input[name="brand"]:checked').forEach(cb => {
-      url.searchParams.append('brand', cb.value);
-    });
-
-    const min = document.querySelector('input[name="price_min"]').value;
-    const max = document.querySelector('input[name="price_max"]').value;
-    const stock = document.querySelector('input[name="in_stock"]')?.checked;
-
-    if (min) url.searchParams.set('price_min', min); else url.searchParams.delete('price_min');
-    if (max) url.searchParams.set('price_max', max); else url.searchParams.delete('price_max');
-    if (stock) url.searchParams.set('in_stock', '1'); else url.searchParams.delete('in_stock');
-
-    window.location = url.toString();
-  }
-</script>
 
 </section>
 {% endblock %}
