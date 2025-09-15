@@ -1,31 +1,28 @@
 from .settings import *
+import os
 
 DEBUG = True
 
-# Секретний ключ для локальної роботи, але не в репозиторії
-SECRET_KEY = 'django-insecure-…локальний-ключ…'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-# База даних: SQLite для швидкого старту
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'HOST': os.getenv('PG_HOST', '127.0.0.1'),
+        'PORT': os.getenv('PG_PORT', '5432'),
+        'NAME': os.getenv('PG_NAME', 'laska_db'),
+        'USER': os.getenv('PG_USER', 'danil'),
+        'PASSWORD': os.getenv('PG_PASS', ''),
+        'CONN_MAX_AGE': 60,
     }
 }
 
-# Пошта в консоль
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_HSTS_SECONDS = 0
 
-# Логи — повний дебаг
-LOGGING = {
-    'version': 1,
-    'handlers': {
-        'console': {'class': 'logging.StreamHandler'},
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
-}
+LOGGING = {}

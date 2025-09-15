@@ -1,4 +1,3 @@
-# Laskazoo/views.py (або де у тебе home)
 from apps.products.models import PopularProduct, Product_Variant, PopularCategory
 from apps.favourites.models import Favourite
 from django.shortcuts import render, redirect
@@ -86,13 +85,13 @@ def home(request):
     variants = (Product_Variant.objects
                 .filter(product_id__in=product_ids)
                 .only('id', 'product_id', 'sku', 'retail_price', 'weight', 'size', 'image', 'warehouse_quantity')
-                .order_by('retail_price'))  # або як хочеш сортувати
+                .order_by('retail_price'))
 
     by_pid = {}
     for v in variants:
         by_pid.setdefault(v.product_id, []).append(v)
 
-    # прикріпимо заздалегідь зібрані варіанти до об’єктів продуктів
+
     for pp in populars:
         pp.product.variants_for_card = by_pid.get(pp.product_id, [])
 

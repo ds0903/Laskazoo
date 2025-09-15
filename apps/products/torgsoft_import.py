@@ -1,5 +1,4 @@
-# apps/products/services/torgsoft_import.py
-import os
+
 from decimal import Decimal
 from django.db import transaction
 from django.utils.text import slugify
@@ -20,7 +19,7 @@ def _slug_unique(base: str) -> str:
     return uniq
 
 def _get_or_create_category(full_name: str) -> Category:
-    # приклад: спробуємо покласти все в один main_category "Інше"
+
     if not full_name:
         full_name = "Інше"
     main, _ = Main_Categories.objects.get_or_create(
@@ -63,11 +62,11 @@ def import_products_variants_from_trs():
     mode, sftp, incoming_dir, photos_dir, file_name = get_reader()
     trs_path = f"{incoming_dir.rstrip('/')}/{file_name}"
 
-    # 1) читаємо файл
+
     raw = sftp.read_bytes(trs_path) if mode == "sftp" else open(trs_path, "rb").read()
     rows = parse_rows(raw)  # список dict, у яких МОЖУТЬ бути ключі: parent_id, variant_id, name, sku, barcode, retail_price, qty, brand, category, photo, weight, size, color, characteristic
 
-    # 2) нормалізуємо: намагаємося вийняти parent_id/variant_id з полів, що прийшли
+
     def get_parent_id(r):
         return str(r.get("parent_id") or r.get("external_id") or r.get("id") or "")
     def get_variant_id(r):
@@ -81,11 +80,11 @@ def import_products_variants_from_trs():
         variant_id = get_variant_id(r)
         name = r.get("name") or "Товар"
 
-        # 2.1 Категорія/бренд
+
         category = _get_or_create_category(r.get("category") or "")
         brand = _get_or_create_brand(r.get("brand") or "")
 
-        # 2.2 Продукт (база)
+
         prod = None
         if parent_id:
             prod = Product.objects.filter(external_id=parent_id).first()
@@ -106,7 +105,7 @@ def import_products_variants_from_trs():
             prod.save()
             upserted_products += 1
         else:
-            # оновлюємо базові поля (без ціни — ціна буде на варіанті)
+
             changed = False
             if not prod.external_id and parent_id:
                 prod.external_id = parent_id
@@ -118,12 +117,12 @@ def import_products_variants_from_trs():
             if changed:
                 prod.save()
 
-        # 2.3 Фото на базовому товарі (опц.)
+
         photo_name = r.get("photo")
         if photos_dir and photo_name and not prod.image:
             _save_photo_to_product(prod, sftp if mode=="sftp" else None, photos_dir, photo_name)
 
-        # 2.4 Варіант
+
         sku = r.get("sku") or variant_id or ""
         weight = r.get("weight")
         size   = r.get("size")
@@ -135,7 +134,7 @@ def import_products_variants_from_trs():
         if variant_id:
             v = v_qs.filter(external_id=variant_id).first()
         else:
-            # fallback — шукаємо по sku
+
             v = v_qs.filter(sku=sku).first()
 
         if not v:

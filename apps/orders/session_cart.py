@@ -1,4 +1,3 @@
-# apps/orders/session_cart.py
 from decimal import Decimal
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
@@ -7,7 +6,7 @@ CART_KEY = "cart"
 
 @dataclass
 class CartItem:
-    kind: str      # 'variant' або 'product'
+    kind: str
     id: int
     qty: int
     price: Decimal
@@ -72,9 +71,6 @@ def session_price(session, kind: str, obj_id: int) -> str:
     return "0"
 
 def summary(session) -> Tuple[int, int, Decimal]:
-    """
-    Повертає (lines, qty, total) для сесійного кошика.
-    """
     _normalize(session)
     items: List[Dict] = session[CART_KEY]
     lines = len(items)

@@ -1,4 +1,3 @@
-from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
 from .models import Favourite
@@ -36,11 +35,11 @@ def toggle(request, pk):
             'product': product.id,
         })
 
-    # ----- Гість: тримаємо список variant_id + окремо продукти без варіантів -----
+
     fav_var_ids = set(map(int, request.session.get('fav_variant_ids', [])))
     fav_prod_ids = set(map(int, request.session.get('fav_product_ids', [])))
 
-    if variant:  # зберігаємо як окремий запис для КОЖНОГО варіанта
+    if variant:
         if variant.id in fav_var_ids:
             fav_var_ids.remove(variant.id)
             state = 'removed'
@@ -97,7 +96,7 @@ def favourite_list(request):
         'favs': favs,
         'fav_ids': fav_ids,
         'fav_product_ids': list(fav_ids),
-        'fav_variant_ids': fav_variant_ids,  # <-- ДОДАНО
+        'fav_variant_ids': fav_variant_ids,
     })
 
 

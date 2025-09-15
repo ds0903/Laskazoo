@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.orders',
     'apps.favourites',
-    'apps.cart',
     'apps.ts_ftps',
 ]
 

@@ -1,15 +1,14 @@
-# apps/orders/models.py
 from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from apps.products.models import Product, Product_Variant
 
 class Order(models.Model):
-    STATUS_CART = 'cart'  # тимчасова корзина
-    STATUS_NEW = 'new'  # щойно оформлене
-    STATUS_PROCESSING = 'processing'  # в обробці менеджером
-    STATUS_COMPLETED = 'completed'  # виконане
-    STATUS_CANCELED = 'canceled'  # скасоване
+    STATUS_CART = 'cart'
+    STATUS_NEW = 'new'
+    STATUS_PROCESSING = 'processing'
+    STATUS_COMPLETED = 'completed'
+    STATUS_CANCELED = 'canceled'
 
     STATUS_CHOICES = [
         (STATUS_CART, 'У кошику'),
@@ -28,12 +27,10 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Поля для checkout
     first_name = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     city = models.CharField(max_length=100, blank=True)
 
-    # … інші адресні/платіжні поля …
 
 
     def __str__(self):
@@ -51,7 +48,7 @@ class OrderItem(models.Model):
     retail_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def save(self, *args, **kwargs):
-        # гарантуємо консистентність: варіант належить продукту
+
         if self.variant and self.variant.product_id != self.product_id:
             raise ValueError('Variant does not belong to product')
         super().save(*args, **kwargs)

@@ -1,4 +1,3 @@
-# apps/products/views.py
 from django.shortcuts import render, get_object_or_404
 from .models import Main_Categories, Category, Product, Brand, Product_Variant
 from django.db.models import Count, Q, Prefetch
@@ -23,7 +22,7 @@ def search_suggest(request):
     if len(q) < 2:
         return JsonResponse({"items": []})
 
-    # базовий запит по Product + просте скорингування
+
     qs = (
         Product.objects.filter(Q(name__icontains=q))
         .annotate(
@@ -33,7 +32,7 @@ def search_suggest(request):
                 default=Value(60),
                 output_field=IntegerField(),
             ),
-            # ціна: мінімум з варіантів або retail_price самого продукту
+
             price=Coalesce(Min("variants__retail_price"), "retail_price"),
         )
         .order_by("-score")[:3]
@@ -55,7 +54,7 @@ def quick_search(request):
     if not q:
         return redirect(reverse("products:catalog"))
 
-    # ---- продукти ----
+
     pqs = Product.objects.filter(name__icontains=q).annotate(
         score=Case(
             When(name__iexact=q, then=Value(100)),
@@ -63,9 +62,9 @@ def quick_search(request):
             default=Value(50),
             output_field=IntegerField(),
         )
-    ).values("id", "score")  # економимо поля
+    ).values("id", "score")
 
-    # ---- варіанти (якщо у них є name; якщо ні — видали цей блок) ----
+
     vqs = Product_Variant.objects.filter(name__icontains=q).select_related("product").annotate(
         score=Case(
             When(name__iexact=q, then=Value(100)),
@@ -75,7 +74,7 @@ def quick_search(request):
         )
     ).values("product_id", "score")
 
-    # вибрати найкращий кандидат
+
     best_product_id = None
     best_score = -1
 
@@ -96,7 +95,7 @@ def quick_search(request):
         except Product.DoesNotExist:
             pass
 
-    # fallback: якщо нічого — на каталог з q (або зроби сторінку результатів)
+
     return redirect(f'{reverse("products:catalog")}?q={q}')
 
 def catalog(request):
@@ -105,7 +104,7 @@ def catalog(request):
     variants_qs = (
         Product_Variant.objects
         .only('id', 'product_id', 'sku', 'retail_price', 'weight', 'size', 'image', 'warehouse_quantity')
-        .order_by('retail_price')   # або як тобі треба
+        .order_by('retail_price')
     )
 
     base_qs = (
@@ -133,7 +132,7 @@ def catalog(request):
     ctx = {
         'title':    'Каталог',
         'mains':    mains,
-        'products': products,   # уже має product.variants_for_card
+        'products': products,
         'fav_variant_ids':  list(fav_variant_ids),
         'fav_product_ids': fav_product_ids,
         **filt_ctx,
@@ -155,7 +154,7 @@ def category_list(request, main_slug, slug):
         main_category__slug=main_slug
     )
 
-    # базовий QS — тільки товари цієї категорії
+
     base_qs = (
         Product.objects
         .filter(category=category)
@@ -163,7 +162,7 @@ def category_list(request, main_slug, slug):
         .prefetch_related('variants')
     )
 
-    # ⬇️ головне — застосувати ті самі фільтри, що й у каталозі
+
     products, filt_ctx = _apply_filters(request, base_qs)
 
     if request.user.is_authenticated:
@@ -184,17 +183,17 @@ def category_list(request, main_slug, slug):
         'products': products,
         'fav_variant_ids': list(fav_variant_ids),
         'fav_product_ids': fav_product_ids,
-        **filt_ctx,                 # brands, price_min, price_max, in_stock, selected_brands
+        **filt_ctx,
     })
 
 def product_detail(request, main_slug, slug, product_slug):
-    # 1) перевіряємо, що категорія належить до головної
+
     category = get_object_or_404(
         Category,
         slug=slug,
         main_category__slug=main_slug
     )
-    # 2) тягнемо сам товар
+
     product = get_object_or_404(
         Product,
         slug=product_slug,
@@ -211,10 +210,10 @@ def product_detail(request, main_slug, slug, product_slug):
     })
 
 def _apply_filters(request, base_qs):
-    """Застосовує GET-фільтри до базового queryset і готує список брендів із лічильниками в межах поточного QS."""
+
     qs = base_qs
 
-    selected_brands = request.GET.getlist('brand')  # ?brand=whiskas&brand=royal...
+    selected_brands = request.GET.getlist('brand')
     price_min       = request.GET.get('price_min') or None
     price_max       = request.GET.get('price_max') or None
     in_stock        = request.GET.get('in_stock')
@@ -227,17 +226,17 @@ def _apply_filters(request, base_qs):
     if price_max:
         qs = qs.filter(retail_price__lte=price_max)
     if in_stock:
-        # підлаштуй під свою модель складу; приклад через related_name variants.stock
+
         qs = qs.filter(variants__warehouse_quantity__gt=0).distinct()
 
-    # Бренди та їх кількість САМЕ в межах відфільтрованого списку
+
     brands_agg = (
         qs.values('brand__brand_slug', 'brand__name')
           .annotate(count=Count('id'))
           .order_by('brand__name')
     )
 
-    # Помітимо вибрані бренди (для чекбоксів)
+
     brands_ctx = [
         {
             'slug':    b['brand__brand_slug'],
@@ -245,7 +244,7 @@ def _apply_filters(request, base_qs):
             'count': b['count'],
             'checked': b['brand__brand_slug'] in selected_brands
         }
-        for b in brands_agg if b['brand__brand_slug']  # захист від None
+        for b in brands_agg if b['brand__brand_slug']
     ]
 
     return qs, {
@@ -257,31 +256,31 @@ def _apply_filters(request, base_qs):
     }
 
 def catalog_by_brand(request, brand_slug):
-    # Поточний бренд сторінки
+
     cur_brand = get_object_or_404(Brand, brand_slug__iexact=brand_slug)
 
-    # ==== зчитуємо фільтри з GET ====
+
     picked_brands = request.GET.getlist('brand')           # може бути кілька
     price_min     = (request.GET.get('price_min') or '').strip()
     price_max     = (request.GET.get('price_max') or '').strip()
     in_stock      = request.GET.get('in_stock') == '1'
 
-    # Базовий набір товарів: якщо юзер тикнув інші бренди — показуємо їх;
-    # інакше — тримаємося поточного бренду (сторінки).
+
+
     base = Product.objects.filter(is_active=True)
     if picked_brands:
         base = base.filter(brand__brand_slug__in=picked_brands)
     else:
         base = base.filter(brand=cur_brand)
 
-    # Мінімальна ціна по варіантах або сама ціна продукту
+
     products = (base
         .select_related('brand', 'category')
         .annotate(min_var_price=Min('variants__retail_price'))
         .annotate(price_eff=Coalesce('min_var_price', F('retail_price')))
     )
 
-    # Діапазон цін
+
     if price_min:
         try: products = products.filter(price_eff__gte=Decimal(price_min))
         except Exception: pass
@@ -289,7 +288,7 @@ def catalog_by_brand(request, brand_slug):
         try: products = products.filter(price_eff__lte=Decimal(price_max))
         except Exception: pass
 
-    # Наявність (є склад у варіанта або у самого продукту)
+
     if in_stock:
         products = products.filter(
             Q(variants__warehouse_quantity__gt=0) |
@@ -298,9 +297,9 @@ def catalog_by_brand(request, brand_slug):
 
     products = products.distinct()
 
-    # ==== Сайдбар «Бренд» з лічильниками ====
-    # Щоб лічильники відповідали іншим фільтрам (ціна/наявність),
-    # рахуємо їх на такому ж базовому наборі, але без конкретного brand-фільтру.
+
+
+
     sidebar = (Product.objects.filter(is_active=True)
         .annotate(min_var_price=Min('variants__retail_price'))
         .annotate(price_eff=Coalesce('min_var_price', F('retail_price')))
@@ -317,7 +316,7 @@ def catalog_by_brand(request, brand_slug):
             Q(warehouse_quantity__gt=0)
         )
 
-    # (необов’язково) обмежити бренди сайдбара країною поточного бренду
+
     sidebar = sidebar.filter(brand__country_slug__iexact=cur_brand.country_slug)
 
     agg = (sidebar.values('brand__brand_slug', 'brand__name')
@@ -338,7 +337,7 @@ def catalog_by_brand(request, brand_slug):
     return render(request, 'zoosvit/products/product_list.html', {
         'title':     f'Бренд: {cur_brand.name}',
         'products':  products,
-        'brands':    brands_ctx,   # саме у тому форматі, який очікує ваш шаблон
+        'brands':    brands_ctx,
         'price_min': price_min,
         'price_max': price_max,
         'in_stock':  in_stock,
@@ -353,5 +352,5 @@ def catalog_by_country(request, country_slug):
     return render(request, 'zoosvit/products/product_list.html', {
         'title': title,
         'products': products,
-        'brands': country_brands.annotate(count=Count('products')),  # опційно
+        'brands': country_brands.annotate(count=Count('products')),
     })

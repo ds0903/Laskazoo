@@ -1,4 +1,3 @@
-# apps/orders/views.py
 from decimal import Decimal
 from typing import List, Dict
 
@@ -13,10 +12,8 @@ from .models import Order, OrderItem
 from .forms import OrderCheckoutForm
 from apps.products.models import Product, Product_Variant
 
-# сесійний кошик (для гостей)
 from .session_cart import summary as sess_summary, add_item as sess_add, CART_KEY
 
-# ----------------- helpers -----------------
 
 def _is_ajax(request):
     return (
@@ -53,7 +50,6 @@ def _cart_math(user):
     return count, qty, total
 
 def _cart_numbers(user):
-    """Повертає (lines_count, total_qty) для кошика користувача."""
     order = Order.objects.filter(user=user, status=Order.STATUS_CART).first()
     if not order:
         return 0, 0
@@ -61,12 +57,8 @@ def _cart_numbers(user):
     qty = order.items.aggregate(q=Sum('quantity'))['q'] or 0
     return lines, qty
 
-# ----------------- API (публічні для фронта) -----------------
 
 def api_cart_summary(request):
-    """
-    Бейджик у шапці: кількість та сума. Працює і для гостей, і для авторизованих.
-    """
     if request.user.is_authenticated:
         count, qty, total = _cart_math(request.user)
     else:
@@ -88,7 +80,7 @@ def cart_modal(request):
     sitems: List[Dict] = []
     total = Decimal('0')
 
-    for idx, it in enumerate(items):  # ← індекс як sid
+    for idx, it in enumerate(items):
         kind = it.get('kind')
         obj_id = int(it.get('id'))
         qty = int(it.get('qty', 1))
@@ -115,7 +107,7 @@ def cart_modal(request):
 
         total += line
         sitems.append({
-            'sid': idx,  # ← оце головне
+            'sid': idx,
             'name': name,
             'sku': sku,
             'weight': weight,
@@ -127,15 +119,10 @@ def cart_modal(request):
 
     return render(request, 'zoosvit/orders/_cart_modal_body.html', {'sitems': sitems, 'total': total})
 
-# ----------------- core actions: add для всіх -----------------
 
 def add_variant_to_cart(request, variant_id: int):
-    """
-    Авторизованим — у БД, гостям — у сесію. Повертаємо JSON для модалки/бейджа.
-    """
     variant = get_object_or_404(Product_Variant, pk=variant_id)
 
-    # перевірка наявності
     if variant.warehouse_quantity is not None and variant.warehouse_quantity <= 0:
         if _is_ajax(request):
             return JsonResponse({'ok': False, 'message': 'Немає в наявності'}, status=400)
@@ -165,7 +152,6 @@ def add_variant_to_cart(request, variant_id: int):
         messages.success(request, f'Додано: {variant.product.name}')
         return redirect('orders:cart')
 
-    # гість → у сесію
     sess_add(request.session, 'variant', variant.id, price=variant.retail_price, inc=1)
     if _is_ajax(request):
         lines, qty, total = sess_summary(request.session)
@@ -179,7 +165,6 @@ def add_to_cart(request, product_id: int):
 
     product = get_object_or_404(Product, pk=product_id)
 
-    # якщо є варіанти — віддаємо на add_variant_to_cart
     v = (Product_Variant.objects
          .filter(product=product)
          .order_by('retail_price')
@@ -205,7 +190,6 @@ def add_to_cart(request, product_id: int):
         messages.success(request, f'Додано: {product.name}')
         return redirect('orders:cart')
 
-    # гість без варіантів
     price = product.retail_price or Decimal('0')
     sess_add(request.session, 'product', product.id, price=price, inc=1)
     if _is_ajax(request):
@@ -213,7 +197,6 @@ def add_to_cart(request, product_id: int):
         return JsonResponse({'ok': True, 'count': lines, 'qty': qty, 'total': str(total)}, status=201)
     return redirect('orders:cart')
 
-# ----------------- editable qty / повні сторінки -----------------
 
 @login_required
 @require_POST
@@ -232,7 +215,7 @@ def item_set_qty(request, item_id):
 
     item.quantity = qty
     item.save(update_fields=['quantity'])
-    return cart_modal(request)  # повертаємо оновлене тіло модалки
+    return cart_modal(request)
 
 @login_required
 def cart_detail(request):
@@ -268,9 +251,7 @@ def order_detail(request, pk):
     order = get_object_or_404(Order, pk=pk, user=request.user)
     return render(request, 'zoosvit/orders/order_detail.html', {'order': order})
 
-# ----------------- інк/дек/видалення (для авторизованих) -----------------
 
-# --- helpers для сесійного кошика ---
 def _sess_get_items(request):
     return list(request.session.get(CART_KEY, []) or [])
 
@@ -278,7 +259,6 @@ def _sess_save_items(request, items):
     request.session[CART_KEY] = items
     request.session.modified = True
 
-# --- +/-/×/clear: ПРАЦЮЄ і для auth, і для guest ---
 def cart_item_inc(request, item_id: int):
     if request.user.is_authenticated and not request.GET.get('guest'):
         item = get_object_or_404(

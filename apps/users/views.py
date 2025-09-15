@@ -1,4 +1,3 @@
-
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
@@ -11,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 
 class UserLoginView(View):
     form_class = LoginForm
-    template_name = 'zoosvit/users/login.html'  # для прямого заходу без AJAX
+    template_name = 'zoosvit/users/login.html'
 
     def get(self, request):
         return render(request, self.template_name, {'login_form': self.form_class()})
@@ -27,7 +26,7 @@ class UserLoginView(View):
             )
             if user:
                 login(request, user)
-                # якщо AJAX — повернути JSON для редіректу
+
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'redirect_url': '/'})
                 return redirect('/')
@@ -35,7 +34,7 @@ class UserLoginView(View):
         else:
             error = 'Будь ласка, виправте помилки у формі'
 
-        # якщо AJAX — повернути лише фрагмент із формою та помилкою
+
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return render(
                 request,
@@ -44,7 +43,7 @@ class UserLoginView(View):
                 status=400
             )
 
-        # інакше — звичайна сторінка
+
         return render(request, self.template_name, {
             'login_form': form,
             'error': error
@@ -67,7 +66,7 @@ def register(request):
         else:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=400)
-            # Інакше звичайно рендеримо повну сторінку
+
             return render(request, 'zoosvit/users/register.html', {'form': form})
 
     else:
