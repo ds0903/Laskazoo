@@ -1,0 +1,132 @@
+# Ukrainian translation for Django forms and messages
+# Copyright (C) 2025
+# This file is distributed under the same license as Django package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Laskazoo\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-16 22:30+0200\n"
+"PO-Revision-Date: 2025-09-16 22:30+0200\n"
+"Last-Translator: Developer\n"
+"Language: uk\n"
+"Language-Team: Ukrainian\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Будь ласка, введіть email."
+msgstr "Будь ласка, введіть email."
+
+msgid "Введіть коректну email адресу."
+msgstr "Введіть коректну email адресу."
+
+msgid "Пароль"
+msgstr "Пароль"
+
+msgid "Введіть пароль"
+msgstr "Введіть пароль"
+
+msgid "Пароль є обов'язковим."
+msgstr "Пароль є обов'язковим."
+
+msgid "Ваш пароль повинен містити щонайменше 4 символи."
+msgstr "Ваш пароль повинен містити щонайменше 4 символи."
+
+msgid "Повторіть пароль"
+msgstr "Повторіть пароль"
+
+msgid "Підтвердіть пароль."
+msgstr "Підтвердіть пароль."
+
+msgid "Введіть той самий пароль для підтвердження."
+msgstr "Введіть той самий пароль для підтвердження."
+
+msgid "Логін"
+msgstr "Логін"
+
+msgid "Введіть логін"
+msgstr "Введіть логін"
+
+msgid "Такий логін вже існує"
+msgstr "Такий логін вже існує"
+
+msgid "Логін може містити тільки букви, цифри та символи @/./+/-/_"
+msgstr "Логін може містити тільки букви, цифри та символи @/./+/-/_"
+
+msgid "Паролі не співпадають."
+msgstr "Паролі не співпадають."
+
+msgid "Користувач з таким email вже існує."
+msgstr "Користувач з таким email вже існує."
+
+msgid "Невірний логін або пароль"
+msgstr "Невірний логін або пароль"
+
+msgid "Будь ласка, виправте помилки у формі"
+msgstr "Будь ласка, виправте помилки у формі"
+
+msgid "Користувач з таким логіном вже існує. Спробуйте інший."
+msgstr "Користувач з таким логіном вже існує. Спробуйте інший."
+
+msgid "Виникла помилка під час реєстрації. Спробуйте ще раз."
+msgstr "Виникла помилка під час реєстрації. Спробуйте ще раз."
+
+msgid "Виникла технічна помилка. Спробуйте пізніше."
+msgstr "Виникла технічна помилка. Спробуйте пізніше."
+
+msgid "Дані оновлено ✔️"
+msgstr "Дані оновлено ✔️"
+
+msgid "Користувач з таким логіном вже існує."
+msgstr "Користувач з таким логіном вже існує."
+
+msgid "Помилка збереження даних."
+msgstr "Помилка збереження даних."
+
+msgid "Технічна помилка. Спробуйте пізніше."
+msgstr "Технічна помилка. Спробуйте пізніше."
+
+msgid "Телефон"
+msgstr "Телефон"
+
+msgid "Ваш логін"
+msgstr "Ваш логін"
+
+msgid "Ваша пошта"
+msgstr "Ваша пошта"
+
+msgid "Ваш телефон"
+msgstr "Ваш телефон"
+
+msgid "Введіть email"
+msgstr "Введіть email"
+
+# Django's built-in validation messages that appear in English
+msgid "The two password fields didn't match."
+msgstr "Паролі не співпадають."
+
+msgid "User with this Email already exists."
+msgstr "Користувач з таким email вже існує."
+
+msgid "A user with that username already exists."
+msgstr "Користувач з таким логіном вже існує."
+
+msgid "This field is required."
+msgstr "Це поле є обов'язковим."
+
+msgid "Enter a valid email address."
+msgstr "Введіть коректну email адресу."
+
+msgid "This password is too short. It must contain at least 8 characters."
+msgstr "Цей пароль занадто короткий. Він повинен містити щонайменше 4 символи."
+
+msgid "This password is too common."
+msgstr "Цей пароль занадто простий."
+
+msgid "This password is entirely numeric."
+msgstr "Цей пароль складається тільки з цифр."

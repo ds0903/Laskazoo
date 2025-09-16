@@ -1,0 +1,73 @@
+{
+
+   "Client": {
+
+       "Name": "Пупкін Іван Петрович",
+
+       "MPhone": "0675746830",
+
+       "CPhone": "7601828",
+
+       "ZIP": "61072",
+
+       "Country": "Україна",
+
+       "Region": "Харківська",
+
+       "Місто": "Харків",
+
+       "Address": "вул.Тобольська 42-А",
+
+       "EMail": "info@torgsoft.com.ua"
+
+   },
+
+   "Options": {
+
+       "SaleType": "1",
+
+       "Comment": "Код під'їзду 1685",
+
+       "OrderNumber": "12",
+
+       "DeliveryCondition": "Нова Пошта",
+
+       "DeliveryAddress": "Харків, вул. Сумська, 124 (Відділення №33)",
+
+       "ReserveDate": "28082013",
+
+       "BonusPay": "100.8",
+
+       "GiftCertificate": "9567200000106,9567200000182",
+
+       "OrderDate": "2020-02-04 18:19:44",
+
+       "CurrencyInternationalCode": "USD"
+
+   },
+
+   "Goods": [
+
+       {
+
+           "GoodID": "38280",
+
+           "Price": "145.33",
+
+           "Count": "2"
+
+       },
+
+       {
+
+           "GoodID": "38281",
+
+           "Price": "131.61",
+
+           "Count": "1"
+
+       }
+
+   ]
+
+}
