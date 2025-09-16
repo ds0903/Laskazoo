@@ -8,29 +8,13 @@
 
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/products/catalog.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/orders/cart-modal.css' %}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 
   {% block extra_css %}{% endblock %}
 </head>
 
-{% load static %}
-<link rel="stylesheet" href="{% static 'zoosvit/css/orders/cart-modal.css' %}">
-<div id="cart-modal" class="cm-overlay hidden">
-  <div class="cm-panel">
-    <div id="cart-modal-body"><!-- сюди підвантажується partial --></div>
-  </div>
-</div>
-<script>
-  window.ZOOSVIT_URLS = {
-    cartModal: "{% url 'orders:cart_modal' %}",
-    cartCount: "{% url 'orders:api_cart_summary' %}"
-  };
-</script>
-
-<script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
-
 <body>
-
   {% include 'zoosvit/core/partials/header.html' %}
 
   {% block breadcrumbs %}{% endblock %}
@@ -40,6 +24,28 @@
   </main>
 
   {% include 'zoosvit/core/partials/footer.html' %}
+
+  <!-- Модальне вікно корзини -->
+  <div id="cart-modal" class="cm-overlay hidden">
+    <div class="cm-panel">
+      <button class="cm-close" type="button">&times;</button>
+      <div id="cart-modal-body"><!-- сюди підвантажується вміст корзини --></div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    window.ZOOSVIT_URLS = {
+      cartModal: "{% url 'orders:cart_modal' %}",
+      cartCount: "{% url 'orders:api_cart_summary' %}"
+    };
+  </script>
+
+  <!-- Основні скрипти -->
+  <script defer src="{% static 'zoosvit/js/cart-modal.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/login_modal.js' %}"></script>
 
   {% block extra_js %}{% endblock %}
 </body>

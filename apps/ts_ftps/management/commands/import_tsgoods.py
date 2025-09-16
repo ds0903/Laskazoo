@@ -1,4 +1,3 @@
-# apps/products/management/commands/import_tsgoods.py
 from django.core.management.base import BaseCommand
 from apps.ts_ftps.services import import_ts_goods
 
