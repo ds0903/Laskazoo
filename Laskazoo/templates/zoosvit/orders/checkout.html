@@ -1,11 +1,221 @@
-<h1>Оформлення замовлення</h1>
-{% if messages %}
-  <ul class="messages">
-    {% for m in messages %}<li>{{ m }}</li>{% endfor %}
-  </ul>
-{% endif %}
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Підтвердити</button>
-</form>
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Оформлення замовлення{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/users/profile.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/orders/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-wrapper">
+
+  <!-- Сайдбар -->
+  <aside class="profile-sidebar">
+    <ul class="profile-nav">
+      {% if user.is_authenticated %}
+        <li><a href="{% url 'users:profile' %}">Особисті дані</a></li>
+        <li><a href="{% url 'orders:list' %}">Замовлення</a></li>
+        <li><a href="{% url 'favourites:list' %}">Обране</a></li>
+      {% endif %}
+      <li class="active"><a href="{% url 'orders:checkout' %}">Оформлення замовлення</a></li>
+    </ul>
+  </aside>
+
+  <!-- Основний контент -->
+  <section class="profile-main">
+    <h1 class="profile-title">Оформлення замовлення</h1>
+
+    {% if messages %}
+      <div class="messages">
+        {% for msg in messages %}
+          <div class="message {{ msg.tags }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="checkout-container">
+      <!-- Ліва колонка: Товари в замовленні -->
+      <div class="order-summary">
+        <h2>Ваше замовлення</h2>
+        
+        {% if order.items.all %}
+          <div class="order-items">
+            {% for item in order.items.all %}
+              <div class="order-item">
+                <div class="item-image">
+                  {% if item.variant and item.variant.image %}
+                    <img src="{{ item.variant.image.url }}" alt="{{ item.product.name }}">
+                  {% elif item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                  {% else %}
+                    <img src="{% static 'zoosvit/img/placeholder.jpg' %}" alt="{{ item.product.name }}">
+                  {% endif %}
+                </div>
+                
+                <div class="item-details">
+                  <h3>{{ item.product.name }}</h3>
+                  {% if item.variant %}
+                    <div class="item-variant">
+                      {% if item.variant.sku %}Артикул: {{ item.variant.sku }}{% endif %}
+                      {% if item.variant.weight %} · {{ item.variant.weight }} кг{% endif %}
+                      {% if item.variant.size %} · {{ item.variant.size }}{% endif %}
+                    </div>
+                  {% endif %}
+                  <div class="item-price">{{ item.retail_price }} грн × {{ item.quantity }} шт</div>
+                </div>
+                
+                <div class="item-total">
+                  <strong>{{ item.line_total }} грн</strong>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          
+          <div class="order-total">
+            <div class="total-row">
+              <span>Загальна сума:</span>
+              <strong>{{ total }} грн</strong>
+            </div>
+          </div>
+        {% else %}
+          <p class="empty-order">Ваш кошик порожній. <a href="{% url 'products:catalog' %}">Перейти до каталогу</a></p>
+        {% endif %}
+      </div>
+
+      <!-- Права колонка: Форма оформлення -->
+      <div class="checkout-form-container">
+        <h2>Контактні дані</h2>
+        
+        <form method="post" class="checkout-form">
+          {% csrf_token %}
+          
+          <div class="form-section">
+            <h3>Особисті дані</h3>
+            
+            <div class="form-group">
+              <label for="{{ form.first_name.id_for_label }}">Ім'я *</label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}
+                <div class="form-errors">
+                  {% for error in form.first_name.errors %}
+                    <span class="error">{{ error }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.phone.id_for_label }}">Телефон *</label>
+              {{ form.phone }}
+              {% if form.phone.errors %}
+                <div class="form-errors">
+                  {% for error in form.phone.errors %}
+                    <span class="error">{{ error }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <small class="form-help">Наприклад: +380671234567</small>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Адреса доставки</h3>
+            
+            <div class="form-group">
+              <label for="{{ form.city.id_for_label }}">Місто *</label>
+              {{ form.city }}
+              {% if form.city.errors %}
+                <div class="form-errors">
+                  {% for error in form.city.errors %}
+                    <span class="error">{{ error }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <small class="form-help">Введіть назву вашого міста або індекс</small>
+            </div>
+          </div>
+
+          {% if form.non_field_errors %}
+            <div class="form-errors">
+              {% for error in form.non_field_errors %}
+                <span class="error">{{ error }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              <span class="btn-icon">📦</span>
+              Підтвердити замовлення
+            </button>
+            <a href="{% url 'orders:cart' %}" class="btn-secondary">
+              ← Повернутися до кошика
+            </a>
+          </div>
+        </form>
+
+        <div class="checkout-info">
+          <h3>Інформація про доставку</h3>
+          <ul>
+            <li>📞 <strong>Зв'язок з вами</strong> — наш менеджер зателефонує протягом 30 хвилин для підтвердження замовлення</li>
+            <li>🚚 <strong>Доставка</strong> — здійснюється протягом 1-3 робочих днів залежно від вашого міста</li>
+            <li>💳 <strong>Оплата</strong> — при отриманні товару або за реквізитами (на вибір)</li>
+            <li>📝 <strong>Документи</strong> — до товару додається чек та гарантійний талон</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Маска для телефону (опціонально)
+    const phoneInput = document.querySelector('input[name=\"phone\"]');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.startsWith('380')) {
+                value = '+' + value;
+            } else if (value.startsWith('0')) {
+                value = '+38' + value;
+            } else if (value && !value.startsWith('+')) {
+                value = '+380' + value;
+            }
+            
+            // Форматування: +380 67 123 45 67
+            if (value.length > 4) {
+                value = value.slice(0, 4) + ' ' + value.slice(4);
+            }
+            if (value.length > 7) {
+                value = value.slice(0, 7) + ' ' + value.slice(7);
+            }
+            if (value.length > 11) {
+                value = value.slice(0, 11) + ' ' + value.slice(11);
+            }
+            if (value.length > 14) {
+                value = value.slice(0, 14) + ' ' + value.slice(14, 16);
+            }
+            
+            e.target.value = value;
+        });
+    }
+
+    // Анімація на відправку форми
+    const form = document.querySelector('.checkout-form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const submitBtn = form.querySelector('button[type=\"submit\"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<span class=\"btn-icon\">⏳</span> Обробка замовлення...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

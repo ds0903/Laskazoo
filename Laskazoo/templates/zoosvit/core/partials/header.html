@@ -7,7 +7,6 @@
     <div class="site-topbar">
       <div class="container topbar-inner">
         <nav class="topbar-nav">
-<!--          <a href="{% url 'stores_map' %}">Магазини Ласка</a>-->
           <a href="{% url 'info_page' 'payment-delivery' %}">Оплата та доставка</a>
           <a href="{% url 'info_page' 'returns' %}">Обмін та повернення</a>
           <a href="#page-footer">Контакти</a>
@@ -21,16 +20,19 @@
           <img src="{% static 'zoosvit/img/laska_white3_.png' %}?v=4"
                alt="Ласка" width="190" height="50" />
         </a>
-        <form id="main-search" class="search-form" method="get"
-      action="{% url 'products:quick_search' %}"
-      data-disable-inline-suggest>
-  <input type="text" name="q" placeholder="пошук товарів" autocomplete="off" />
-  <button type="submit" aria-label="Пошук">🔍</button>
-  <div class="search-suggest" id="search-suggest" hidden></div>
-</form>
 
+        <!-- Пошук з inline підказками -->
+        <form id="main-search" class="search-form" method="get" action="{% url 'products:quick_search' %}">
+          <input type="text" name="q" placeholder="пошук товарів" autocomplete="off" />
+          <button type="submit" aria-label="Пошук">🔍</button>
 
-
+          <!-- Inline підказки прямо під полем -->
+          <div class="search-dropdown" id="search-dropdown" hidden>
+            <div class="search-results" id="search-results">
+              <!-- Результати пошуку -->
+            </div>
+          </div>
+        </form>
 
         <div class="icon-btn phone-btn">
           <img src="{% static 'zoosvit/img/header_icons/phone-icon.png' %}" alt="Телефон">
@@ -40,39 +42,33 @@
             <div class="dropdown-contact">
               <b>+38 093 238 47 30</b>
               <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram"
-              style="margin-left: 20px;  !important">
+              style="margin-left: 20px;">
             </div>
-              </a>
+            </a>
             <div class="dropdown-schedule">
               <strong>Графік роботи:</strong> Пн–Нд<br/>9:00 – 20:00
             </div>
-<!--            <div class="dropdown-chats">-->
-<!--              <a href="viber://chat?number=+380679001022">-->
-<!--                <img src="{% static 'zoosvit/img/header_icons/viber-icon.png' %}" alt="Viber">-->
-<!--              </a>-->
-<!--              <a href="https://t.me/your_username">-->
-<!--                <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram">-->
-<!--              </a>-->
-<!--              <a href="https://t.me/your_username"><img src="{% static 'zoosvit/img/header_icons/instagram-icon.png' %}" alt="INST"></a>-->
-<!--            </div>-->
           </div>
         </div>
+
         <div class="header-actions">
+          <!-- Іконка користувача з дропдауном -->
           {% if user.is_authenticated %}
-            <div class="icon-btn login-btn">
+            <div class="icon-btn login-btn user-profile-btn" id="user-profile-btn">
               <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
-              <div class="login-dropdown">
-                <div class="dropdown-title">Вітаємо, {{ user.username }}!</div>
-                <div class="dropdown-chats">
-                  <a href="{% url 'orders:list' %}" class="dropdown-link">Замовлення</a>
+              <div class="profile-dropdown">
+                <div class="dropdown-title">{{ user.get_full_name|default:user.username }}</div>
+                <div class="dropdown-links">
+                  <a href="{% url 'users:profile' %}" class="dropdown-link">Мій профіль</a>
+                  <a href="{% url 'orders:list' %}" class="dropdown-link">Мої замовлення</a>
                   <a href="{% url 'favourites:list' %}" class="dropdown-link">Обране</a>
-                  <a href="{% url 'users:profile' %}" class="dropdown-link">Особисті дані</a>
+                  <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
                   <a href="{% url 'users:logout' %}" class="dropdown-link">Вийти</a>
                 </div>
               </div>
             </div>
           {% else %}
-            <div class="icon-btn login-btn">
+            <div class="icon-btn login-btn" id="user-login-btn">
               <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
               <div class="login-dropdown">
                 <div class="dropdown-title">Вхід / Реєстрація</div>
@@ -84,25 +80,29 @@
             </div>
           {% endif %}
 
-          {# улюблені #}
+          <!-- Обране -->
           <a href="{% url 'favourites:list' %}" class="icon-btn header-icon" id="fav-btn" aria-label="Обране">
-  <img src="{% static 'zoosvit/img/header_icons/heart-icon.png' %}" alt="Обране">
-  <span id="fav-count"
-        class="icon-badge js-fav-count"
-        data-favs-count
-        data-favs-live="server"
-        {% if fav_count|default:0 <= 0 %}hidden{% endif %}>
-    {{ fav_count|default:0 }}
-  </span>
-</a>
-
-
-          {# кошик: count + total всередині посилання #}
-          <a href="#cart" class="btn-cart" aria-label="Мій кошик">
-            <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}" alt="Cart">
-            <span class="cart-count">{{ cart_qty|default:0 }}</span>
-            <span class="cart-text">Мій кошик</span>
+            <img src="{% static 'zoosvit/img/header_icons/heart-icon.png' %}" alt="Обране">
+            <span id="fav-count" class="icon-badge js-fav-count" data-favs-count data-favs-live="server" {% if fav_count|default:0 <= 0 %}hidden{% endif %}>
+              {{ fav_count|default:0 }}
+            </span>
           </a>
+
+          <!-- Кошик: неактивний коли порожній -->
+          {% if cart_qty|default:0 > 0 %}
+            <a href="#cart" class="btn-cart" aria-label="Мій кошик" id="cart-btn">
+              <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}" alt="Cart">
+              <span class="cart-count">{{ cart_qty|default:0 }}</span>
+              <span class="cart-text">Мій кошик</span>
+            </a>
+          {% else %}
+            <div class="btn-cart btn-cart--disabled" aria-label="Кошик порожній" id="cart-btn-disabled">
+              <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}" alt="Cart">
+              <span class="cart-count">0</span>
+              <span class="cart-text">Мій кошик</span>
+            </div>
+          {% endif %}
+
           <span class="cart-total" id="cart-total">
             {% if cart_total|floatformat:2 != "0.00" %}
               {{ cart_total }} грн
@@ -117,350 +117,432 @@
           <a href="{% url 'products:subcategory_list' 'shares' %}">Акції</a>
           <a href="{% url 'products:subcategory_list' 'dogs' %}">Собаки</a>
           <a href="{% url 'products:subcategory_list' 'cats' %}">Коти</a>
-<!--          <a href="{% url 'products:subcategory_list' 'birds' %}">Птахи</a>-->
-<!--          <a href="{% url 'products:subcategory_list' 'rodents' %}">Гризуни</a>-->
-<!--          <a href="{% url 'products:subcategory_list' 'aquarium' %}">Акваріум</a>-->
-          <a href="{% url 'products:subcategory_list' 'super-vigodniye-propozicii' %}" >Супер вигідні-пропозиції</a>
-
-<!--          <a href="{% url 'products:subcategory_list' 'terrarium' %}">Тераріум</a>-->
-<!--          <a href="{% url 'products:subcategory_list' 'brands' %}">Бренди</a>-->
+          <a href="{% url 'products:subcategory_list' 'super-vigodniye-propozicii' %}">Супер вигідні-пропозиції</a>
         </nav>
       </div>
     </div>
 </header>
 
-<!-- Портал для результатів пошуку (НЕ в середині форми!) -->
-<div id="search-portal" class="s-portal s-portal--inline" hidden>
-  <div class="s-backdrop"></div>
-  <div class="s-panel" role="dialog" aria-label="Результати пошуку">
-    <button class="s-close" aria-label="Закрити">×</button>
-    <div class="s-head">
-      <div class="s-query"><span id="sq"></span></div>
-    </div>
-    <div class="s-body" id="s-body">
-      <!-- тут малюємо знайдені товари -->
-    </div>
-  </div>
-</div>
-
+<!-- JavaScript для всієї функціональності -->
 <script>
-(function(){
-  const form  = document.querySelector('.search-form:not([data-disable-inline-suggest])');
-  if (!form) return;
+document.addEventListener('DOMContentLoaded', () => {
+  // =============== ПОШУК ===============
+  const searchForm = document.getElementById('main-search');
+  const searchInput = searchForm?.querySelector('input[name="q"]');
+  const searchDropdown = document.getElementById('search-dropdown');
+  const searchResults = document.getElementById('search-results');
+  const API_URL = "{% url 'products:search_suggest' %}";
 
-  const input = form.querySelector('input[name="q"]');
-  const api   = "{% url 'products:search_suggest' %}";
+  let searchItems = [];
+  let activeIndex = -1;
 
-  const portal = document.getElementById('search-portal');
-  const bodyEl = document.getElementById('s-body');
-  const qEl    = document.getElementById('sq');
+  // Debounce function
+  const debounce = (fn, delay = 200) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => fn(...args), delay);
+    };
+  };
 
-  let items = [];
-  let active = -1;
+  // Escape HTML
+  const escapeHtml = (text) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
 
-  const debounce = (fn, ms=200)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms);} };
-  const money = n => (n!=null ? `₴ ${Number(n).toFixed(2)}` : '');
-  const esc = s => String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  // Позиціонуємо dropdown під полем пошуку
+  function positionSearchDropdown() {
+    if (!searchForm || !searchDropdown) return;
 
-  function openPortal(q, list){
-    qEl.textContent = q;
+    const rect = searchForm.getBoundingClientRect();
+    searchDropdown.style.position = 'fixed';
+    searchDropdown.style.top = (rect.bottom + 2) + 'px';
+    searchDropdown.style.left = rect.left + 'px';
+    searchDropdown.style.width = rect.width + 'px';
+    searchDropdown.style.zIndex = '9999';
+  }
 
-    if (!list.length){
-      bodyEl.innerHTML = `<div class="s-card"><div class="s-empty">Нічого не знайдено</div></div>`;
+  // Показуємо результати пошуку
+  function showSearchResults(items) {
+    if (!searchResults) return;
+
+    if (!items.length) {
+      searchResults.innerHTML = '<div class="search-no-results">Нічого не знайдено</div>';
     } else {
-      const rows = list.map((it,i)=>`
-        <div class="s-row" data-i="${i}">
-          <img class="s-img"
-               src="${it.image||''}" alt=""
-               width="64" height="64"
-               loading="lazy" decoding="async" />
-          <div class="s-title">${esc(it.name)}</div>
-          <div class="s-price">${money(it.price)}</div>
+      const html = items.map((item, index) => `
+        <div class="search-item" data-index="${index}" data-url="${escapeHtml(item.url || '')}">
+          <img src="${escapeHtml(item.image || '')}" alt="" class="search-item-image">
+          <div class="search-item-content">
+            <div class="search-item-title">${escapeHtml(item.name || '')}</div>
+            <div class="search-item-price">${item.price ? '₴ ' + Number(item.price).toFixed(2) : ''}</div>
+          </div>
         </div>
       `).join('');
-      bodyEl.innerHTML = `<div class="s-card">${rows}</div>`;
+      searchResults.innerHTML = html;
     }
 
-    portal.hidden = false;
-    document.documentElement.classList.add('no-scroll');
-    document.body.classList.add('no-scroll');
-    active = -1;
+    searchDropdown.hidden = false;
+    positionSearchDropdown();
+    activeIndex = -1;
   }
 
-  function closePortal(){
-    portal.hidden = true;
-    document.documentElement.classList.remove('no-scroll');
-    document.body.classList.remove('no-scroll');
-    active = -1;
+  // Ховаємо результати пошуку
+  function hideSearchResults() {
+    if (searchDropdown) {
+      searchDropdown.hidden = true;
+    }
+    activeIndex = -1;
   }
 
-  const fetchS = debounce(async (q)=>{
-    q = q.trim();
-    if (q.length < 2){ closePortal(); return; }
-    try{
-      const r = await fetch(`${api}?q=${encodeURIComponent(q)}`, {credentials:'same-origin'});
-      const data = await r.json();
-      items = data.items || [];
-      openPortal(q, items);
-    }catch(e){
-      items = [];
-      openPortal(q, items);
+  // Виконуємо пошук
+  const performSearch = debounce(async (query) => {
+    if (query.length < 2) {
+      hideSearchResults();
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      searchItems = data.items || [];
+      showSearchResults(searchItems);
+    } catch (error) {
+      console.error('Search error:', error);
+      hideSearchResults();
     }
   }, 180);
 
-  input.addEventListener('input', ()=> fetchS(input.value));
+  // Події пошуку
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      performSearch(e.target.value.trim());
+    });
 
-  document.addEventListener('keydown', (e)=>{
-    if (portal.hidden) return;
-    if (e.key === 'Escape'){ closePortal(); return; }
-    if (!items.length) return;
-
-    const rows = [...bodyEl.querySelectorAll('.s-row')];
-    if (e.key === 'ArrowDown'){ e.preventDefault(); move(1, rows); }
-    else if (e.key === 'ArrowUp'){ e.preventDefault(); move(-1, rows); }
-    else if (e.key === 'Enter'){
-  if (active >= 0 && items[active]) {
-    e.preventDefault();
-    window.location.href = items[active].url;
-  }
-}
-  });
-
-  bodyEl.addEventListener('click', (e)=>{
-    const row = e.target.closest('.s-row'); if (!row) return;
-    const i = Number(row.dataset.i);
-    if (items[i]) openQuickModal(items[i]);
-  });
-
-  portal.querySelector('.s-backdrop').onclick = closePortal;
-  portal.querySelector('.s-close').onclick = closePortal;
-
-  function move(dir, rows){
-    const n = rows.length; if (!n) return;
-    active = (active + dir + n) % n;
-    rows.forEach((r,i)=> r.classList.toggle('is-active', i===active));
-    rows[active]?.scrollIntoView({block:'nearest'});
-  }
-
-  function openQuickModal(item){
-  if (item && item.url) {
-    window.location.href = item.url;
-  }
-}
-
-  form.addEventListener('submit', (e)=>{
-    const q = (input.value || '').trim();
-    if (!q) e.preventDefault();
-  });
-
-})();
-
-</script>
-
-<!--кнопки -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.querySelector('.phone-btn');
-  const dd  = btn?.querySelector('.phone-dropdown');
-  if (!btn || !dd) return;
-
-  let t;
-  const open  = () => { clearTimeout(t); dd.classList.add('show'); };
-  const close = () => { t = setTimeout(() => dd.classList.remove('show'), 150); };
-
-  btn.addEventListener('mouseenter', open);
-  btn.addEventListener('mouseleave', close);
-  dd .addEventListener('mouseenter', open);
-  dd .addEventListener('mouseleave', close);
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.querySelector('.login-btn');
-  const dd  = btn?.querySelector('.login-dropdown');
-  if (!btn || !dd) return;
-
-  let t;
-  const open  = () => { clearTimeout(t); dd.classList.add('show'); };
-  const close = () => { t = setTimeout(() => dd.classList.remove('show'), 150); };
-
-  btn.addEventListener('mouseenter', open);
-  btn.addEventListener('mouseleave', close);
-  dd .addEventListener('mouseenter', open);
-  dd .addEventListener('mouseleave', close);
-});
-</script>
-<!--кнопки -->
-
-
-<script>
-document.addEventListener('DOMContentLoaded', ()=>{
-  const f = document.querySelector('.search-form');
-  if (!f) return;
-  f.addEventListener('submit', e=>{
-    const q = (f.querySelector('input[name="q"]')?.value || '').trim();
-    if (!q) e.preventDefault();
-  });
-});
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
-  const badge = document.querySelector('[data-favs-count], .js-fav-count, .icon-badge.js-fav-counter');
-  if (!badge) return;
-  try {
-    const r = await fetch('{% url "favourites:api_count" %}', {credentials:'same-origin'});
-    if (!r.ok) return;
-    const {count=0} = await r.json();
-    badge.textContent = String(count);
-    badge.hidden = count <= 0;
-  } catch(e) {}
-});
-</script>
-
-<script>
-(function(){
-  const form   = document.getElementById('main-search');
-  if (!form) return;
-
-  const input  = form.querySelector('input[name="q"]');
-  const api    = "{% url 'products:search_suggest' %}";
-
-  const portal = document.getElementById('search-portal');
-  const panel  = portal.querySelector('.s-panel');
-  const bodyEl = document.getElementById('s-body');
-
-  let items = [];
-  let active = -1;
-
-  const debounce = (fn, ms=200)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms);} };
-  const money = n => (n!=null ? `₴ ${Number(n).toFixed(2)}` : '');
-  const esc   = s => String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-  // позиціюємо картку під полем пошуку
-  function positionPanel(){
-    const r = form.getBoundingClientRect();
-    const pad = 2; // невеликий відступ
-    Object.assign(panel.style, {
-      left:  (r.left) + 'px',
-      top:   (r.bottom + pad) + 'px',
-      width: (r.width) + 'px',
-      maxWidth: Math.min(r.width, 760) + 'px'
+    searchInput.addEventListener('focus', () => {
+      const query = searchInput.value.trim();
+      if (query.length >= 2 && searchItems.length > 0) {
+        showSearchResults(searchItems);
+      }
     });
   }
 
-  function openPortal(list){
-    if (!list.length){
-      bodyEl.innerHTML = `<div class="s-card"><div class="s-empty">Нічого не знайдено</div></div>`;
-    } else {
-      const rows = list.map((it,i)=>`
-        <div class="s-row" data-i="${i}">
-          <img class="s-img" src="${it.image||''}" alt="" width="64" height="64" loading="lazy" decoding="async" />
-          <div class="s-title">${esc(it.name)}</div>
-          <div class="s-price">${money(it.price)}</div>
-        </div>`).join('');
-      bodyEl.innerHTML = rows;
-    }
-    portal.hidden = false;
-    positionPanel();
-    active = -1;
-  }
+  // Навігація клавіатурою
+  document.addEventListener('keydown', (e) => {
+    if (searchDropdown?.hidden !== false) return;
 
-  function closePortal(){
-    portal.hidden = true;
-    active = -1;
-  }
+    const items = searchResults?.querySelectorAll('.search-item') || [];
 
-  const fetchS = debounce(async (q)=>{
-    q = q.trim();
-    if (q.length < 2){ closePortal(); return; }
-    try{
-      const r = await fetch(`${api}?q=${encodeURIComponent(q)}`, {credentials:'same-origin'});
-      const data = await r.json();
-      items = data.items || [];
-      openPortal(items);
-    }catch(e){
-      items = [];
-      openPortal(items);
-    }
-  }, 180);
-
-  input.addEventListener('input', ()=> fetchS(input.value));
-
-  // клавіатура
-  document.addEventListener('keydown', (e)=>{
-    if (portal.hidden) return;
-    if (e.key === 'Escape'){ closePortal(); return; }
-    if (!items.length) return;
-
-    const rows = [...bodyEl.querySelectorAll('.s-row')];
-    if (e.key === 'ArrowDown'){ e.preventDefault(); move(1, rows); }
-    else if (e.key === 'ArrowUp'){ e.preventDefault(); move(-1, rows); }
-    else if (e.key === 'Enter'){
-      if (active>=0 && items[active]?.url){ e.preventDefault(); window.location.href = items[active].url; }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, items.length - 1);
+      updateActiveItem(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, -1);
+      updateActiveItem(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIndex >= 0 && searchItems[activeIndex]?.url) {
+        window.location.href = searchItems[activeIndex].url;
+      } else {
+        searchForm?.submit();
+      }
+    } else if (e.key === 'Escape') {
+      hideSearchResults();
     }
   });
 
-  function move(dir, rows){
-    const n = rows.length; if (!n) return;
-    active = (active + dir + n) % n;
-    rows.forEach((r,i)=> r.classList.toggle('is-active', i===active));
-    rows[active]?.scrollIntoView({block:'nearest'});
+  function updateActiveItem(items) {
+    items.forEach((item, index) => {
+      item.classList.toggle('active', index === activeIndex);
+    });
   }
 
-  // клік по рядку => відкриваємо сторінку товару
-  bodyEl.addEventListener('click', (e)=>{
-    const row = e.target.closest('.s-row'); if (!row) return;
-    const i = Number(row.dataset.i);
-    if (items[i]?.url) window.location.href = items[i].url;
+  // Клік по результату пошуку
+  if (searchResults) {
+    searchResults.addEventListener('click', (e) => {
+      const item = e.target.closest('.search-item');
+      if (item?.dataset.url) {
+        window.location.href = item.dataset.url;
+      }
+    });
+  }
+
+  // Закриваємо при кліку поза формою
+  document.addEventListener('click', (e) => {
+    if (!searchForm?.contains(e.target)) {
+      hideSearchResults();
+    }
   });
 
-  // клік поза карткою або по хрестику — закрити
-  portal.querySelector('.s-close').onclick = closePortal;
-  document.addEventListener('click', (e)=>{
-    if (portal.hidden) return;
-    if (!panel.contains(e.target) && !form.contains(e.target)) closePortal();
-  });
+  // Позиціонуємо при скролі/ресайзі
+  window.addEventListener('scroll', positionSearchDropdown);
+  window.addEventListener('resize', positionSearchDropdown);
 
-  // тримати картку під полем при скролі/ресайзі
-  window.addEventListener('resize', positionPanel, {passive:true});
-  window.addEventListener('scroll', positionPanel, {passive:true});
+  // =============== ТЕЛЕФОННИЙ ДРОПДАУН ===============
+  const phoneBtn = document.querySelector('.phone-btn');
+  const phoneDropdown = phoneBtn?.querySelector('.phone-dropdown');
 
-  // сабміт без порожнього запиту
-  form.addEventListener('submit', (e)=>{
-    const q = (input.value || '').trim();
-    if (!q) e.preventDefault();
-  });
-})();
+  if (phoneBtn && phoneDropdown) {
+    let phoneTimer;
+
+    const showPhoneDropdown = () => {
+      clearTimeout(phoneTimer);
+      phoneDropdown.classList.add('show');
+    };
+
+    const hidePhoneDropdown = () => {
+      phoneTimer = setTimeout(() => {
+        phoneDropdown.classList.remove('show');
+      }, 150);
+    };
+
+    phoneBtn.addEventListener('mouseenter', showPhoneDropdown);
+    phoneBtn.addEventListener('mouseleave', hidePhoneDropdown);
+    phoneDropdown.addEventListener('mouseenter', showPhoneDropdown);
+    phoneDropdown.addEventListener('mouseleave', hidePhoneDropdown);
+  }
+
+  // =============== ДРОПДАУНИ КОРИСТУВАЧА ===============
+  // Для авторизованих користувачів - hover
+  const userProfileBtn = document.getElementById('user-profile-btn');
+  const profileDropdown = userProfileBtn?.querySelector('.profile-dropdown');
+
+  if (userProfileBtn && profileDropdown) {
+    let profileTimer;
+
+    const showProfileDropdown = () => {
+      clearTimeout(profileTimer);
+      profileDropdown.classList.add('show');
+    };
+
+    const hideProfileDropdown = () => {
+      profileTimer = setTimeout(() => {
+        profileDropdown.classList.remove('show');
+      }, 150);
+    };
+
+    userProfileBtn.addEventListener('mouseenter', showProfileDropdown);
+    userProfileBtn.addEventListener('mouseleave', hideProfileDropdown);
+    profileDropdown.addEventListener('mouseenter', showProfileDropdown);
+    profileDropdown.addEventListener('mouseleave', hideProfileDropdown);
+
+    // Також клік відкриває профіль
+    userProfileBtn.addEventListener('click', (e) => {
+      const firstLink = profileDropdown.querySelector('.dropdown-link');
+      if (firstLink) {
+        window.location.href = firstLink.href;
+      }
+    });
+  }
+
+  // Для неавторизованих - клік
+  const userLoginBtn = document.getElementById('user-login-btn');
+  const loginDropdown = userLoginBtn?.querySelector('.login-dropdown');
+
+  if (userLoginBtn && loginDropdown) {
+    userLoginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginDropdown.classList.toggle('show');
+    });
+
+    // Закриваємо при кліку поза дропдауном
+    document.addEventListener('click', (e) => {
+      if (!userLoginBtn.contains(e.target)) {
+        loginDropdown.classList.remove('show');
+      }
+    });
+  }
+
+  // =============== ОБРАНЕ БЕЙДЖ ===============
+  async function updateFavouritesBadge() {
+    try {
+      const response = await fetch('{% url "favourites:api_count" %}');
+      const data = await response.json();
+      const badge = document.getElementById('fav-count');
+
+      if (badge) {
+        badge.textContent = data.count || 0;
+        badge.hidden = (data.count || 0) <= 0;
+      }
+    } catch (error) {
+      console.error('Error updating favourites badge:', error);
+    }
+  }
+
+  updateFavouritesBadge();
+});
 </script>
 
-
-<script>
-// утиліта
-function updateBadge(id, n) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (n > 0) {
-    el.textContent = n;
-    el.hidden = false;
-  } else {
-    el.hidden = true;
-  }
+<!-- Стилі для пошуку і дропдаунів -->
+<style>
+/* Пошукові підказки */
+.search-form {
+  position: relative;
 }
 
+.search-dropdown {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 9999;
+}
 
-// ініціалізація бейджа при завантаженні сторінки
-document.addEventListener('DOMContentLoaded', () => {
-  fetch('{% url "favourites:api_count" %}')
-    .then(r => r.json())
-    .then(({count}) => updateBadge('fav-count', count))
-    .catch(console.error);
-});
+.search-results {
+  padding: 8px 0;
+}
 
-</script>
-<!--скрипт який підтягую обране -->
+.search-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  gap: 12px;
+}
+
+.search-item:hover,
+.search-item.active {
+  background-color: #f5f5f5;
+}
+
+.search-item-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f0f0f0;
+}
+
+.search-item-content {
+  flex: 1;
+}
+
+.search-item-title {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.search-item-price {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.search-no-results {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Дропдаун профілю для авторизованих */
+.user-profile-btn {
+  position: relative;
+}
+
+.profile-dropdown {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.35s ease-in-out,
+    transform 0.35s ease-in-out,
+    visibility 0.35s;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  width: 220px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 999;
+  font-size: 0.875rem;
+  color: #333;
+}
+
+.profile-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.profile-dropdown .dropdown-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--color-primary);
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.profile-dropdown .dropdown-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-dropdown .dropdown-link {
+  color: #333;
+  text-decoration: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.profile-dropdown .dropdown-link:hover {
+  background: rgba(9,94,86,0.1);
+  color: var(--color-primary);
+}
+
+/* Неактивний кошик */
+.btn-cart--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-cart--disabled:hover {
+  background: #fff !important;
+  transform: none !important;
+}
+
+.btn-cart--disabled img {
+  filter: none !important;
+}
+
+/* Мобільна адаптація */
+@media (max-width: 768px) {
+  .search-dropdown {
+    max-height: 300px;
+  }
+
+  .search-item {
+    padding: 10px;
+  }
+
+  .search-item-image {
+    width: 35px;
+    height: 35px;
+  }
+
+  .search-item-title {
+    font-size: 0.85rem;
+  }
+}
+</style>
+
+<!-- Підтягуємо дані для обраного -->
 {{ fav_variant_ids|json_script:"fav-variant-ids" }}
 {{ fav_product_ids|json_script:"fav-product-ids" }}
 <script>
@@ -468,48 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     const v = JSON.parse(document.getElementById('fav-variant-ids')?.textContent || '[]').map(Number);
     const p = JSON.parse(document.getElementById('fav-product-ids')?.textContent || '[]').map(Number);
-    window.__favVarSet  = new Set(v);
+    window.__favVarSet = new Set(v);
     window.__favProdSet = new Set(p);
   } catch(e) {
-    window.__favVarSet  = window.__favVarSet  || new Set();
+    window.__favVarSet = window.__favVarSet || new Set();
     window.__favProdSet = window.__favProdSet || new Set();
   }
 })();
 </script>
-
-<!--пошук -->
-
-<div id="quick-modal" class="qm" hidden>
-  <div class="qm__backdrop"></div>
-  <div class="qm__dialog">
-    <button class="qm__close" aria-label="Закрити">×</button>
-    <div class="qm__body" id="quick-modal-body">Завантаження…</div>
-  </div>
-</div>
-<style>.qm[hidden]{ display:none; }
-.qm__backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.4); }
-.qm__dialog{ position:fixed; inset:auto 0 0 0; margin:auto; top:10vh; width:min(720px, 92vw);
-  background:#fff; border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,.25); padding:16px; z-index:3000; }
-.qm__close{ position:absolute; right:10px; top:8px; font-size:22px; background:transparent; border:0; cursor:pointer; }
-</style>
-<script>
-function openModal(item){
-  const m = document.getElementById('quick-modal');
-  const b = document.getElementById('quick-modal-body');
-  m.hidden = false;
-  // найпростіше — вбудувати міні-картку з того що є
-  b.innerHTML = `
-    <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start">
-      <img src="${item.image||''}" alt="" style="width:120px;height:120px;object-fit:cover;border-radius:12px;background:#eee">
-      <div>
-        <h3 style="margin:0 0 6px 0">${item.name}</h3>
-        <div style="font-weight:700;margin-bottom:12px">${item.price!=null?('₴ '+Number(item.price).toFixed(2)):''}</div>
-        <a class="btn" href="${item.url}">Відкрити сторінку товару</a>
-      </div>
-    </div>`;
-  const close = ()=> m.hidden = true;
-  m.querySelector('.qm__backdrop').onclick = close;
-  m.querySelector('.qm__close').onclick = close;
-}
-</script>
-

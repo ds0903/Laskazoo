@@ -75,6 +75,7 @@ TS_SYNC = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # Middleware для локалізації
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -87,6 +88,7 @@ ROOT_URLCONF = 'Laskazoo.urls'
 AUTH_USER_MODEL = 'users.CustomUser'
 LOGIN_REDIRECT_URL  = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+LOGIN_URL = '/users/login/'  # Виправляє проблему з редиректом на accounts/login
 
 TEMPLATES = [
     {
@@ -115,7 +117,7 @@ WSGI_APPLICATION = 'Laskazoo.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    # НОВА дефолтна БД (Postgres)
+    # PostgreSQL - основна база даних
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('PG_NAME', 'laska_db'),
@@ -123,18 +125,16 @@ DATABASES = {
         'PASSWORD': os.getenv('PG_PASS', 'danilus15'),
         'HOST': os.getenv('PG_HOST', '127.0.0.1'),
         'PORT': os.getenv('PG_PORT', '5432'),
-        'CONN_MAX_AGE': 60,  # простий keep-alive
-
-        # 'OPTIONS': {
-        #     # приклад: увімкнути ssl, якщо треба
-        #     # 'sslmode': 'require',
-        # }
+        'CONN_MAX_AGE': 60,
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
     },
-
-    # СТАРА SQLite (лише для зчитування даних під час міграції)
-    # 'sqlite': {
+    
+    # SQLite для резервного копіювання
+    # 'sqlite_backup': {
     #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    #     'NAME': BASE_DIR / 'db.sqlite3',
     # },
 }
 
@@ -144,30 +144,45 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 4,
+        }
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    # Закоментовані строгі валідатори для простішої реєстрації
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    # },
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'uk'  # Українська мова за замовчуванням
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Kiev'  # Київський часовий пояс
 
-USE_I18N = True
+USE_I18N = True  # Увімкнути інтернаціоналізацію
 
 USE_TZ = True
+
+# Доступні мови
+LANGUAGES = [
+    ('uk', 'Українська'),
+    ('en', 'English'),
+]
+
+# Шляхи до файлів перекладу
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 
 # Static files (CSS, JavaScript, Images)
@@ -188,3 +203,41 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Налаштування логування
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'apps.users': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+    },
+}

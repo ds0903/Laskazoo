@@ -1,227 +1,181 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const modal        = document.getElementById('auth-modal');
-  const closeBtn     = document.querySelector('.auth-close-btn');
-  const loginBtn     = document.getElementById('open-login-modal');
-  const registerBtn  = document.getElementById('open-register-modal');
-  const loginHdrBtn  = document.getElementById('open-login-modal');     // у хедері
-  const registerHdrBtn = document.getElementById('open-register-modal'); // у хедері
+  // DOM елементи
+  const modal = document.getElementById('auth-modal');
+  const closeBtn = modal?.querySelector('.auth-close-btn');
+  const headerLoginBtn = document.getElementById('open-login-modal');
+  const headerRegBtn = document.getElementById('open-register-modal');
+  const tabs = document.querySelectorAll('.auth-tab');
+  const loginBox = document.getElementById('login-form');
+  const registerBox = document.getElementById('register-form');
 
-  const loginForm    = document.getElementById('login-form');
-  const registerForm = document.getElementById('register-form');
+  if (!modal) return;
 
-  const loginTab     = document.querySelector('[data-tab="login"]');
-  const registerTab  = document.querySelector('[data-tab="register"]');
-
-  if (!modal || !loginBtn || !registerBtn || !loginForm || !registerForm) return;
-
-  // ✅ Вхід
-  loginBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    loginForm.style.display = 'block';
-    registerForm.style.display = 'none';
-    loginTab.classList.add('active');
-    registerTab.classList.remove('active');
-    modal.classList.add('show');
-  });
-
-  // ✅ Реєстрація
-  registerBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    loginForm.style.display = 'none';
-    registerForm.style.display = 'block';
-    loginTab.classList.remove('active');
-    registerTab.classList.add('active');
-    modal.classList.add('show');
-  });
-
-  // кліки по самим вкладкам у модалці
-  loginTab.addEventListener('click', (e) => {
-    e.preventDefault();
-    showTab('login');
-  });
-  registerTab.addEventListener('click', (e) => {
-    e.preventDefault();
-    showTab('register');
-  });
-
-  // Закриття модалки
-  closeBtn.addEventListener('click', () => {
-    modal.classList.remove('show');
-  });
-});
-
-
-
-// розібрати потім потрібно буде
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('register-form-ajax');
-
-  if (!form) return;
-
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(form);
-    const response = await fetch(form.action, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: formData
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      window.location.href = json.redirect_url;
-    } else {
-      const html = await response.text();
-      document.getElementById('register-form').innerHTML = html;
-    }
-  });
-
-  // делегований слухач на submit для обох форм
-  document.body.addEventListener('submit', async e => {
-    const form = e.target;
-    if (form.id === 'login-form-ajax' || form.id === 'register-form-ajax') {
-      e.preventDefault();
-      const formData = new FormData(form);
-      const response = await fetch(form.action, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
+  // Функція для очищення форми
+  function clearForm(formElement) {
+    if (!formElement) return;
+    
+    const form = formElement.querySelector('form');
+    if (form) {
+      // Очищуємо всі input поля
+      const inputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
+      inputs.forEach(input => {
+        input.value = '';
+        input.classList.remove('error'); // видаляємо класи помилок якщо є
       });
-
-      if (response.ok) {
-        // якщо успіх — нічної вставки, а редірект
-        const json = await response.json();
-        window.location.href = json.redirect_url;
-      } else {
-        // якщо помилка — вставляємо HTML фрагмент
-        const html = await response.text();
-        const targetId = form.id === 'login-form-ajax' ? 'login-form' : 'register-form';
-        document.getElementById(targetId).innerHTML = html;
-      }
+      
+      // Видаляємо повідомлення про помилки
+      const errorMessages = form.querySelectorAll('.error-message, .errorlist, .non-field-errors');
+      errorMessages.forEach(error => error.remove());
+      
+      // Видаляємо класи помилок з полів
+      const fieldGroups = form.querySelectorAll('.form-group');
+      fieldGroups.forEach(group => group.classList.remove('has-error'));
+      
+      // Видаляємо атрибути aria-invalid
+      const invalidFields = form.querySelectorAll('[aria-invalid="true"]');
+      invalidFields.forEach(field => field.removeAttribute('aria-invalid'));
     }
-  });
-});
-
-document.getElementById('register-form-ajax')
-
-document.addEventListener('DOMContentLoaded', () => {
-  // знайдемо всі потрібні елементи
-  const tabs          = document.querySelectorAll('.auth-tab');
-  const loginFormDiv  = document.getElementById('login-form');
-  const regFormDiv    = document.getElementById('register-form');
-
-  function showTab(name) {
-    if (name === 'login') {
-      loginFormDiv.style.display  = 'block';
-      regFormDiv.style.display    = 'none';
-    } else {
-      loginFormDiv.style.display  = 'none';
-      regFormDiv.style.display    = 'block';
-    }
-    // підсвічуємо активну вкладку
-    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   }
 
-  // повісимо слухач на всі кнопки .auth-tab
-  tabs.forEach(tab => {
-    tab.addEventListener('click', e => {
-      e.preventDefault();
-      showTab(tab.dataset.tab);
-    });
-  });
+  // Функція для скидання всіх форм в модалці
+  function clearAllForms() {
+    clearForm(loginBox);
+    clearForm(registerBox);
+  }
 
-  // за замовчуванням можна показати login або register
-  showTab('login');  // або 'register', якщо хочете щоб модалка завжди відкривалася на реєстрації
-});
-
-//
-// розібрати код
-//
-
-document.addEventListener('DOMContentLoaded', () => {
-  // --- 1) DOM-елементи ---
-  const modal           = document.getElementById('auth-modal');
-  const closeBtn        = modal.querySelector('.auth-close-btn');
-  const headerLoginBtn  = document.getElementById('open-login-modal');
-  const headerRegBtn    = document.getElementById('open-register-modal');
-  const tabs            = document.querySelectorAll('.auth-tab');
-  const loginBox        = document.getElementById('login-form');
-  const registerBox     = document.getElementById('register-form');
-
-  // --- 2) Функція для показу потрібної вкладки ---
+  // Функція для показу потрібної вкладки
   function showTab(name) {
     const isLogin = name === 'login';
-    loginBox.style.display    = isLogin ? 'block' : 'none';
-    registerBox.style.display = isLogin ? 'none'  : 'block';
-    tabs.forEach(tab =>
-      tab.classList.toggle('active', tab.dataset.tab === name)
-    );
+    if (loginBox) loginBox.style.display = isLogin ? 'block' : 'none';
+    if (registerBox) registerBox.style.display = isLogin ? 'none' : 'block';
+    
+    tabs.forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.tab === name);
+    });
   }
 
-  // --- 3) Клики по вкладках усередині модалки ---
+  // Функція для закриття модалки
+  function closeModal() {
+    modal.classList.remove('show');
+    // Скидаємо стан всіх форм при закритті
+    clearAllForms();
+  }
+
+  // Клики по вкладках усередині модалки
   tabs.forEach(tab => {
     tab.addEventListener('click', e => {
       e.preventDefault();
+      // Очищуємо форми при переключенні вкладок
+      clearAllForms();
       showTab(tab.dataset.tab);
     });
   });
 
-  // --- 4) Клики на кнопки в header: відкривають модалку + потрібну вкладку ---
-  headerLoginBtn.addEventListener('click', e => {
-    e.preventDefault();
-    showTab('login');
-    modal.classList.add('show');
-  });
-  headerRegBtn.addEventListener('click', e => {
-    e.preventDefault();
-    showTab('register');
-    modal.classList.add('show');
+  // Клики на кнопки в header
+  if (headerLoginBtn) {
+    headerLoginBtn.addEventListener('click', e => {
+      e.preventDefault();
+      clearAllForms();
+      showTab('login');
+      modal.classList.add('show');
+    });
+  }
+
+  if (headerRegBtn) {
+    headerRegBtn.addEventListener('click', e => {
+      e.preventDefault();
+      clearAllForms();
+      showTab('register');
+      modal.classList.add('show');
+    });
+  }
+
+  // Закрити модалку
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeModal);
+  }
+
+  // Закрити модалку при кліку поза нею
+  modal.addEventListener('click', e => {
+    if (e.target === modal) {
+      closeModal();
+    }
   });
 
-  // --- 5) Закрити модалку ---
-  closeBtn.addEventListener('click', () => {
-    modal.classList.remove('show');
+  // Закрити модалку при натисканні Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('show')) {
+      closeModal();
+    }
   });
 
-  // --- 6) Загальний AJAX-submit для обох форм ---
+  // AJAX submit для обох форм
   document.body.addEventListener('submit', async e => {
     const form = e.target;
-    // ловимо тільки наші дві форми
+    
+    // Ловимо тільки наші дві форми
     if (form.id !== 'login-form-ajax' && form.id !== 'register-form-ajax') return;
 
     e.preventDefault();
-    const data = new FormData(form);
-    const resp = await fetch(form.action, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': data.get('csrfmiddlewaretoken'),
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: data
-    });
+    
+    // Показуємо індикатор завантаження
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn?.textContent;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Обробка...';
+    }
 
-    if (resp.ok) {
-      // при успішному логіні/реєстрації – редірект
-      const json = await resp.json();
-      window.location.href = json.redirect_url;
-    } else {
-      // при помилці – вкидаємо назад HTML фрагмент форми
-      const html = await resp.text();
-      const targetBox = form.id === 'login-form-ajax'
-        ? loginBox
-        : registerBox;
+    try {
+      const data = new FormData(form);
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': data.get('csrfmiddlewaretoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: data
+      });
 
-      targetBox.innerHTML = html;
-      // після заміни вмісту треба ще раз підвісити слухачі на вкладки,
-      // або просто знову викликати showTab поточної вкладки:
-      showTab(form.id === 'login-form-ajax' ? 'login' : 'register');
+      if (response.ok) {
+        // При успішному логіні/реєстрації - редірект
+        const json = await response.json();
+        if (json.redirect_url) {
+          window.location.href = json.redirect_url;
+        } else {
+          // Якщо немає redirect_url, закриваємо модалку
+          closeModal();
+          window.location.reload(); // або оновлюємо сторінку
+        }
+      } else {
+        // При помилці - вкидаємо назад HTML фрагмент форми
+        const html = await response.text();
+        const targetBox = form.id === 'login-form-ajax' ? loginBox : registerBox;
+        
+        if (targetBox) {
+          targetBox.innerHTML = html;
+          // Після заміни вмісту показуємо поточну вкладку
+          showTab(form.id === 'login-form-ajax' ? 'login' : 'register');
+        }
+      }
+    } catch (error) {
+      console.error('Помилка при відправці форми:', error);
+      
+      // Показуємо загальну помилку користувачу
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.textContent = 'Виникла помилка. Спробуйте ще раз.';
+      form.insertBefore(errorDiv, form.firstChild);
+      
+    } finally {
+      // Відновлюємо кнопку submit
+      if (submitBtn && originalText) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
   });
+
+  // За замовчуванням показуємо вкладку логін
+  showTab('login');
 });

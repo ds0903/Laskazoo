@@ -6,7 +6,7 @@
 </div>
 
 {# 1) Авторизований користувач з позиціями #}
-{% if order and order.items.all %}
+{% if user.is_authenticated and order and order.items.all %}
   <ul class="cm-items">
     {% for item in order.items.all %}
       <li class="cm-row" data-item="{{ item.id }}">
@@ -59,7 +59,14 @@
     </div>
   </div>
 
-{# 2) Гість: позиції з сесії (з фото + керування кількістю) #}
+{# 2) Авторизований користувач з порожнім кошиком #}
+{% elif user.is_authenticated %}
+  <div class="cm-empty">
+    <p>Ваш кошик порожній.</p>
+    <p><small>Додайте товари з каталогу, щоб оформити замовлення.</small></p>
+  </div>
+
+{# 3) ГІСТЬ з товарами в сесії - показуємо кнопки авторизації #}
 {% elif sitems %}
   <ul class="cm-items">
     {% for it in sitems %}
@@ -97,22 +104,30 @@
   </ul>
 
   <div class="cm-footer">
-  <div class="cm-total">Всього: <b>{{ total|floatformat:2 }} грн</b></div>
-  <div class="cm-actions">
-    <a href="{% url 'users:register' %}?next={{ request.get_full_path|urlencode }}" class="btn-outline">
-      Зареєструйтесь, щоб оформити
-    </a>
-    <a href="{% url 'orders:clear' %}?ajax=1&guest=1" class="btn-outline js-cart">
-      Очистити кошик
-    </a>
-    <a href="{% url 'users:login' %}?next={{ request.get_full_path|urlencode }}" class="btn-green">
-      Увійти
-    </a>
+    <div class="cm-total">Всього: <b>{{ total|floatformat:2 }} грн</b></div>
+    <div class="cm-actions">
+      <a href="{% url 'orders:clear' %}?ajax=1&guest=1" class="btn-outline js-cart">
+        Очистити кошик
+      </a>
+      <a href="#" class="btn-outline" onclick="openAuthModal('register'); return false;">
+        Зареєструйтесь, щоб оформити
+      </a>
+      <a href="#" class="btn-green" onclick="openAuthModal('login'); return false;">
+        Увійти
+      </a>
+    </div>
   </div>
-</div>
 
+{# 4) Порожній кошик для гостя #}
+{% else %}
+  <div class="cm-empty">
+    <p>Ваш кошик порожній.</p>
+    <p><small>Додайте товари з каталогу.</small></p>
+  </div>
+{% endif %}
 
-<style>.cm-actions{
+<style>
+.cm-actions{
   display:flex;
   align-items:center;
   justify-content:flex-end; /* вирівняти вправо */
@@ -130,6 +145,7 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  cursor: pointer;
 }
 
 .btn-green{
@@ -145,9 +161,38 @@
 }
 </style>
 
-{# 3) Порожній кошик #}
-{% else %}
-  <div class="cm-empty">
-    <p>Ваш кошик порожній.</p>
-  </div>
-{% endif %}
+<script>
+// Функція для відкриття модалки авторизації з корзини
+function openAuthModal(type) {
+  // Закриваємо модалку корзини
+  const cartModal = document.getElementById('cart-modal');
+  if (cartModal) {
+    cartModal.classList.add('hidden');
+    document.documentElement.classList.remove('no-scroll');
+  }
+  
+  // Відкриваємо модалку авторизації
+  const authModal = document.getElementById('auth-modal');
+  if (authModal) {
+    // Показуємо потрібну вкладку
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const loginTab = document.querySelector('[data-tab="login"]');
+    const registerTab = document.querySelector('[data-tab="register"]');
+    
+    if (type === 'login') {
+      if (loginForm) loginForm.style.display = 'block';
+      if (registerForm) registerForm.style.display = 'none';
+      if (loginTab) loginTab.classList.add('active');
+      if (registerTab) registerTab.classList.remove('active');
+    } else {
+      if (loginForm) loginForm.style.display = 'none';
+      if (registerForm) registerForm.style.display = 'block';
+      if (loginTab) loginTab.classList.remove('active');
+      if (registerTab) registerTab.classList.add('active');
+    }
+    
+    authModal.classList.add('show');
+  }
+}
+</script>
