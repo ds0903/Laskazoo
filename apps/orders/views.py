@@ -130,7 +130,18 @@ def add_variant_to_cart(request, variant_id: int):
         return redirect('orders:cart')
 
     if request.user.is_authenticated:
-        order, _ = Order.objects.get_or_create(user=request.user, status=Order.STATUS_CART)
+        order, created = Order.objects.get_or_create(user=request.user, status=Order.STATUS_CART)
+        
+        # Якщо створили нове замовлення, очищаємо всі попередні дані
+        if created:
+            order.full_name = ''
+            order.phone = ''
+            order.email = ''
+            order.delivery_condition = 'nova_poshta'  # За замовчуванням
+            order.delivery_address = ''
+            order.comment = ''
+            order.save()
+            
         item, _ = OrderItem.objects.get_or_create(
             order=order, product=variant.product, variant=variant,
             defaults={'retail_price': variant.retail_price, 'quantity': 0}
@@ -174,7 +185,18 @@ def add_to_cart(request, product_id: int):
         return add_variant_to_cart(request, v.id)
 
     if request.user.is_authenticated:
-        order, _ = Order.objects.get_or_create(user=request.user, status=Order.STATUS_CART)
+        order, created = Order.objects.get_or_create(user=request.user, status=Order.STATUS_CART)
+        
+        # Якщо створили нове замовлення, очищаємо всі попередні дані
+        if created:
+            order.full_name = ''
+            order.phone = ''
+            order.email = ''
+            order.delivery_condition = 'nova_poshta'  # За замовчуванням
+            order.delivery_address = ''
+            order.comment = ''
+            order.save()
+            
         item, _ = OrderItem.objects.get_or_create(
             order=order, product=product, variant=None,
             defaults={'retail_price': product.retail_price, 'quantity': 0}
@@ -225,15 +247,71 @@ def cart_detail(request):
 @login_required
 def checkout(request):
     order = get_object_or_404(Order, user=request.user, status=Order.STATUS_CART)
+    
+    # Перевіряємо, чи є товари в кошику
+    if not order.items.exists():
+        messages.warning(request, 'Кошик порожній')
+        return redirect('orders:cart')
+    
+    # Перевіряємо, чи це нове кошикове замовлення (без контактних даних)
+    is_new_order = not (order.full_name or order.phone or order.email)
+    
     if request.method == 'POST':
-        form = OrderCheckoutForm(request.POST, instance=order)
+        form = OrderCheckoutForm(request.POST)
         if form.is_valid():
-            order = form.save(commit=False)
-            order.status = Order.STATUS_NEW
+            # ТІЛЬКИ ТЕПЕР оновлюємо існуюче замовлення
+            order.full_name = form.cleaned_data['full_name']
+            order.phone = form.cleaned_data['phone']
+            order.email = form.cleaned_data['email']
+            order.delivery_address = form.cleaned_data['delivery_address']
+            order.comment = form.cleaned_data.get('comment', '')
+            
+            # Визначаємо delivery_condition на основі delivery_type
+            delivery_type = form.cleaned_data['delivery_type']
+            if delivery_type == 'nova_poshta':
+                order.delivery_condition = 'nova_poshta'
+            else:
+                order.delivery_condition = 'ukrposhta'
+            
+            # Встановлюємо статус "в обробці" (in_process) - буде експортовано в JSON
+            order.status = Order.STATUS_IN_PROCESS
+            order.sale_type = '1'  # Роздріб
             order.save()
-            return redirect('orders:history')
+            
+            # Генеруємо номер замовлення
+            order_number = order.order_number or order.id
+            messages.success(request, f'Замовлення №{order_number} успішно оформлено!')
+            return redirect('orders:list')
     else:
-        form = OrderCheckoutForm(instance=order)
+        # Просто показуємо порожню форму - НЕ ЗБЕРІГАЄМО НІЧОГО
+        # ТІЛЬКИ якщо це нове замовлення, показуємо дані користувача
+        if is_new_order:
+            initial = {
+                'full_name': request.user.get_full_name() or request.user.username,
+                'email': request.user.email,
+                'delivery_type': 'nova_poshta'  # За замовчуванням Нова Пошта
+            }
+        else:
+            # Якщо вже є дані - показуємо їх (наприклад послі помилки валідації)
+            # Визначаємо delivery_type на основі поточного delivery_condition
+            if order.delivery_condition == 'nova_poshta':
+                current_delivery_type = 'nova_poshta'
+            elif order.delivery_condition == 'ukrposhta':
+                current_delivery_type = 'ukrposhta'
+            else:
+                current_delivery_type = 'nova_poshta'  # За замовчуванням
+                
+            initial = {
+                'full_name': order.full_name or request.user.get_full_name() or request.user.username,
+                'phone': order.phone,
+                'email': order.email or request.user.email,
+                'delivery_type': current_delivery_type,
+                'delivery_address': order.delivery_address,
+                'comment': order.comment,
+            }
+        
+        form = OrderCheckoutForm(initial=initial)
+    
     return render(request, 'zoosvit/orders/checkout.html', {'order': order, 'form': form})
 
 @login_required
@@ -325,4 +403,3 @@ def cart_clear(request):
     else:
         _sess_save_items(request, [])
     return cart_modal(request) if _is_ajax(request) else redirect('orders:cart')
-

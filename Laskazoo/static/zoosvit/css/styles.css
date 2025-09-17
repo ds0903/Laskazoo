@@ -1441,12 +1441,12 @@ section#mega-categories.container {
   padding: 40px 0;     /* регулює відстань зверху/знизу */
 }
 
-/* 2. Гнучкий контейнер — всі пункти по центру рівномірно */
+/* 2. Гнучкий контейнер — тепер 3 пункти по центру рівномірно */
 .why-us-inner {
   display: flex;
   justify-content: center;  /* центруємо по горизонталі */
   align-items: center;      /* центрально по вертикалі */
-  gap: 60px;                /* відстань між пунктами */
+  gap: 80px;                /* збільшена відстань між 3 пунктами */
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 16px;
@@ -1474,19 +1474,19 @@ section#mega-categories.container {
   top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%) translateY(10px);
-  width: 240px; /* або твоя ширина */
+  width: 280px;
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 
   opacity: 0;
   visibility: hidden;
   transition:
-    opacity 0.25s ease,
-    transform 0.25s ease,
-    visibility 0.25s;
+    opacity 0.35s ease,
+    transform 0.35s ease,
+    visibility 0.35s;
   pointer-events: none;
 }
 
@@ -2749,16 +2749,16 @@ body{
 /* На всякий: не обрізати сторінку по висоті */
 html, body { overflow-y: auto; }
 /* пошук */
-/* десктоп: пошук має фіксовану ширину, не росте */
+/* десктоп: пошук має розширену ширину для кращого відображення */
 .site-mainheader .header-inner{
   display:flex; align-items:center; gap:24px;
 }
 .site-mainheader .header-inner > .logo{ flex:0 0 auto; }
 .site-mainheader .header-inner > form.search-form{
-  flex: 0 0 560px !important;   /* фікс 560px */
-  max-width: 560px !important;
+  flex: 0 0 720px !important;   /* розширено з 560px до 720px */
+  max-width: 720px !important;
   width: 100%;
-  min-width: 280px;
+  min-width: 320px;
 }
 .site-mainheader .header-inner > .header-actions{ margin-left:auto; }
 
@@ -2835,12 +2835,12 @@ html.no-scroll, body.no-scroll{ overflow:hidden !important; }
   .s-card{ grid-template-columns:56px 1fr auto; padding:10px; }
   .s-img{ width:56px; height:56px; }
 }
-/* ── Search: фіксована ширина на десктопі, не росте */
+/* ── Search: розширена ширина на десктопі для кращого відображення товарів */
 #main-search{
   flex: none !important;
-  width: 560px !important;
-  max-width: 560px !important;
-  min-width: 560px !important;
+  width: 720px !important;
+  max-width: 720px !important;
+  min-width: 320px !important;
   margin: 0 24px;
 }
 #main-search input[name="q"]{
@@ -3048,6 +3048,93 @@ input[aria-invalid="true"] {
 }
 
 /* ===== КІНЕЦЬ МОДАЛЬНИХ СТИЛІВ =====
+
+/* ===== Покращені стилі для дропдауну телефону =====*/
+.phone-dropdown .dropdown-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-primary);
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 0.95rem;
+}
+
+.phone-dropdown .dropdown-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.phone-dropdown .dropdown-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: #333;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.phone-dropdown .dropdown-link:hover {
+  background: rgba(9,94,86,0.1);
+  color: var(--color-primary);
+}
+
+.phone-dropdown .dropdown-link img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.phone-dropdown .dropdown-schedule {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* ===== Адаптація WHY-US для 3 колонок ===== */
+@media (max-width: 768px) {
+  .why-us-bar { 
+    padding: 20px 0; 
+    margin: 22px 0; 
+  }
+  .why-us-inner { 
+    gap: 18px; 
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+  .why-us-item {
+    flex: 0 1 calc(33.333% - 12px);
+    text-align: center;
+    min-width: 100px;
+  }
+  .why-us-item img { 
+    width: 34px; 
+  }
+  .why-us-item p {
+    font-size: 0.9rem;
+    line-height: 1.15;
+    word-break: break-word;
+    text-align: center;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .why-us-inner {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .why-us-item {
+    flex: none;
+    min-width: auto;
+  }
+}
 
 
 .s-portal--inline[hidden]{ display:none; }

@@ -126,9 +126,6 @@ DATABASES = {
         'HOST': os.getenv('PG_HOST', '127.0.0.1'),
         'PORT': os.getenv('PG_PORT', '5432'),
         'CONN_MAX_AGE': 60,
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
     },
     
     # SQLite для резервного копіювання
@@ -203,6 +200,21 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Celery налаштування
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Шлях для експорту замовлень
+TS_LOCAL_INCOMING_DIR = os.getenv('TS_LOCAL_INCOMING_DIR', '/home/torgsoft/incoming')
+
+# Якщо шлях не існує (локальна розробка), використовуємо папку в проекті
+if not os.path.exists(TS_LOCAL_INCOMING_DIR):
+    TS_LOCAL_INCOMING_DIR = BASE_DIR / 'exports'
 
 # Налаштування логування
 LOGGING = {

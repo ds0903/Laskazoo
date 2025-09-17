@@ -1,20 +1,139 @@
-{# Zoosvit_shop/Zoosvit/templates/zoosvit/orders/order_list.html #}
 {% extends 'zoosvit/core/base.html' %}
 {% load static %}
 
 {% block title %}Мої замовлення{% endblock %}
 
 {% block extra_css %}
-  {# Загальні стилі для sidebar та wrapper з profile.css #}
   <link rel="stylesheet" href="{% static 'zoosvit/css/users/profile.css' %}">
-  {# Специфічні стилі для списку замовлень #}
-  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
-<!--  <link rel="stylesheet" href="{% static 'zoosvit/css/orders/order_list.css' %}">-->
+  <style>
+    .orders-container {
+      padding: 20px;
+    }
+    .order-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .order-number {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+    .order-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .status-cart {
+      background: #f0f0f0;
+      color: #666;
+    }
+    .status-in_process {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .status-processing {
+      background: #cff4fc;
+      color: #055160;
+    }
+    .status-shipped {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    .status-completed {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status-canceled {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .order-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .order-info-item {
+      font-size: 0.9rem;
+    }
+    .order-info-label {
+      color: #666;
+      margin-right: 8px;
+    }
+    .order-items {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .order-item:last-child {
+      border-bottom: none;
+    }
+    .item-name {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+    .item-variant {
+      font-size: 0.8rem;
+      color: #666;
+    }
+    .item-qty {
+      margin: 0 16px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .item-price {
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+    .order-total {
+      text-align: right;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 2px solid #e0e0e0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+    .empty-orders {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+    .empty-orders img {
+      width: 120px;
+      opacity: 0.5;
+      margin-bottom: 20px;
+    }
+    .empty-orders a {
+      color: var(--color-primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
-<div class="profile-wrapper"><!-- reuse same container -->
-
+<div class="profile-wrapper">
   <!-- Сайдбар -->
   <aside class="profile-sidebar">
     <ul class="profile-nav">
@@ -28,25 +147,107 @@
   <section class="profile-main">
     <h1 class="profile-title">Мої замовлення</h1>
 
-    {% if orders %}
-      <ul class="orders-list">
+    <div class="orders-container">
+      {% if orders %}
         {% for order in orders %}
-          <li class="order-item">
+          <div class="order-card">
             <div class="order-header">
-              <span class="order-number">Замовлення №{{ order.pk }}</span>
-              <span class="order-date">{{ order.created_at|date:"j F Y H:i" }}</span>
+              <div>
+                <div class="order-number">Замовлення №{{ order.order_number|default:order.id }}</div>
+                <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">
+                  {{ order.created_at|date:"d.m.Y H:i" }}
+                </div>
+              </div>
+              <span class="order-status status-{{ order.status }}">
+                {{ order.get_status_display }}
+              </span>
             </div>
-            <div class="order-status">Статус: {{ order.get_status_display }}</div>
-            <a href="{% url 'orders:detail' order.pk %}" class="order-detail-link">
-              Детальніше
-            </a>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>У вас поки немає замовлень.</p>
-    {% endif %}
 
+            <div class="order-info">
+              <div class="order-info-item">
+                <span class="order-info-label">Замовник:</span>
+                <strong>{{ order.full_name }}</strong>
+              </div>
+              <div class="order-info-item">
+                <span class="order-info-label">Телефон:</span>
+                {{ order.phone }}
+              </div>
+              <div class="order-info-item">
+                <span class="order-info-label">Email:</span>
+                {{ order.email }}
+              </div>
+              <div class="order-info-item">
+                <span class="order-info-label">Доставка:</span>
+                {{ order.get_delivery_condition_display }}
+              </div>
+            </div>
+
+            {% if order.delivery_address %}
+              <div style="margin-bottom: 12px;">
+                <span class="order-info-label">Адреса:</span>
+                {{ order.delivery_address }}
+              </div>
+            {% endif %}
+
+            {% if order.comment %}
+              <div style="margin-bottom: 12px;">
+                <span class="order-info-label">Коментар:</span>
+                {{ order.comment }}
+              </div>
+            {% endif %}
+
+            <div class="order-items">
+              <div style="font-weight: 600; margin-bottom: 8px;">Товари:</div>
+              {% for item in order.items.all %}
+                <div class="order-item">
+                  <div class="item-name">
+                    {{ item.product.name }}
+                    {% if item.variant %}
+                      <div class="item-variant">
+                        {{ item.variant.sku }}
+                        {% if item.variant.weight %} • {{ item.variant.weight }}кг{% endif %}
+                        {% if item.variant.size %} • {{ item.variant.size }}{% endif %}
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div class="item-qty">{{ item.quantity }} шт</div>
+                  <div class="item-price">{{ item.line_total }} грн</div>
+                </div>
+              {% endfor %}
+              
+              <div class="order-total">
+                Загалом: {{ order.total_amount }} грн
+              </div>
+            </div>
+
+            {% if order.status == 'in_process' %}
+              <div style="margin-top: 16px; padding: 12px; background: #fff3cd; border-radius: 8px; font-size: 0.9rem;">
+                ⏳ Очікуйте дзвінка менеджера для підтвердження замовлення
+              </div>
+            {% elif order.status == 'processing' %}
+              <div style="margin-top: 16px; padding: 12px; background: #cff4fc; border-radius: 8px; font-size: 0.9rem;">
+                📋 Замовлення обробляється менеджером
+              </div>
+            {% elif order.status == 'shipped' %}
+              <div style="margin-top: 16px; padding: 12px; background: #d1ecf1; border-radius: 8px; font-size: 0.9rem;">
+                🚚 Ваше замовлення в дорозі
+              </div>
+            {% elif order.status == 'completed' %}
+              <div style="margin-top: 16px; padding: 12px; background: #d4edda; border-radius: 8px; font-size: 0.9rem;">
+                ✅ Замовлення виконано. Дякуємо за покупку!
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-orders">
+          <img src="{% static 'zoosvit/img/empty-cart.png' %}" alt="Немає замовлень">
+          <h3>У вас ще немає замовлень</h3>
+          <p>Час це виправити!</p>
+          <a href="{% url 'products:catalog' %}">Перейти до каталогу</a>
+        </div>
+      {% endif %}
+    </div>
   </section>
 </div>
 {% endblock %}

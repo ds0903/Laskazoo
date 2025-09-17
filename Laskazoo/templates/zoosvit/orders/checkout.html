@@ -76,7 +76,14 @@
           <div class="order-total">
             <div class="total-row">
               <span>Загальна сума:</span>
-              <strong>{{ total }} грн</strong>
+              <strong>
+                {% if order.total_amount %}
+                  {{ order.total_amount }} грн
+                {% else %}
+                  {% load custom_tags %}
+                  {{ order|calculate_total }} грн
+                {% endif %}
+              </strong>
             </div>
           </div>
         {% else %}
@@ -88,26 +95,29 @@
       <div class="checkout-form-container">
         <h2>Контактні дані</h2>
         
-        <form method="post" class="checkout-form">
+        <form method="post" class="checkout-form" id="checkout-form">
           {% csrf_token %}
           
+          <!-- Особисті дані -->
           <div class="form-section">
             <h3>Особисті дані</h3>
             
+            <!-- ПІБ -->
             <div class="form-group">
-              <label for="{{ form.first_name.id_for_label }}">Ім'я *</label>
-              {{ form.first_name }}
-              {% if form.first_name.errors %}
+              {{ form.full_name.label_tag }}
+              {{ form.full_name }}
+              {% if form.full_name.errors %}
                 <div class="form-errors">
-                  {% for error in form.first_name.errors %}
+                  {% for error in form.full_name.errors %}
                     <span class="error">{{ error }}</span>
                   {% endfor %}
                 </div>
               {% endif %}
             </div>
 
+            <!-- Телефон -->
             <div class="form-group">
-              <label for="{{ form.phone.id_for_label }}">Телефон *</label>
+              {{ form.phone.label_tag }}
               {{ form.phone }}
               {% if form.phone.errors %}
                 <div class="form-errors">
@@ -118,22 +128,66 @@
               {% endif %}
               <small class="form-help">Наприклад: +380671234567</small>
             </div>
-          </div>
 
-          <div class="form-section">
-            <h3>Адреса доставки</h3>
-            
+            <!-- Email -->
             <div class="form-group">
-              <label for="{{ form.city.id_for_label }}">Місто *</label>
-              {{ form.city }}
-              {% if form.city.errors %}
+              {{ form.email.label_tag }}
+              {{ form.email }}
+              {% if form.email.errors %}
                 <div class="form-errors">
-                  {% for error in form.city.errors %}
+                  {% for error in form.email.errors %}
                     <span class="error">{{ error }}</span>
                   {% endfor %}
                 </div>
               {% endif %}
-              <small class="form-help">Введіть назву вашого міста або індекс</small>
+            </div>
+          </div>
+
+          <!-- Тип доставки -->
+          <div class="form-section">
+            <h3>{{ form.delivery_type.label }}</h3>
+            
+            <div class="form-group">
+              <div class="delivery-type-options">
+                {% for radio in form.delivery_type %}
+                  <div class="delivery-type-option" data-value="{{ radio.choice_value }}">
+                    {{ radio.tag }}
+                    <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+              {% if form.delivery_type.errors %}
+                <div class="form-errors">
+                  {% for error in form.delivery_type.errors %}
+                    <span class="error">{{ error }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Поле адреси (завжди видиме) -->
+            <div class="form-group" id="delivery-address-group">
+              <label for="{{ form.delivery_address.id_for_label }}" id="delivery-address-label">Адреса доставки Нової Пошти *</label>
+              {{ form.delivery_address }}
+              {% if form.delivery_address.errors %}
+                <div class="form-errors">
+                  {% for error in form.delivery_address.errors %}
+                    <span class="error">{{ error }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <small class="form-help" id="delivery-address-help">Вкажіть адресу або номер відділення Нової Пошти</small>
+            </div>
+          </div>
+
+          <!-- Коментар -->
+          <div class="form-section">
+            <h3>Коментар</h3>
+            
+            <div class="form-group">
+              {{ form.comment.label_tag }}
+              {{ form.comment }}
+              <small class="form-help">За бажанням</small>
             </div>
           </div>
 
@@ -150,20 +204,12 @@
               <span class="btn-icon">📦</span>
               Підтвердити замовлення
             </button>
-            <a href="{% url 'orders:cart' %}" class="btn-secondary">
-              ← Повернутися до кошика
-            </a>
           </div>
         </form>
 
         <div class="checkout-info">
           <h3>Інформація про доставку</h3>
-          <ul>
-            <li>📞 <strong>Зв'язок з вами</strong> — наш менеджер зателефонує протягом 30 хвилин для підтвердження замовлення</li>
-            <li>🚚 <strong>Доставка</strong> — здійснюється протягом 1-3 робочих днів залежно від вашого міста</li>
-            <li>💳 <strong>Оплата</strong> — при отриманні товару або за реквізитами (на вибір)</li>
-            <li>📝 <strong>Документи</strong> — до товару додається чек та гарантійний талон</li>
-          </ul>
+          <p>📞 <strong>Зв'язок з вами</strong> — наш менеджер зателефонує протягом 30 хвилин для підтвердження замовлення</p>
         </div>
       </div>
     </div>
@@ -174,8 +220,52 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Маска для телефону (опціонально)
-    const phoneInput = document.querySelector('input[name=\"phone\"]');
+    const deliveryTypeInputs = document.querySelectorAll('input[name="delivery_type"]');
+    const deliveryAddressLabel = document.getElementById('delivery-address-label');
+    const deliveryAddressHelp = document.getElementById('delivery-address-help');
+    const deliveryOptions = document.querySelectorAll('.delivery-type-option');
+    
+    // Робимо всю кнопку клікабельною
+    deliveryOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            // Якщо клік не по самому radio-button, активуємо його
+            if (e.target.type !== 'radio') {
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                    // Тригеримо подію change
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        });
+        
+        // Додаємо курсор pointer
+        option.style.cursor = 'pointer';
+    });
+    
+    function updateDeliveryAddressText() {
+        const selectedDelivery = document.querySelector('input[name="delivery_type"]:checked');
+        if (selectedDelivery) {
+            if (selectedDelivery.value === 'nova_poshta') {
+                deliveryAddressLabel.textContent = 'Адреса доставки Нової Пошти *';
+                deliveryAddressHelp.textContent = 'Вкажіть адресу або номер відділення Нової Пошти';
+            } else if (selectedDelivery.value === 'ukrposhta') {
+                deliveryAddressLabel.textContent = 'Адреса доставки Укрпошти *';
+                deliveryAddressHelp.textContent = 'Вкажіть адресу або номер відділення Укрпошти';
+            }
+        }
+    }
+    
+    // Слухаємо зміни типу доставки
+    deliveryTypeInputs.forEach(input => {
+        input.addEventListener('change', updateDeliveryAddressText);
+    });
+    
+    // Початкове налаштування (за замовчуванням Нова Пошта)
+    updateDeliveryAddressText();
+
+    // Маска для телефону
+    const phoneInput = document.querySelector('input[name="phone"]');
     if (phoneInput) {
         phoneInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
@@ -187,35 +277,235 @@ document.addEventListener('DOMContentLoaded', function() {
                 value = '+380' + value;
             }
             
-            // Форматування: +380 67 123 45 67
-            if (value.length > 4) {
-                value = value.slice(0, 4) + ' ' + value.slice(4);
-            }
-            if (value.length > 7) {
-                value = value.slice(0, 7) + ' ' + value.slice(7);
-            }
-            if (value.length > 11) {
-                value = value.slice(0, 11) + ' ' + value.slice(11);
-            }
-            if (value.length > 14) {
-                value = value.slice(0, 14) + ' ' + value.slice(14, 16);
+            if (value.length > 13) {
+                value = value.slice(0, 13);
             }
             
             e.target.value = value;
         });
     }
 
-    // Анімація на відправку форми
-    const form = document.querySelector('.checkout-form');
+    // Валідація форми
+    const form = document.getElementById('checkout-form');
     if (form) {
-        form.addEventListener('submit', function() {
-            const submitBtn = form.querySelector('button[type=\"submit\"]');
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            
+            // Перевіряємо обов'язкові поля
+            const fullName = form.querySelector('input[name="full_name"]').value.trim();
+            const phone = form.querySelector('input[name="phone"]').value.trim();
+            const email = form.querySelector('input[name="email"]').value.trim();
+            const deliveryAddress = form.querySelector('textarea[name="delivery_address"]').value.trim();
+            const deliveryType = form.querySelector('input[name="delivery_type"]:checked');
+            
+            if (!fullName) {
+                alert('Будь ласка, заповніть поле ПІБ');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!phone) {
+                alert('Будь ласка, заповніть поле телефон');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!email) {
+                alert('Будь ласка, заповніть поле email');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!deliveryAddress) {
+                alert('Будь ласка, заповніть адресу доставки');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!deliveryType) {
+                alert('Будь ласка, виберіть тип доставки');
+                e.preventDefault();
+                return;
+            }
+            
+            // Якщо все ОК - показуємо анімацію
             if (submitBtn) {
-                submitBtn.innerHTML = '<span class=\"btn-icon\">⏳</span> Обробка замовлення...';
+                submitBtn.innerHTML = '<span class="btn-icon">⏳</span> Обробка замовлення...';
                 submitBtn.disabled = true;
             }
         });
     }
 });
 </script>
+
+<style>
+/* Стилі для типів доставки - ПОВНІСТЮ КЛІКАБЕЛЬНІ */
+.delivery-type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.delivery-type-option {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+  cursor: pointer !important; /* Вся кнопка клікабельна */
+  user-select: none; /* Заборона виділення тексту при кліках */
+}
+
+.delivery-type-option:hover {
+  border-color: #0f6b38;
+}
+
+.delivery-type-option input[type="radio"] {
+  margin-right: 12px;
+  accent-color: #0f6b38;
+  cursor: pointer;
+}
+
+.delivery-type-option input[type="radio"]:checked + label {
+  font-weight: 600;
+}
+
+.delivery-type-option:has(input[type="radio"]:checked) {
+  border-color: #0f6b38;
+  background-color: #f8fdf9;
+}
+
+.delivery-type-option label {
+  cursor: pointer;
+  font-size: 1rem;
+  color: #333;
+  flex: 1; /* Займає всю ширину */
+  pointer-events: none; /* Не блокує кліки на батьківський елемент */
+}
+
+/* Поле коментаря */
+.form-control {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #0f6b38;
+  box-shadow: 0 0 0 3px rgba(15, 107, 56, 0.1);
+}
+
+/* Обов'язкові поля - червоні помилки */
+.form-control:invalid {
+  border-color: #d32f2f;
+}
+
+/* Центруємо кнопку */
+.form-actions {
+  text-align: center;
+  margin-top: 32px;
+}
+
+.form-actions .btn-primary {
+  min-width: 250px;
+  padding: 14px 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #0f6b38 0%, #1a8f4a 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.form-actions .btn-primary:hover {
+  background: linear-gradient(135deg, #0d5a2f 0%, #168040 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 107, 56, 0.3);
+}
+
+.form-actions .btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-icon {
+  font-size: 1.2em;
+}
+
+/* Стилі для форми */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-errors {
+  margin-top: 5px;
+}
+
+.form-errors .error {
+  color: #d32f2f;
+  font-size: 0.875rem;
+}
+
+.form-help {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+/* Секції форми */
+.form-section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+}
+
+.form-section h3 {
+  margin: 0 0 16px 0;
+  color: #0f6b38;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Адаптивність */
+@media (max-width: 768px) {
+  .delivery-type-options {
+    gap: 12px;
+  }
+  
+  .delivery-type-option {
+    padding: 10px;
+  }
+  
+  .form-actions .btn-primary {
+    min-width: 100%;
+  }
+}
+</style>
 {% endblock %}
