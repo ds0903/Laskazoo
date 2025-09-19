@@ -18,7 +18,7 @@ class OrderCheckoutForm(forms.ModelForm):
     
     class Meta:
         model = Order
-        fields = ['full_name', 'phone', 'email', 'delivery_address', 'comment']
+        fields = ['full_name', 'phone', 'email', 'city', 'delivery_address', 'comment']
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -50,14 +50,25 @@ class OrderCheckoutForm(forms.ModelForm):
         self.fields['email'].label = 'Email *'
         self.fields['email'].required = True
         
-        # АДРЕСА ДОСТАВКИ - ОБОВ'ЯЗКОВА
+        # МІСТО - ОБОВ'ЯЗКОВЕ
+        self.fields['city'].widget.attrs.update({
+            'placeholder': 'Почніть вводити назву міста або індекс',
+            'required': True,
+            'class': 'form-control city-autocomplete',
+            'autocomplete': 'off'
+        })
+        self.fields['city'].label = 'Місто *'
+        self.fields['city'].required = True
+        
+        # АДРЕСА ДОСТАВКИ - ОБОВ'ЯЗКОВА (поки що деактивована)
         self.fields['delivery_address'].widget = forms.Textarea(attrs={
             'rows': 2,
-            'placeholder': 'Вкажіть адресу доставки',
+            'placeholder': 'Спочатку виберіть місто',
             'class': 'form-control',
-            'required': True
+            'required': True,
+            'disabled': True  # Деактивована поки не вибрано місто
         })
-        self.fields['delivery_address'].label = 'Адреса доставки *'
+        self.fields['delivery_address'].label = 'Відділення доставки *'
         self.fields['delivery_address'].required = True
         
         # Коментар - НЕ обов'язковий
@@ -86,6 +97,12 @@ class OrderCheckoutForm(forms.ModelForm):
         if not email or not email.strip():
             raise forms.ValidationError('Поле email є обов\'язковим для заповнення')
         return email.strip()
+        
+    def clean_city(self):
+        city = self.cleaned_data.get('city')
+        if not city or not city.strip():
+            raise forms.ValidationError('Поле місто є обов\'язковим для заповнення')
+        return city.strip()
         
     def clean_delivery_address(self):
         delivery_address = self.cleaned_data.get('delivery_address')

@@ -1,6 +1,6 @@
 // zoosvit/js/cart-modal.js
 (() => {
-  console.log('[cart-modal] v4 loaded');
+  console.log('[cart-modal] v5 loaded - ВИПРАВЛЕННЯ ПОДВІЙНОГО ДОДАВАННЯ');
 
   const qs = (s, r=document) => r.querySelector(s);
   const overlay = qs('#cart-modal');
@@ -24,31 +24,51 @@
   }
 
   function refreshBadge() {
+  console.log('[cart-modal] Оновлюємо бейдж кошика...');
   fetch(URLS.badge, {
     credentials: 'include',
     headers: { 'X-Requested-With': 'XMLHttpRequest' }
   })
-  .then(res => res.ok ? res.json() : null)
+  .then(res => {
+    console.log('[cart-modal] Відповідь від сервера для бейджа:', res.status);
+    return res.ok ? res.json() : null;
+  })
   .then(data => {
-    if (!data) return;
+    if (!data) {
+      console.warn('[cart-modal] Не отримано дані для бейджа');
+      return;
+    }
 
     const qty   = (data.qty ?? data.count ?? 0);
     const total = parseFloat(data.total ?? 0);
     const { countEl, totalEl } = getBadgeEls();
 
-    if (countEl) countEl.textContent = qty;
+    console.log('[cart-modal] Дані бейджа:', { qty, total });
+
+    if (countEl) {
+      countEl.textContent = qty;
+      console.log('[cart-modal] Оновлено лічильник:', qty);
+    } else {
+      console.warn('[cart-modal] Елемент .cart-count не знайдено');
+    }
 
     if (totalEl) {
       if (total > 0) {
         totalEl.textContent = `${total.toFixed(2)} грн`;
         totalEl.hidden = false;
+        console.log('[cart-modal] Оновлено суму:', total);
       } else {
         totalEl.textContent = '';
         totalEl.hidden = true;
+        console.log('[cart-modal] Приховано суму (кошик порожній)');
       }
+    } else {
+      console.warn('[cart-modal] Елемент .cart-total не знайдено');
     }
   })
-  .catch(e => console.warn('[cart-modal] refresh badge error', e));
+  .catch(e => {
+    console.error('[cart-modal] Помилка оновлення бейджа:', e);
+  });
 }
 
 
@@ -61,19 +81,91 @@
   function openModal(){ overlay?.classList.remove('hidden'); document.documentElement.classList.add('no-scroll'); }
   function closeModal(){ overlay?.classList.add('hidden'); document.documentElement.classList.remove('no-scroll'); }
 
-  // ----- cart add -----
+  // ----- cart add ----- КРИТИЧНЕ ВИПРАВЛЕННЯ ПОДВІЙНОГО ДОДАВАННЯ
+  let addToCartClickTimes = {}; // захист від подвійних кліків на картках
+  let processingButtons = new Set(); // додатковий захист для обробки кнопок
+  
   document.addEventListener('click', async (e) => {
     const a = e.target.closest('a.add-to-cart');
     if (!a) return;
     e.preventDefault();
+    
+    // ПОКРАЩЕНИЙ ЗАХИСТ ВІД ПОДВІЙНИХ КЛІКІВ
+    const buttonId = a.href + '_' + (a.dataset.variant || a.dataset.vid || 'default');
+    const now = Date.now();
+    
+    // Перевіряємо, чи вже обробляється ця кнопка
+    if (processingButtons.has(buttonId)) {
+      console.log('ЗАХИСТ JS: Кнопка вже обробляється, ігноруємо');
+      return;
+    }
+    
+    // Перевіряємо часовий захист (зменшено з 3000 до 1500мс)
+    if (addToCartClickTimes[buttonId] && (now - addToCartClickTimes[buttonId]) < 1500) {
+      console.log('ЗАХИСТ JS: Подвійний клік на картці товару, ігноруємо');
+      return;
+    }
+    
+    // Реєструємо початок обробки
+    addToCartClickTimes[buttonId] = now;
+    processingButtons.add(buttonId);
+    
+    // Візуальний фідбек - робимо кнопку неактивною МИТТЄВО
+    const originalText = a.textContent;
+    const originalPointerEvents = a.style.pointerEvents;
+    const originalOpacity = a.style.opacity;
+    
+    a.style.pointerEvents = 'none';
+    a.style.opacity = '0.6';
+    a.textContent = 'Додаємо...';
+    a.disabled = true;
+    
+    // Функція відновлення кнопки
+    const restoreButton = () => {
+      a.style.pointerEvents = originalPointerEvents || '';
+      a.style.opacity = originalOpacity || '';
+      a.textContent = originalText;
+      a.disabled = false;
+      processingButtons.delete(buttonId);
+      console.log(`ЗАВЕРШЕНО: ${buttonId} - кнопка знову активна`);
+    };
+    
     const url = a.href.includes('?') ? a.href + '&ajax=1' : a.href + '?ajax=1';
     try {
+      console.log(`ДОДАЄМО ТОВАР: ${buttonId} - відправляємо запит`);
       const r = await fetch(url, { credentials:'include', headers:{'X-Requested-With':'XMLHttpRequest'} });
-      if (r.redirected) { location = r.url; return; }
-      await refreshBadge();
-      await loadModal();
-      openModal();
-    } catch(err){ console.error('[cart-modal] add fail → fallback', err); location = a.href; }
+      
+      if (r.status === 429) {
+        // Якщо сервер заблокував - швидко відновлюємо кнопку
+        console.log('Сервер заблокував запит (HTTP 429)');
+        setTimeout(restoreButton, 500);
+        return;
+      }
+      
+      if (r.redirected) { 
+        location = r.url; 
+        return; 
+      }
+      
+      if (r.ok) {
+        console.log(`ТОВАР ДОДАНО: ${buttonId} - оновлюємо UI`);
+        // Спочатку оновлюємо бейдж, потім модалку
+        await refreshBadge();
+        await loadModal();
+        openModal();
+        
+        // Швидше відновлюємо кнопку після успішного додавання
+        setTimeout(restoreButton, 800);
+      } else {
+        console.error('Помилка відповіді сервера:', r.status);
+        setTimeout(restoreButton, 1000);
+      }
+    } catch(err){ 
+      console.error('[cart-modal] add fail → fallback', err); 
+      // При помилці відновлюємо кнопку швидше
+      setTimeout(restoreButton, 1000);
+      location = a.href; 
+    }
   });
 
   // ----- open modal from header -----
@@ -91,10 +183,22 @@
   });
 
   // ----- plus/minus/remove/clear inside modal -----
+  let lastClickTime = {}; // захист від подвійних кліків
+  
   document.addEventListener('click', async (e) => {
     const link = e.target.closest('#cart-modal-body a.js-cart');
     if (!link) return;
     e.preventDefault();
+    
+    // ПОКРАЩЕНИЙ ЗАХИСТ ВІД ПОДВІЙНИХ КЛІКІВ
+    const now = Date.now();
+    const key = link.href;
+    if (lastClickTime[key] && (now - lastClickTime[key]) < 1000) {
+      console.log('ЗАХИСТ JS: Подвійний клік у модалці, ігноруємо');
+      return;
+    }
+    lastClickTime[key] = now;
+    
     try {
       const r = await fetch(link.href, { credentials:'include', headers:{'X-Requested-With':'XMLHttpRequest'} });
       if (r.redirected) { location = r.url; return; }
@@ -161,19 +265,3 @@
   // первинне оновлення бейджа
   document.addEventListener('DOMContentLoaded', refreshBadge);
 })();
-
-fetch(btn.href, {
-  method: 'POST',
-  headers: {
-    'X-Requested-With': 'XMLHttpRequest',
-    'X-CSRFToken': getCookie('csrftoken'),
-  }
-})
-.then(res => res.json())
-.then(data => {
-  if (data.ok) {
-    updateCartBadge(data.qty);           // оновлення бейджика
-    updateCartTotal(data.total);         // ✅ нова функція!
-  }
-})
-.catch(console.error);

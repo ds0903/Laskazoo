@@ -1,8 +1,11 @@
 from decimal import Decimal
 from typing import List, Dict
 
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import requests
+import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -13,6 +16,30 @@ from .forms import OrderCheckoutForm
 from apps.products.models import Product, Product_Variant
 
 from .session_cart import summary as sess_summary, add_item as sess_add, CART_KEY
+
+
+def ensure_clean_cart(user):
+    """
+    Гарантує чистий кошик для користувача
+    Видаляє всі кошикові замовлення з заповненими даними
+    """
+    # Шукаємо кошикові замовлення з заповненими контактами
+    problematic_carts = Order.objects.filter(
+        user=user,
+        status=Order.STATUS_CART
+    ).exclude(
+        full_name='',
+        phone='',
+        email=''
+    )
+    
+    if problematic_carts.exists():
+        print(f"ВИПРАВЛЕННЯ: знайдено {problematic_carts.count()} проблемних кошиків")
+        for cart in problematic_carts:
+            print(f"   Видаляємо кошик #{cart.id} з контактами: {cart.full_name}")
+            cart.delete()
+    
+    return True
 
 
 def _is_ajax(request):
@@ -121,6 +148,27 @@ def cart_modal(request):
 
 
 def add_variant_to_cart(request, variant_id: int):
+    # КРИТИЧНЕ ВИПРАВЛЕННЯ: захист від одночасних запитів
+    import time
+    user_key = request.user.id if request.user.is_authenticated else request.session.session_key or 'anonymous'
+    request_key = f'add_variant_{variant_id}_{user_key}'
+    current_time = time.time()
+    
+    # Перевіряємо кеш запитів (використовуємо сесію для простоти)
+    last_request_key = f'last_add_request_{request_key}'
+    if last_request_key in request.session:
+        last_time = float(request.session[last_request_key])
+        time_diff = current_time - last_time
+        if time_diff < 2.0:  # менше 2 секунд між запитами
+            print(f"ЗАХИСТ PYTHON: Подвійний запит додавання варіанту {variant_id} (різниця: {time_diff:.2f}с) - ігноруємо")
+            if _is_ajax(request):
+                return JsonResponse({'ok': False, 'message': 'Дуже швидко! Почекайте'}, status=429)
+            return redirect('orders:cart')
+    
+    # Зберігаємо час поточного запиту
+    request.session[last_request_key] = current_time
+    request.session.modified = True
+    
     variant = get_object_or_404(Product_Variant, pk=variant_id)
 
     if variant.warehouse_quantity is not None and variant.warehouse_quantity <= 0:
@@ -130,17 +178,40 @@ def add_variant_to_cart(request, variant_id: int):
         return redirect('orders:cart')
 
     if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(user=request.user, status=Order.STATUS_CART)
+        # КРИТИЧНЕ ВИПРАВЛЕННЯ: спочатку очищаємо проблемні кошики
+        ensure_clean_cart(request.user)
         
-        # Якщо створили нове замовлення, очищаємо всі попередні дані
-        if created:
-            order.full_name = ''
-            order.phone = ''
-            order.email = ''
-            order.delivery_condition = 'nova_poshta'  # За замовчуванням
-            order.delivery_address = ''
-            order.comment = ''
-            order.save()
+        # Тепер створюємо або знаходимо чистий кошик
+        order, created = Order.objects.get_or_create(
+            user=request.user, 
+            status=Order.STATUS_CART,
+            defaults={
+                'status': Order.STATUS_CART,
+                'full_name': '',
+                'phone': '',
+                'email': '',
+                'delivery_condition': '',  # ПОРОЖНІ ПОЛЯ!
+                'delivery_address': '',
+                'comment': ''
+            }
+        )
+        
+        # Подвійна перевірка (мало ли що)
+        if not created and (order.full_name or order.phone or order.email):
+            print(f"КРИТИЧНА ПОМИЛКА: Кошик #{order.id} все ще має дані!")
+            order.delete()  # Видаляємо його повністю
+            # Створюємо новий чистий кошик
+            order = Order.objects.create(
+                user=request.user,
+                status=Order.STATUS_CART,
+                full_name='',
+                phone='',
+                email='',
+                delivery_condition='',  # ПОРОЖНІ ПОЛЯ!
+                delivery_address='',
+                comment=''
+            )
+            print(f"   Створено новий чистий кошик #{order.id}")
             
         item, _ = OrderItem.objects.get_or_create(
             order=order, product=variant.product, variant=variant,
@@ -173,6 +244,27 @@ def add_to_cart(request, product_id: int):
     variant_id = request.GET.get('variant')
     if variant_id:
         return add_variant_to_cart(request, variant_id)
+    
+    # КРИТИЧНЕ ВИПРАВЛЕННЯ: захист від одночасних запитів
+    import time
+    user_key = request.user.id if request.user.is_authenticated else request.session.session_key or 'anonymous'
+    request_key = f'add_product_{product_id}_{user_key}'
+    current_time = time.time()
+    
+    # Перевіряємо кеш запитів
+    last_request_key = f'last_add_request_{request_key}'
+    if last_request_key in request.session:
+        last_time = float(request.session[last_request_key])
+        time_diff = current_time - last_time
+        if time_diff < 2.0:  # менше 2 секунд між запитами
+            print(f"ЗАХИСТ PYTHON: Подвійний запит додавання продукту {product_id} (різниця: {time_diff:.2f}с) - ігноруємо")
+            if _is_ajax(request):
+                return JsonResponse({'ok': False, 'message': 'Дуже швидко! Почекайте'}, status=429)
+            return redirect('orders:cart')
+    
+    # Зберігаємо час поточного запиту
+    request.session[last_request_key] = current_time
+    request.session.modified = True
 
     product = get_object_or_404(Product, pk=product_id)
 
@@ -185,17 +277,39 @@ def add_to_cart(request, product_id: int):
         return add_variant_to_cart(request, v.id)
 
     if request.user.is_authenticated:
-        order, created = Order.objects.get_or_create(user=request.user, status=Order.STATUS_CART)
+        # КРИТИЧНЕ ВИПРАВЛЕННЯ: спочатку очищаємо проблемні кошики
+        ensure_clean_cart(request.user)
         
-        # Якщо створили нове замовлення, очищаємо всі попередні дані
-        if created:
-            order.full_name = ''
-            order.phone = ''
-            order.email = ''
-            order.delivery_condition = 'nova_poshta'  # За замовчуванням
-            order.delivery_address = ''
-            order.comment = ''
-            order.save()
+        # Тепер створюємо або знаходимо чистий кошик
+        order, created = Order.objects.get_or_create(
+            user=request.user, 
+            status=Order.STATUS_CART,
+            defaults={
+                'status': Order.STATUS_CART,
+                'full_name': '',
+                'phone': '',
+                'email': '',
+                'delivery_condition': '',  # ПОРОЖНІ ПОЛЯ!
+                'delivery_address': '',
+                'comment': ''
+            }
+        )
+        
+        # Подвійна перевірка
+        if not created and (order.full_name or order.phone or order.email):
+            print(f"КРИТИЧНА ПОМИЛКА: Кошик #{order.id} все ще має дані!")
+            order.delete()
+            order = Order.objects.create(
+                user=request.user,
+                status=Order.STATUS_CART,
+                full_name='',
+                phone='',
+                email='',
+                delivery_condition='',  # ПОРОЖНІ ПОЛЯ!
+                delivery_address='',
+                comment=''
+            )
+            print(f"   Створено новий чистий кошик #{order.id}")
             
         item, _ = OrderItem.objects.get_or_create(
             order=order, product=product, variant=None,
@@ -241,11 +355,19 @@ def item_set_qty(request, item_id):
 
 @login_required
 def cart_detail(request):
+    # ЗАБОРОНА ПЕРЕХОДУ В КОШИК ЗІ СТОРІНКИ CHECKOUT
+    referer = request.META.get('HTTP_REFERER', '')
+    if '/checkout/' in referer:
+        print(f"ЗАБОРОНА: Перехід в кошик зі сторінки checkout")
+        messages.warning(request, 'Перейдіть на сторінку оформлення замовлення')
+        return redirect('orders:checkout')
+    
     order, total = _cart_tuple(request.user)
     return render(request, 'zoosvit/orders/cart.html', {'order': order, 'total': total})
 
 @login_required
 def checkout(request):
+    # ВАЖЛИВО: шукаємо ТІЛЬКИ кошикові замовлення
     order = get_object_or_404(Order, user=request.user, status=Order.STATUS_CART)
     
     # Перевіряємо, чи є товари в кошику
@@ -253,8 +375,53 @@ def checkout(request):
         messages.warning(request, 'Кошик порожній')
         return redirect('orders:cart')
     
+    # РАДИКАЛЬНЕ ВИПРАВЛЕННЯ: очищаємо ВСІ можливі джерела повідомлень
+    if request.method == 'GET':
+        # Очищаємо Django messages
+        from django.contrib.messages import get_messages
+        storage = get_messages(request)
+        list(storage)  # Читаємо всі повідомлення щоб очистити
+        
+        # Очищаємо сесію від можливих повідомлень
+        if 'order_success' in request.session:
+            del request.session['order_success']
+        if 'checkout_message' in request.session:
+            del request.session['checkout_message']
+        if '_messages' in request.session:
+            del request.session['_messages']
+        request.session.modified = True
+        
+        # FORCE ОЧИСТКА: видаляємо всі messages з бази якщо вони там
+        from django.contrib.messages.storage.base import Message
+        try:
+            # Очищаємо всі можливі залишки
+            storage._queued_messages = []
+            storage.added_new = False
+        except:
+            pass
+            
+        print(f"FORCE ОЧИСТКА: Всі повідомлення очищено для користувача {request.user.username}")
+        
+        # Додаткова перевірка: якщо замовлення має заповнені контакти - очищаємо їх
+        if order.full_name or order.phone or order.email:
+            print(f"КРИТИЧНА ПОМИЛКА: Кошик #{order.id} має заповнені дані!")
+            print(f"   Повідомлення про 'successfully оформлено' може показатися через це")
+            order.full_name = ''
+            order.phone = ''
+            order.email = ''
+            order.delivery_condition = ''
+            order.delivery_address = ''
+            order.comment = ''
+            order.delivery_condition = ''
+            order.save()
+            print(f"   Очищено всі контактні дані")
+    
     # Перевіряємо, чи це нове кошикове замовлення (без контактних даних)
     is_new_order = not (order.full_name or order.phone or order.email)
+    
+    # Дебаг: логуємо інформацію
+    print(f"DEBUG CHECKOUT: order_id={order.id}, status={order.status}, is_new={is_new_order}")
+    print(f"DEBUG CHECKOUT: full_name='{order.full_name}', phone='{order.phone}', email='{order.email}'")
     
     if request.method == 'POST':
         form = OrderCheckoutForm(request.POST)
@@ -263,6 +430,7 @@ def checkout(request):
             order.full_name = form.cleaned_data['full_name']
             order.phone = form.cleaned_data['phone']
             order.email = form.cleaned_data['email']
+            order.city = form.cleaned_data['city']  # ДОДАНО ПОЛЕ МІСТА
             order.delivery_address = form.cleaned_data['delivery_address']
             order.comment = form.cleaned_data.get('comment', '')
             
@@ -280,7 +448,8 @@ def checkout(request):
             
             # Генеруємо номер замовлення
             order_number = order.order_number or order.id
-            messages.success(request, f'Замовлення №{order_number} успішно оформлено!')
+            print(f"DEBUG: Оформлено замовлення #{order_number}, новий статус: {order.status}")
+            # messages.success(request, f'Замовлення №{order_number} успішно оформлено!')
             return redirect('orders:list')
     else:
         # Просто показуємо порожню форму - НЕ ЗБЕРІГАЄМО НІЧОГО
@@ -338,6 +507,26 @@ def _sess_save_items(request, items):
     request.session.modified = True
 
 def cart_item_inc(request, item_id: int):
+    # ПОКРАЩЕНИЙ ЗАХИСТ ВІД ПОДВІЙНИХ КЛІКІВ
+    session_key = f'cart_inc_{item_id}_{request.user.id if request.user.is_authenticated else "guest"}'
+    import time
+    current_time = time.time()
+    
+    # Перевіряємо чи був клік недавно
+    if session_key in request.session:
+        last_click = float(request.session[session_key])
+        time_diff = current_time - last_click
+        if time_diff < 2:  # ЗБІЛЬШУЄМО ЧАС ДО 2 СЕКУНД!
+            print(f"ЗАХИСТ: Подвійний клік на товар {item_id} (різниця: {time_diff:.2f}с) - ігноруємо")
+            if _is_ajax(request):
+                return JsonResponse({'ok': False, 'message': 'Дуже швидко! Почекайте'}, status=429)
+            return cart_modal(request) if _is_ajax(request) else redirect('orders:cart')
+    
+    # Зберігаємо час кліка
+    request.session[session_key] = current_time
+    request.session.modified = True
+    
+    print(f"ДОДАЄМО ТОВАР: item_id={item_id}, user={request.user.username if request.user.is_authenticated else 'guest'}")
     if request.user.is_authenticated and not request.GET.get('guest'):
         item = get_object_or_404(
             OrderItem, id=item_id,
@@ -358,6 +547,26 @@ def cart_item_inc(request, item_id: int):
     return cart_modal(request) if _is_ajax(request) else redirect('orders:cart')
 
 def cart_item_dec(request, item_id: int):
+    # ПОКРАЩЕНИЙ ЗАХИСТ ВІД ПОДВІЙНИХ КЛІКІВ
+    session_key = f'cart_dec_{item_id}_{request.user.id if request.user.is_authenticated else "guest"}'
+    import time
+    current_time = time.time()
+    
+    # Перевіряємо чи був клік недавно
+    if session_key in request.session:
+        last_click = float(request.session[session_key])
+        time_diff = current_time - last_click
+        if time_diff < 2:  # ЗБІЛЬШУЄМО ЧАС ДО 2 СЕКУНД!
+            print(f"ЗАХИСТ: Подвійний клік на товар {item_id} (різниця: {time_diff:.2f}с) - ігноруємо")
+            if _is_ajax(request):
+                return JsonResponse({'ok': False, 'message': 'Дуже швидко! Почекайте'}, status=429)
+            return cart_modal(request) if _is_ajax(request) else redirect('orders:cart')
+    
+    # Зберігаємо час кліка
+    request.session[session_key] = current_time
+    request.session.modified = True
+    
+    print(f"ВІДНІМАЄМО ТОВАР: item_id={item_id}, user={request.user.username if request.user.is_authenticated else 'guest'}")
     if request.user.is_authenticated and not request.GET.get('guest'):
         item = get_object_or_404(
             OrderItem, id=item_id,
@@ -396,10 +605,33 @@ def cart_item_remove(request, item_id: int):
     return cart_modal(request) if _is_ajax(request) else redirect('orders:cart')
 
 def cart_clear(request):
-    if request.user.is_authenticated and not request.GET.get('guest'):
-        order = Order.objects.filter(user=request.user, status=Order.STATUS_CART).first()
-        if order:
-            order.items.all().delete()
-    else:
-        _sess_save_items(request, [])
+    try:
+        if request.user.is_authenticated and not request.GET.get('guest'):
+            # Додатковий захист - намагаємося отримати користувача безпечно
+            try:
+                user = request.user
+                if user.is_authenticated:
+                    order = Order.objects.filter(user=user, status=Order.STATUS_CART).first()
+                    if order:
+                        # ВИПРАВЛЕННЯ: видаляємо все замовлення повністю, а не тільки товари
+                        print(f"Очищаємо кошик: видаляємо замовлення #{order.id}")
+                        order.delete()  # Видаляємо все замовлення!
+                    else:
+                        print("Кошик вже порожній")
+                else:
+                    print("Користувач не авторизований")
+            except Exception as db_error:
+                print(f"Помилка бази даних при очищенні кошика: {db_error}")
+                # Якщо помилка з базою даних - очищаємо сесію
+                _sess_save_items(request, [])
+        else:
+            _sess_save_items(request, [])
+    except Exception as e:
+        print(f"Критична помилка при очищенні кошика: {e}")
+        # У випадку будь-якої помилки - намагаємося очистити сесію
+        try:
+            _sess_save_items(request, [])
+        except:
+            pass
+    
     return cart_modal(request) if _is_ajax(request) else redirect('orders:cart')
