@@ -9,7 +9,7 @@
         <nav class="topbar-nav">
           <a href="{% url 'info_page' 'payment-delivery' %}">Оплата та доставка</a>
           <a href="{% url 'info_page' 'returns' %}">Обмін та повернення</a>
-          <a href="#page-footer">Контакти</a>
+          <a href="{% url 'info_page' 'contacts' %}">Контакти</a>
           <a href="{% url 'products:catalog' %}">Каталог</a>
         </nav>
       </div>
@@ -23,7 +23,7 @@
 
         <!-- Пошук з inline підказками -->
         <form id="main-search" class="search-form" method="get" action="{% url 'products:quick_search' %}">
-          <input type="text" name="q" placeholder="пошук товарів" autocomplete="off" />
+          <input type="text" name="q" placeholder="Пошук товарів" autocomplete="off" />
           <button type="submit" aria-label="Пошук">🔍</button>
 
           <!-- Inline підказки прямо під полем -->
@@ -35,7 +35,9 @@
         </form>
 
         <div class="icon-btn phone-btn" id="phone-support-btn">
-          <img src="{% static 'zoosvit/img/header_icons/phone-icon.png' %}" alt="Телефон">
+          <a href="{% url 'info_page' 'contacts' %}" class="phone-clickable-link">
+            <img src="{% static 'zoosvit/img/header_icons/phone-icon.png' %}" alt="Телефон">
+          </a>
           <div class="phone-dropdown">
             <div class="dropdown-title">Консультація менеджерів</div>
             <div class="dropdown-links">
@@ -121,7 +123,7 @@
           <a href="{% url 'products:subcategory_list' 'shares' %}">Акції</a>
           <a href="{% url 'products:subcategory_list' 'dogs' %}">Собаки</a>
           <a href="{% url 'products:subcategory_list' 'cats' %}">Коти</a>
-          <a href="{% url 'products:subcategory_list' 'super-vigodniye-propozicii' %}">Супер вигідні-пропозиції</a>
+{#          <a href="{% url 'products:subcategory_list' 'super-vigodniye-propozicii' %}">Супер вигідні-пропозиції</a>#}
         </nav>
       </div>
     </div>
@@ -300,8 +302,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // =============== ПОКРАЩЕНИЙ ТЕЛЕФОННИЙ ДРОПДАУН ===============
   const phoneBtn = document.getElementById('phone-support-btn');
   const phoneDropdown = phoneBtn?.querySelector('.phone-dropdown');
+  const phoneLink = phoneBtn?.querySelector('.phone-clickable-link');
 
-  if (phoneBtn && phoneDropdown) {
+  if (phoneBtn && phoneDropdown && phoneLink) {
     let phoneTimer;
 
     const showPhoneDropdown = () => {
@@ -315,10 +318,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 150);
     };
 
+    // Hover events для показу дропдауну
     phoneBtn.addEventListener('mouseenter', showPhoneDropdown);
     phoneBtn.addEventListener('mouseleave', hidePhoneDropdown);
     phoneDropdown.addEventListener('mouseenter', showPhoneDropdown);
     phoneDropdown.addEventListener('mouseleave', hidePhoneDropdown);
+    
+    // Клік по лінку веде на сторінку контактів (браузер сам обробляє це)
+    // Не потрібно додавати preventDefault, щоб лінк працював
   }
 
   // =============== ДРОПДАУНИ КОРИСТУВАЧА ===============
@@ -354,11 +361,30 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Для неавторизованих - клік
+  // Для неавторизованих - hover (як у авторизованих)
   const userLoginBtn = document.getElementById('user-login-btn');
   const loginDropdown = userLoginBtn?.querySelector('.login-dropdown');
 
   if (userLoginBtn && loginDropdown) {
+    let loginTimer;
+
+    const showLoginDropdown = () => {
+      clearTimeout(loginTimer);
+      loginDropdown.classList.add('show');
+    };
+
+    const hideLoginDropdown = () => {
+      loginTimer = setTimeout(() => {
+        loginDropdown.classList.remove('show');
+      }, 150);
+    };
+
+    userLoginBtn.addEventListener('mouseenter', showLoginDropdown);
+    userLoginBtn.addEventListener('mouseleave', hideLoginDropdown);
+    loginDropdown.addEventListener('mouseenter', showLoginDropdown);
+    loginDropdown.addEventListener('mouseleave', hideLoginDropdown);
+
+    // Також залишаємо клік для мобільних пристроїв
     userLoginBtn.addEventListener('click', (e) => {
       e.preventDefault();
       loginDropdown.classList.toggle('show');
@@ -558,6 +584,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .btn-cart--disabled img {
   filter: none !important;
+}
+
+/* Стилі для кнопки телефону з кліком */
+.phone-clickable-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.phone-clickable-link:hover {
+  background: rgba(9, 94, 86, 0.1);
+}
+
+.phone-btn {
+  position: relative;
 }
 
 /* Мобільна адаптація для розширеного пошуку */

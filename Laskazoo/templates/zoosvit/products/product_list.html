@@ -49,9 +49,9 @@
           <span>–</span>
           <input type="number" name="price_max" placeholder="до"  value="{{ price_max }}">
         </div>
-        <label class="mt-8">
+        <label class="stock-filter">
           <input type="checkbox" name="in_stock" {% if in_stock %}checked{% endif %}>
-          В наявності
+          <span>В наявності</span>
         </label>
 
         <button class="btn-secondary btn-filter-apply" onclick="applyFilters()">OK</button>
@@ -60,6 +60,22 @@
 
     <main class="catalog-main">
       {% if products %}
+        {# Контроль кількості товарів на сторінці #}
+        <div class="catalog-controls">
+          <div class="results-info">
+            Показано {{ products.start_index }}-{{ products.end_index }} з {{ products.paginator.count }} товарів
+          </div>
+          <div class="per-page-control">
+            <label for="per-page-select">Товарів на сторінці:</label>
+            <select id="per-page-select" onchange="changePerPage(this.value)">
+              <option value="20" {% if current_per_page == 20 %}selected{% endif %}>20</option>
+              <option value="40" {% if current_per_page == 40 %}selected{% endif %}>40</option>
+              <option value="60" {% if current_per_page == 60 %}selected{% endif %}>60</option>
+              <option value="100" {% if current_per_page == 100 %}selected{% endif %}>100</option>
+            </select>
+          </div>
+        </div>
+        
       <div class="product-grid">
         {% for product in products %}
           <div class="prod-card">
@@ -148,9 +164,36 @@
           </div>
         {% endfor %}
       </div>
+      
+      {# Пагінація #}
+      {% if products.has_other_pages %}
+        <div class="pagination-wrapper">
+          <nav class="pagination" aria-label="Пагінація">
+            {% if products.has_previous %}
+              <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ products.previous_page_number }}" class="page prev" aria-label="Попередня сторінка">« Назад</a>
+            {% endif %}
+            
+            {% for num in products.paginator.page_range %}
+              {% if num == products.number %}
+                <span class="page active" aria-current="page">{{ num }}</span>
+              {% elif num > products.number|add:"-3" and num < products.number|add:"3" %}
+                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}" class="page">{{ num }}</a>
+              {% elif num == 1 or num == products.paginator.num_pages %}
+                <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}" class="page">{{ num }}</a>
+              {% elif num == products.number|add:"-4" or num == products.number|add:"4" %}
+                <span class="page ellipsis">…</span>
+              {% endif %}
+            {% endfor %}
+            
+            {% if products.has_next %}
+              <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ products.next_page_number }}" class="page next" aria-label="Наступна сторінка">Далі »</a>
+            {% endif %}
+          </nav>
+        </div>
+      {% endif %}
     {% else %}
     <div class="product-grid is-empty">
-      <p class="no-favourites">У вас поки що немає обраних товарів. ;(</p>
+      <p class="no-favourites">Немає товарів у цій категорії. ;(</p>
     </div>
     {% endif %}
     </main>
@@ -176,6 +219,14 @@
     if (stock) url.searchParams.set('in_stock', '1'); else url.searchParams.delete('in_stock');
 
     window.location = url.toString();
+  }
+  
+  // Функція для зміни кількості товарів на сторінці
+  function changePerPage(perPage) {
+    const url = new URL(window.location);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.delete('page'); // скидаємо номер сторінки, щоб почати з першої
+    window.location.href = url.toString();
   }
 </script>
 

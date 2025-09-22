@@ -15,13 +15,17 @@
 </head>
 
 <body>
-  {% include 'zoosvit/core/partials/header.html' %}
+  <header class="site-header">
+    {% include 'zoosvit/core/partials/header.html' %}
+  </header>
 
-  {% block breadcrumbs %}{% endblock %}
+  <div class="site-content">
+    {% block breadcrumbs %}{% endblock %}
 
-  <main class="site-main">
-    {% block content %}{% endblock %}
-  </main>
+    <main class="site-main">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
 
   {% include 'zoosvit/core/partials/footer.html' %}
 

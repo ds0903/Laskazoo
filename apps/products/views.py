@@ -10,6 +10,7 @@ from django.db.models import (
 from django.urls import reverse
 from django.db.models.functions import Coalesce
 from django.db.models import Q, Case, When, Value, IntegerField, Min
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 try:
@@ -115,7 +116,22 @@ def catalog(request):
         )
     )
 
-    products, filt_ctx = _apply_filters(request, base_qs)
+    products_qs, filt_ctx = _apply_filters(request, base_qs)
+    
+    # Додаємо пагінацію
+    items_per_page = int(request.GET.get('per_page', 20))  # 20 товарів на сторінку за замовчуванням
+    if items_per_page > 100:  # обмежуємо максимум
+        items_per_page = 100
+    
+    paginator = Paginator(products_qs, items_per_page)
+    page = request.GET.get('page', 1)
+    
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
 
     if request.user.is_authenticated:
         fav_qs = Favourite.objects.filter(user=request.user)
@@ -132,9 +148,10 @@ def catalog(request):
     ctx = {
         'title':    'Каталог',
         'mains':    mains,
-        'products': products,
+        'products': products,  # тепер це Page об'єкт
         'fav_variant_ids':  list(fav_variant_ids),
         'fav_product_ids': fav_product_ids,
+        'current_per_page': items_per_page,
         **filt_ctx,
     }
     return render(request, 'zoosvit/products/catalog.html', ctx)
@@ -163,7 +180,22 @@ def category_list(request, main_slug, slug):
     )
 
 
-    products, filt_ctx = _apply_filters(request, base_qs)
+    products_qs, filt_ctx = _apply_filters(request, base_qs)
+    
+    # Додаємо пагінацію
+    items_per_page = int(request.GET.get('per_page', 20))
+    if items_per_page > 100:
+        items_per_page = 100
+    
+    paginator = Paginator(products_qs, items_per_page)
+    page = request.GET.get('page', 1)
+    
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
 
     if request.user.is_authenticated:
         fav_qs = Favourite.objects.filter(user=request.user)
@@ -183,6 +215,7 @@ def category_list(request, main_slug, slug):
         'products': products,
         'fav_variant_ids': list(fav_variant_ids),
         'fav_product_ids': fav_product_ids,
+        'current_per_page': items_per_page,
         **filt_ctx,
     })
 
@@ -274,7 +307,7 @@ def catalog_by_brand(request, brand_slug):
         base = base.filter(brand=cur_brand)
 
 
-    products = (base
+    products_qs = (base
         .select_related('brand', 'category')
         .annotate(min_var_price=Min('variants__retail_price'))
         .annotate(price_eff=Coalesce('min_var_price', F('retail_price')))
@@ -282,20 +315,35 @@ def catalog_by_brand(request, brand_slug):
 
 
     if price_min:
-        try: products = products.filter(price_eff__gte=Decimal(price_min))
+        try: products_qs = products_qs.filter(price_eff__gte=Decimal(price_min))
         except Exception: pass
     if price_max:
-        try: products = products.filter(price_eff__lte=Decimal(price_max))
+        try: products_qs = products_qs.filter(price_eff__lte=Decimal(price_max))
         except Exception: pass
 
 
     if in_stock:
-        products = products.filter(
+        products_qs = products_qs.filter(
             Q(variants__warehouse_quantity__gt=0) |
             Q(warehouse_quantity__gt=0)
         )
 
-    products = products.distinct()
+    products_qs = products_qs.distinct()
+    
+    # Додаємо пагінацію
+    items_per_page = int(request.GET.get('per_page', 20))
+    if items_per_page > 100:
+        items_per_page = 100
+    
+    paginator = Paginator(products_qs, items_per_page)
+    page = request.GET.get('page', 1)
+    
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
 
 
 
@@ -341,16 +389,34 @@ def catalog_by_brand(request, brand_slug):
         'price_min': price_min,
         'price_max': price_max,
         'in_stock':  in_stock,
+        'current_per_page': items_per_page,
     })
 
 def catalog_by_country(request, country_slug):
     country_brands = Brand.objects.filter(country_slug__iexact=country_slug)
-    products = (Product.objects
+    products_qs = (Product.objects
                 .filter(brand__in=country_brands)
                 .select_related('brand', 'category'))
+    
+    # Додаємо пагінацію
+    items_per_page = int(request.GET.get('per_page', 20))
+    if items_per_page > 100:
+        items_per_page = 100
+    
+    paginator = Paginator(products_qs, items_per_page)
+    page = request.GET.get('page', 1)
+    
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
+        
     title = f"Країна: {country_brands.first().country if country_brands else country_slug}"
     return render(request, 'zoosvit/products/product_list.html', {
         'title': title,
         'products': products,
         'brands': country_brands.annotate(count=Count('products')),
+        'current_per_page': items_per_page,
     })

@@ -21,60 +21,188 @@
   gap: 14px;
 }
 
-/* Сайдбар фільтрів */
+/* Сайдбар фільтрів - покращений дизайн */
 .filter-sidebar {
-  flex: 0 0 250px;
+  flex: 0 0 280px;
   background: #fff;
   padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   margin: 10px 0;
   margin-left: -160px;
+  border: 1px solid #f0f0f0;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
+
 .fs-title {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
+  margin-bottom: 20px;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.fs-group {
+  margin-bottom: 28px;
+  padding: 16px;
+  background: #fafbfc;
+  border-radius: 10px;
+  border: 1px solid #f0f0f0;
+}
+
+.fs-group-title {
+  font-weight: 700;
+  font-size: 1.05rem;
   margin-bottom: 16px;
   color: var(--color-primary);
-}
-.fs-group {
-  margin-bottom: 24px;
-}
-.fs-group-title {
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-.fs-group label {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-}
-.fs-group input {
-  margin-right: 8px;
-}
-.range-inputs {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
 }
-.range-inputs input {
-  width: 60px;
-  padding: 4px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.btn-filter-apply {
-  padding: 6px 12px;
+
+.fs-group-title::before {
+  content: "";
+  width: 4px;
+  height: 16px;
   background: var(--color-primary);
+  border-radius: 2px;
+}
+
+.fs-group label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s, transform 0.1s;
+  position: relative;
+}
+
+.fs-group label:hover {
+  background: rgba(9, 94, 86, 0.05);
+  transform: translateX(2px);
+}
+
+.fs-group input[type="checkbox"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.fs-group label span {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #666;
+  background: #e9ecef;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.range-inputs input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.range-inputs input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(9, 94, 86, 0.1);
+}
+
+.range-inputs span {
+  color: #666;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.btn-filter-apply {
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #0a6b61 100%);
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(9, 94, 86, 0.3);
 }
+
 .btn-filter-apply:hover {
-  background: #07473f;
+  background: linear-gradient(135deg, #0a6b61 0%, var(--color-primary) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(9, 94, 86, 0.4);
+}
+
+.btn-filter-apply:active {
+  transform: translateY(0);
+}
+
+/* Спеціальний стиль для чекбокса "В наявності" */
+.fs-group label.stock-filter {
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.fs-group label.stock-filter:hover {
+  border-color: var(--color-primary);
+  background: rgba(9, 94, 86, 0.03);
+  transform: translateX(0);
+}
+
+.fs-group label.stock-filter input:checked + span {
+  color: var(--color-primary);
+}
+
+/* Мобільна адаптація для фільтрів */
+@media (max-width: 992px) {
+  .filter-sidebar {
+    flex: 1 1 100%;
+    margin-left: 0;
+    margin-bottom: 24px;
+    position: static;
+    max-height: none;
+  }
+  
+  .catalog-wrapper {
+    flex-direction: column;
+  }
 }
 
 /* Основний контент */
@@ -148,7 +276,7 @@
 /* Пагінація */
 .pagination {
   text-align: center;
-  margin-top: 32px;
+  margin-top: 16px;
 }
 .pagination .page {
   display: inline-block;
@@ -438,7 +566,7 @@
 }
 .site-main {
   /* додаємо простір перед футером */
-  padding-bottom: 200px;
+  padding-bottom: 40px;
 }
 /* ========== Детальний перегляд товару ========== */
 .product-detail {
@@ -721,4 +849,134 @@ section.catalog .prod-card:hover .card-back,
 .filter-sidebar{
   align-self: flex-start;   /* примусити тримати власну висоту */
   height: auto;             /* на випадок, якщо десь було задано height */
+}
+
+/* === КОНТРОЛЬ КАТАЛОГУ === */
+.catalog-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.results-info {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.per-page-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.per-page-control label {
+  color: #333;
+  font-weight: 500;
+}
+
+.per-page-control select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.per-page-control select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* === ПАГІНАЦІЯ === */
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;         /* зменшили до 8px */
+  margin-bottom: 16px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pagination .page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #333;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.pagination .page:hover {
+  background: #f8f9fa;
+  border-color: #bbb;
+  transform: translateY(-1px);
+}
+
+.pagination .page.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+  cursor: default;
+}
+
+.pagination .page.active:hover {
+  transform: none;
+}
+
+.pagination .ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  color: #666;
+  font-weight: bold;
+  cursor: default;
+}
+
+.pagination .prev,
+.pagination .next {
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+/* Мобільна адаптація */
+@media (max-width: 768px) {
+  .catalog-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .pagination .page {
+    min-width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+  
+  .pagination .prev,
+  .pagination .next {
+    padding: 6px 12px;
+  }
 }

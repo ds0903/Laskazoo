@@ -104,7 +104,7 @@ html {
 /* ===== “Чому саме ми” бар ===== */
 .why-us-bar {
   height: 200px;          /* тут підбери свою бажану висоту */
-  margin: 45px 0;
+  margin: 60px 0;         /* збільшив відступи зверху та знизу */
   width: 100%;
   background-color: #fff;      /* такий же колір, як у site-mainheader */
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -150,6 +150,7 @@ html {
   height: 460px;           /* або потрібна висота */
   margin: 0 auto;          /* центр секції на сторінці */
   overflow: hidden;
+  border-radius: 20px;     /* ← додано заокруглення */
 }
 
 /* Слайди: горизонтальне центрування всередині hero-carousel */
@@ -164,6 +165,7 @@ html {
   background-position: center;
   opacity: 0;
   transition: opacity .8s ease;
+  border-radius: 20px;     /* ← додано заокруглення */
 }
 .hero-carousel > .carousel-slide.active{ opacity: 1; }
 
@@ -521,7 +523,7 @@ h2 { font-size:2rem; margin:40px 0 20px; text-align:center; color:#095e56; }
   flex: 0 0 var(--prod-card-width);
   max-width: var(--prod-card-width);
   background: #fff;
-  border-radius: 12px;
+  border-radius: 16px;    /* ← збільшили заокруглення */
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
@@ -729,12 +731,15 @@ footer { background:#fff; padding:16px 0; text-align:center; color:#777; font-si
 .login-dropdown {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition:
+    opacity 0.35s ease-in-out,
+    transform 0.35s ease-in-out,
+    visibility 0.35s;
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%);
-  width: 180px;             /* можна підправити ширину */
+  transform: translateX(-50%) translateY(10px);
+  width: 200px;
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -749,6 +754,7 @@ footer { background:#fff; padding:16px 0; text-align:center; color:#777; font-si
 .login-dropdown.show {
   opacity: 1;
   visibility: visible;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* 4) Внутрішній заголовок */
@@ -1139,6 +1145,7 @@ background-color: #1c7f73;
   padding-top: 40px;
   font-size: 0.9rem;
   line-height: 1.4;
+  margin-top: 60px;  /* ← додано відступ зверху */
 }
 
 .footer-top {
@@ -1560,7 +1567,7 @@ section#mega-categories.container {
   text-decoration: none;  /* прибираємо підкреслення */
   color: inherit;         /* успадковує колір тексту */
   background: #fff;
-  border-radius: 8px;
+  border-radius: 16px;    /* ← збільшили заокруглення */
   padding: 12px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   transition: transform .2s, box-shadow .2s;
@@ -2094,14 +2101,15 @@ section#mega-categories.container{
   padding: 0 16px !important;
 }
 
-/* 4 колонки + центрування в клітинці */
+/* 3 колонки + центрування в клітинці */
 .mega-categories{
   display: grid !important;
-  grid-template-columns: repeat(4, minmax(240px, 1fr));
-  column-gap: 56px;
+  grid-template-columns: repeat(3, minmax(280px, 1fr)) !important;
+  column-gap: 80px;
   row-gap: 28px;
   align-items: start;
   justify-items: center;        /* ← центрує вміст кожної колонки */
+  justify-content: center;      /* ← центрує всю сітку */
 }
 
 /* кожна колонка – вертикальний стек */
@@ -2110,7 +2118,7 @@ section#mega-categories.container{
   flex: initial !important;
 
   width: 100%;
-  max-width: 300px;
+  max-width: 350px;
   display: grid;
   grid-auto-rows: min-content;
   justify-items: center;        /* і заголовок, і список, і кнопка по центру */
@@ -2133,12 +2141,18 @@ section#mega-categories.container{
 
 /* адаптив */
 @media (max-width: 992px){
-  .mega-categories{ grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+  .mega-categories{ grid-template-columns: repeat(2, minmax(220px, 1fr)) !important; }
 }
 @media (max-width: 560px){
-  .mega-categories{ grid-template-columns: 1fr; }
+  .mega-categories{ grid-template-columns: 1fr !important; }
 }
 
+
+/* Додав відступи для секції брендів */
+#brands {
+  margin: 60px 0;           /* відступи зверху та знизу */
+  padding: 40px 0;          /* внутрішні відступи */
+}
 
 /* 7 колонок, рівне вирівнювання */
 .brands-grid.core{
@@ -2650,12 +2664,87 @@ html, body{ overflow-x: hidden; }
 .prod-card img { display:block; }
 
 
+/* === КАРТОЧКИ ТОВАРІВ - ПОКРАЩЕННЯ === */
+
+/* Основні зображення товарів */
 .prod-card img {
   width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 4;        /* під свої зображення; 1/1 якщо квадратні */
-  object-fit: contain;
-  background: #f8f8f8;        /* легкий плейсхолдер */
+  height: 180px !important;     /* фіксована висота для всіх зображень */
+  object-fit: contain;           /* зберігає пропорції, не обрізає */
+  background: #fff;              /* білий фон */
+  border-radius: 8px;
+  margin: 0 auto 12px;           /* центруємо зображення */
+  display: block;
+  border: 1px solid #f0f0f0;     /* легка рамка */
+  transition: transform 0.2s ease;
+}
+
+.prod-card:hover img {
+  transform: scale(1.02);        /* легке збільшення при наведенні */
+}
+
+/* Покращення тексту в карточках */
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-align: center;
+  margin: 8px 0;
+  line-height: 1.3;
+  min-height: 2.6em;           /* мінімальна висота для 2 рядків */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding: 0 8px;              /* відступи збоку */
+}
+
+.card-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.card-title a:hover {
+  opacity: 0.8;
+}
+
+.card-article {
+  font-size: 0.85rem;
+  color: #888;
+  text-align: center;
+  margin: 8px 0;
+  font-weight: 500;
+}
+
+.card-price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-align: center;
+  margin: 12px 0;
+  padding: 8px;
+  background: rgba(9, 94, 86, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(9, 94, 86, 0.1);
+}
+
+.card-info {
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+  margin: 8px 0;
+  padding: 0 8px;
+}
+
+.card-info a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.card-info a:hover {
+  text-decoration: underline;
 }
 
 /* ЄДИНЕ джерело правди для висоти картки */
@@ -2717,11 +2806,26 @@ body{
   min-height: 100dvh;                 /* стабільна висота на мобілках */
   display: grid;
   grid-template-rows: auto 1fr auto auto;  /* header | content | footer | subfooter */
+  grid-template-areas:
+    "header"
+    "main"
+    "footer"
+    "subfooter";
 }
+
+/* правильні зони */
+.site-header{ grid-area: header; }
+.site-content,
+.site-main { grid-area: main; min-height: 0; overflow: auto; }
+.site-footer{ grid-area: footer; }
+.site-subfooter{ grid-area: subfooter; }
 
 /* те, що між header і футерами, має тягнутись і скролитись */
 .site-content,
-.site-main { min-height: 0; }
+.site-main { 
+  min-height: 600px;  /* мінімальна висота контенту */
+  padding-bottom: 40px;  /* відступ від футера */
+}
 
 /* ===== 2) ГАРАНТОВАНО прибиваємо все fixed у футерів ===== */
 .site-footer,
@@ -2744,6 +2848,10 @@ body{
   .site-footer { padding-top: 20px; }
   .footer-top  { gap: 16px; }
   .footer-col  { min-width: 0; }
+  
+  /* менша мінімальна висота на мобілці */
+  .site-content,
+  .site-main { min-height: 400px; }
 }
 
 /* На всякий: не обрізати сторінку по висоті */
