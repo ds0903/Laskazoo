@@ -94,22 +94,14 @@
             </span>
           </a>
 
-          <!-- Кошик: неактивний коли порожній -->
-          {% if cart_qty|default:0 > 0 %}
-            <a href="#cart" class="btn-cart" aria-label="Мій кошик" id="cart-btn">
-              <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}" alt="Cart">
-              <span class="cart-count">{{ cart_qty|default:0 }}</span>
-              <span class="cart-text">Мій кошик</span>
-            </a>
-          {% else %}
-            <div class="btn-cart btn-cart--disabled" aria-label="Кошик порожній" id="cart-btn-disabled">
-              <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}" alt="Cart">
-              <span class="cart-count">0</span>
-              <span class="cart-text">Мій кошик</span>
-            </div>
-          {% endif %}
+          <!-- Кошик: завжди активний для відкриття модалки -->
+          <a href="#cart" class="btn-cart {% if cart_qty|default:0 <= 0 %}btn-cart--empty{% endif %}" aria-label="Мій кошик" id="cart-btn">
+            <img src="{% static 'zoosvit/img/header_icons/cart-icon.png' %}" alt="Cart">
+            <span class="cart-count">{{ cart_qty|default:0 }}</span>
+            <span class="cart-text">Мій кошик</span>
+          </a>
 
-          <span class="cart-total" id="cart-total">
+          <span class="cart-total" id="cart-total" {% if cart_total|floatformat:2 == "0.00" %}style="display: none;"{% endif %}>
             {% if cart_total|floatformat:2 != "0.00" %}
               {{ cart_total }} грн
             {% endif %}

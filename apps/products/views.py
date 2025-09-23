@@ -235,11 +235,26 @@ def product_detail(request, main_slug, slug, product_slug):
 
     variants = product.variants.all()
 
+    # Додаємо логіку для обраних товарів
+    if request.user.is_authenticated:
+        fav_qs = Favourite.objects.filter(user=request.user)
+        fav_variant_ids = list(
+            fav_qs.exclude(variant__isnull=True).values_list('variant_id', flat=True)
+        )
+        fav_product_ids = list(
+            fav_qs.filter(variant__isnull=True).values_list('product_id', flat=True)
+        )
+    else:
+        fav_variant_ids = list(map(int, request.session.get('fav_variant_ids', [])))
+        fav_product_ids = list(map(int, request.session.get('fav_product_ids', [])))
+
     return render(request, 'zoosvit/products/product_detail.html', {
         'main_slug': main_slug,
         'category':  category,
         'product':   product,
-        'variants':  variants
+        'variants':  variants,
+        'fav_variant_ids': fav_variant_ids,
+        'fav_product_ids': fav_product_ids,
     })
 
 def _apply_filters(request, base_qs):

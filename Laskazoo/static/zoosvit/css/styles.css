@@ -9,6 +9,8 @@
   --cat-gap:          10px;   /* відступ між карточками */
   --cat-per-page:     9;
   --cat-scroll:      3;
+  /* салатовий колір для обраного та бейджів */
+  --badge-green: #27ae60;
   /* …інші ваші змінні… */
   /* ширина однієї product-картки */
   --prod-card-width: 235px;
@@ -3375,5 +3377,26 @@ input[aria-invalid="true"] {
   color:#222; background:#fff; font-weight:600; text-decoration:none;
   transition:background .15s, color .15s, border-color .15s;
 }
-.btn-outline:hover{ border-color:#b2bbb8; background:#fafafa; }}
+.btn-outline:hover{ border-color:#b2bbb8; background:#fafafa; }
+
+/* ===== НОВИЙ СТИЛЬ ДЛЯ ПОРОЖНЬОГО КОШИКА ===== */
+/* Порожній кошик - все одно кліканий для відкриття модалки */
+.btn-cart--empty {
+  opacity: 0.7;
+  /* НЕ вимикаємо pointer-events - кошик має відкриватися */
+}
+
+.btn-cart--empty:hover {
+  opacity: 1;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn-cart--empty img {
+  transition: filter 0.3s;
+}
+
+.btn-cart--empty:hover img {
+  filter: brightness(0) invert(1);
+}
 
