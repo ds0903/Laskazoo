@@ -2150,17 +2150,42 @@ section#mega-categories.container{
 
 /* Додав відступи для секції брендів */
 #brands {
-  margin: 60px 0;           /* відступи зверху та знизу */
+  margin: 60px auto;        /* змінив на auto для центрування */
   padding: 40px 0;          /* внутрішні відступи */
+  text-align: center;       /* центрування всього контенту */
+  max-width: 1200px;        /* максимальна ширина */
+  width: 100%;              /* на всю ширину */
 }
 
-/* 7 колонок, рівне вирівнювання */
+/* 5 логотипів в один горизонтальний ряд, по центру */
 .brands-grid.core{
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, max-content));
-  justify-content: center;   /* ← центрує всю сітку, якщо вона вужча за контейнер */
-  gap: 100px;
+  display: flex;              /* змінив на flex для горизонтального рядка */
+  justify-content: center;   /* центрування по горизонталі */
+  align-items: center;       /* центрування по вертикалі */
+  gap: 80px;                 /* збільшив відстань між логотипами */
+  flex-wrap: wrap;           /* дозволяє перенос на мобільних */
+  margin: 0 auto;            /* центрування самої сітки */
+  width: 100%;               /* на всю ширину контейнера */
+}
+
+/* Стилі для окремих логотипів брендів */
+.brands-grid.core .brand-item {
+  flex: 0 0 auto;            /* не росте і не стискається */
+  width: 160px;              /* збільшив ширину */
+  height: 120px;             /* збільшив висоту */
+  display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 15px;             /* збільшив падінг */
+}
+
+.brands-grid.core .brand-item img {
+  max-height: 90px;          /* збільшив максимальну висоту */
+  max-width: 130px;          /* збільшив максимальну ширину */
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
 /* Однакова “клітинка” під логотип */
