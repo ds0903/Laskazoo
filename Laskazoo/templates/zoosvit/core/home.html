@@ -1,20 +1,15 @@
-<!DOCTYPE html>
+{% extends 'zoosvit/core/base.html' %}
 {% load static %}
-<html lang="uk">
-<head>
-  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
-  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
+
+{% block title %}Ласка – Все для ваших улюбленців{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <script defer src="{% static 'zoosvit/js/variant_pills.js' %}"></script>
   <script defer src="{% static 'zoosvit/js/home_sliders.js' %}"></script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ласка – Все для ваших улюбленців</title>
-  <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-</head>
-<body>
+{% endblock %}
 
-{% include 'zoosvit/core/partials/header.html' %}
+{% block content %}
 
 <section class="hero-carousel">
 <div class="carousel-slide"
@@ -31,14 +26,6 @@
 </div>
 
 <div class="carousel-nav"></div>
-
-<!--  <div class="carousel-overlay">-->
-<!--    <div class="carousel-content container">-->
-<!--      <h1>Все для щасливих друзів</h1>-->
-<!--      <p>Якісні товари для собак, котів та інших улюбленців</p>-->
-<!--      <a href="#categories" class="btn-primary">Почати покупки</a>-->
-<!--    </div>-->
-<!--  </div>-->
 </section>
 
 <section id="categories" class="categories container">
@@ -55,7 +42,6 @@
             {% if pc.image %}
               <img src="{{ pc.image.url }}" alt="{{ pc.title }}">
             {% else %}
-              {# fallback, якщо в Category немає картинки #}
               <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="{{ pc.title }}">
             {% endif %}
             <p class="cat-title">{{ pc.title }}</p>
@@ -63,7 +49,7 @@
         {% empty %}
           <a href="#" class="cat-card">
             <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Категорія">
-            <p class="cat-title">В базі відсутні популряні категорії!</p>
+            <p class="cat-title">В базі відсутні популярні категорії!</p>
           </a>
         {% endfor %}
 
@@ -73,7 +59,6 @@
     <button class="slide-btn right" aria-label="Вперед">&gt;</button>
   </div>
 </section>
-
 
 <section id="products" class="products container">
 <h2>Хіти продаж</h2>
@@ -112,11 +97,9 @@
     </h3>
     <div class="card-price">₴ {{ v0.retail_price|default:product.retail_price }}</div>
   {% endwith %}
-
 </div>
 
-
-  {# ---- BACK (можеш залишити як було, я трохи підчистив) ---- #}
+  {# ---- BACK ---- #}
   <div class="card-back">
   {% with v0=product.variants_for_card.0 %}
     <a href="{{ product.get_absolute_url|default:'#' }}">
@@ -143,10 +126,9 @@
       </h3>
     </a>
 
-    {# ЦІНА на бек-стороні #}
     <div class="card-price">₴ {{ v0.retail_price|default:product.retail_price }}</div>
 
-    {# ПІГУЛКИ (тепер тут) #}
+    {# ПІГУЛКИ #}
     {% if product.variants_for_card|length > 1 %}
       {% with vfirst=product.variants_for_card.0 %}
         <div class="variant-group">
@@ -183,7 +165,6 @@
     В кошик
   </a>
 
-  {# Підсвічуємо лише якщо поточний варіант у вибраному #}
   <button
     class="btn-fav js-fav {% if v0 and v0.id in fav_variant_ids %}is-on{% endif %}"
     data-url="{% url 'favourites:toggle' product.id %}"
@@ -192,21 +173,14 @@
     ❤️
   </button>
 {% endwith %}
-
   </div>
+    
     <div class="card-info">
           Виробник:
           {% if product.brand %}
             <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
           {% else %} — {% endif %}
-        </div>
-<!--        <div class="card-info">-->
-<!--          Країна:-->
-<!--          {% if product.brand and product.brand.country_slug %}-->
-<!--            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>-->
-<!--          {% else %} — {% endif %}-->
-<!--        </div>-->
-
+    </div>
 </div>
 </div>
     {% endwith %}
@@ -214,35 +188,11 @@
     <p>Популярні товари ще не обрані.</p>
   {% endfor %}
 </div>
-
   </div>
   <button class="slide-btn right">&gt;</button>
     </div>
 </div>
 </section>
-
-<!-- Приховано за запитом - блок "6 зоомаркетів" 
-<section class="why-us-bar">
-  <div class="container why-us-inner">
-    <div class="why-us-item">
-      <img src="{% static 'zoosvit/img/other/shop-icon.png' %}" alt="6 зоомаркетів">
-      <p>6 зоомаркетів</p>
-    </div>
-    <div class="why-us-item">
-      <img src="{% static 'zoosvit/img/other/delivery-icon.png' %}" alt="Швидка доставка">
-      <p>Швидка доставка</p>
-    </div>
-    <div class="why-us-item">
-      <img src="{% static 'zoosvit/img/other/help-icon.png' %}" alt="Найкращий рівень сервісу">
-      <p>Найкращий рівень сервісу</p>
-    </div>
-    <div class="why-us-item">
-      <img src="{% static 'zoosvit/img/other/happy-icon.png' %}" alt="100% задоволені клієнти та їх пухнасті">
-      <p>100% задоволені клієнти та їх пухнасті</p>
-    </div>
-  </div>
-</section>
--->
 
 <!-- Нова секція з 3 колонками замість 4 -->
 <section class="why-us-bar">
@@ -263,15 +213,6 @@
 </section>
 
 <section id="mega-categories" class="mega-categories container">
-{#  <div class="category-col">#}
-{#    <h3 class="category-title">#}
-{#      <a href="{% url 'products:subcategory_list' 'super-vigodniye-propozicii' %}" class="category-link">#}
-{#        <img src="{% static 'zoosvit/img/category-detailed/sale-icon.png' %}" alt="Супер вигідні-пропозиції">#}
-{#        Супер вигідні-пропозиції#}
-{#      </a>#}
-{#    </h3>#}
-{#  </div>#}
-
   <div class="category-col">
     <h3 class="category-title">
       <a href="{% url 'products:subcategory_list' 'shares' %}" class="category-link">
@@ -291,10 +232,6 @@
     <ul>
       <li><a href="/categories/dogs/korm-dlya-sobak/">Корм для собак</a></li>
       <li><a href="/categories/dogs/lasoshhi-dlya-sobak/">Ласощі для собак</a></li>
-<!--      <li><a href="#">Іграшки для собак</a></li>-->
-<!--      <li><a href="#">Амуніція для собак</a></li>-->
-<!--      <li><a href="#">Вітаміни та добавки</a></li>-->
-<!--      <li><a href="#">Сумки, переноски</a></li>-->
     </ul>
     <a href="{% url 'products:subcategory_list' 'dogs' %}" class="btn-secondary">Всі категорії</a>
   </div>
@@ -309,82 +246,9 @@
     <ul>
       <li><a href="/categories/cats/korm-dlya-kotiv/">Корм для котів</a></li>
       <li><a href="/categories/cats/lasoshhi-dlya-kotiv/">Ласощі для котів</a></li>
-      <!--      <li><a href="#">Сумки, переноски</a></li>-->
-      <!--      <li><a href="#">Іграшки для котів</a></li>-->
-      <!--      <li><a href="#">Дряпки та когтеточки</a></li>-->
-<!--      <li><a href="#">Аксесуари</a></li>-->
     </ul>
     <a href="{% url 'products:subcategory_list' 'cats' %}" class="btn-secondary">Всі категорії</a>
   </div>
-
-<!--  <div class="category-col">-->
-<!--    <h3 class="category-title">-->
-<!--      <a href="{% url 'products:subcategory_list' 'birds' %}" class="category-link">-->
-<!--        <img src="{% static 'zoosvit/img/category-detailed/bird-icon.png' %}" alt="Птахи">-->
-<!--        Птахи-->
-<!--      </a>-->
-<!--    </h3>-->
-<!--    <ul>-->
-<!--      <li><a href="#">Корм для птахів</a></li>-->
-<!--      <li><a href="#">Іграшки для птахів</a></li>-->
-<!--      <li><a href="#">Клітки та наповнювачі</a></li>-->
-<!--      <li><a href="#">Годівниці та аксесуари</a></li>-->
-<!--      <li><a href="#">Вітаміни та ветпрепарати</a></li>-->
-<!--      <li><a href="#">Ласощі для птахів</a></li>-->
-<!--    </ul>-->
-<!--    <a href="{% url 'products:subcategory_list' 'birds' %}" class="btn-secondary">Всі категорії</a>-->
-<!--  </div>-->
-
-<!--  <div class="category-col">-->
-<!--    <h3 class="category-title">-->
-<!--      <a href="{% url 'products:subcategory_list' 'rodents' %}" class="category-link">-->
-<!--        <img src="{% static 'zoosvit/img/category-detailed/hamster-icon.png' %}" alt="Гризуни">-->
-<!--        Гризуни-->
-<!--      </a>-->
-<!--    </h3>-->
-<!--    <ul>-->
-<!--      <li><a href="#">Корм для гризунів</a></li>-->
-<!--      <li><a href="#">Клітки та наповнювачі</a></li>-->
-<!--      <li><a href="#">Іграшки для гризунів</a></li>-->
-<!--      <li><a href="#">Годівниці та аксесуари</a></li>-->
-<!--      <li><a href="#">Ласощі для гризунів</a></li>-->
-<!--    </ul>-->
-<!--    <a href="{% url 'products:subcategory_list' 'rodents' %}" class="btn-secondary">Всі категорії</a>-->
-<!--  </div>-->
-
-<!--  <div class="category-col">-->
-<!--    <h3 class="category-title">-->
-<!--      <a href="{% url 'products:subcategory_list' 'aquarium' %}" class="category-link">-->
-<!--        <img src="{% static 'zoosvit/img/category-detailed/fish-icon.png' %}" alt="Акваріум">-->
-<!--        Акваріум-->
-<!--      </a>-->
-<!--    </h3>-->
-<!--    <ul>-->
-<!--      <li><a href="#">Товари для ставка</a></li>-->
-<!--      <li><a href="#">Акваріуми та декорації</a></li>-->
-<!--      <li><a href="#">Грунти та субстрати</a></li>-->
-<!--      <li><a href="#">Освітлення та фільтри</a></li>-->
-<!--      <li><a href="#">Корм для рибок</a></li>-->
-<!--    </ul>-->
-<!--    <a href="{% url 'products:subcategory_list' 'aquarium' %}" class="btn-secondary">Всі категорії</a>-->
-<!--  </div>-->
-
-<!--  <div class="category-col">-->
-<!--    <h3 class="category-title">-->
-<!--      <a href="{% url 'products:subcategory_list' 'terrarium' %}" class="category-link">-->
-<!--        <img src="{% static 'zoosvit/img/category-detailed/turtle-icon.png' %}" alt="Тераріум">-->
-<!--        Тераріум-->
-<!--      </a>-->
-<!--    </h3>-->
-<!--    <ul>-->
-<!--      <li><a href="#">Корма та добавки</a></li>-->
-<!--      <li><a href="#">Грот та декорації</a></li>-->
-<!--      <li><a href="#">Грунти та підложки</a></li>-->
-<!--      <li><a href="#">Освітлення та підігрів</a></li>-->
-<!--      <li><a href="#">Наповнювачі для плазунів</a></li>-->
-<!--    </ul>-->
-<!--    <a href="{% url 'products:subcategory_list' 'terrarium' %}" class="btn-secondary">Всі категорії</a>-->
-<!--  </div>-->
 </section>
 
 <section id="brands" class="brands container collapsed">
@@ -393,58 +257,35 @@
   <div class="brands-grid core">
     <div class="brand-item">
       <a href="/categories/categories/brand/club4paws/" title="club4paws.png">
-        <img src="{% static 'zoosvit/img/brands/club4paws.png' %}"    alt="club4paws.png">
+        <img src="{% static 'zoosvit/img/brands/club4paws.png' %}" alt="club4paws.png">
       </a>
     </div>
     <div class="brand-item">
       <a href="/categories/categories/brand/optimeal/" title="optimeal.png">
-        <img src="{% static 'zoosvit/img/brands/optimeal.png' %}"    alt="optimeal.png">
+        <img src="{% static 'zoosvit/img/brands/optimeal.png' %}" alt="optimeal.png">
       </a>
     </div>
     <div class="brand-item">
       <a href="/categories/categories/brand/delickcious/" title="delickcious_Logo.png">
-        <img src="{% static 'zoosvit/img/brands/delickcious_Logo.png' %}"    alt="delickcious_Logo.png">
+        <img src="{% static 'zoosvit/img/brands/delickcious_Logo.png' %}" alt="delickcious_Logo.png">
       </a>
     </div>
     <div class="brand-item">
       <a href="/categories/categories/brand/myau/" title="myau.png">
-        <img src="{% static 'zoosvit/img/brands/myau.png' %}"    alt="myau.png">
+        <img src="{% static 'zoosvit/img/brands/myau.png' %}" alt="myau.png">
       </a>
     </div>
     <div class="brand-item">
       <a href="/categories/categories/brand/gav/" title="gav.png">
-        <img src="{% static 'zoosvit/img/brands/gav.png' %}"    alt="gav.png">
+        <img src="{% static 'zoosvit/img/brands/gav.png' %}" alt="gav.png">
       </a>
     </div>
-<!--    <div class="brand-item">-->
-<!--      <a href="/brands/brand1/" title="gav.png">-->
-<!--        <img src="{% static 'zoosvit/img/brands/leopold.png' %}"    alt="gav.png">-->
-<!--      </a>-->
-<!--    </div>-->
   </div>
-
-<!--  <div class="brands-grid extra">-->
-<!--    <div class="brand-item">-->
-<!--      <a href="/brands/brand1/" title="Brand 1">-->
-<!--        <img src="{% static 'zoosvit/img/brands/britcar.png' %}"    alt="britcare.png">-->
-<!--      </a>-->
-<!--    </div>-->
-<!--    <div class="brand-item">-->
-<!--      <a href="/brands/brand2/" title="Brand 2">-->
-<!--        <img src="…/brand2.png" alt="Brand 2">-->
-<!--      </a>-->
-<!--    </div>-->
-<!--    <div class="brand-item">-->
-<!--      <a href="/brands/brand1/" title="Brand 1">-->
-<!--        <img src="…/brand1.png" alt="Brand 1">-->
-<!--      </a>-->
-<!--    </div>-->
-
-<!--  <button id="toggle-brands" class="btn-secondary">Показати ще</button>-->
 </section>
 
-{% include 'zoosvit/core/partials/footer.html' %}
+{% endblock %}
 
+{% block extra_js %}
 {{ fav_variant_ids|json_script:"fav-variant-ids" }}
 <script>
   (function () {
@@ -454,19 +295,4 @@
     } catch (e) { window.__favVarSet = new Set(); }
   })();
 </script>
-
-
-
-
-<!--доабвить картинки-->
-<!--  <div class="floating-buttons">-->
-<!--    <a href="https://t.me/your_username" target="_blank" class="float-btn telegram" aria-label="Telegram">-->
-<!--      <img src="{% static 'zoosvit/img/telegram-icon.png' %}" alt="Telegram">-->
-<!--    </a>-->
-<!--    <a href="viber://chat?number=+380XXXXXXXXX" target="_blank" class="float-btn viber" aria-label="Viber">-->
-<!--      <img src="{% static 'zoosvit/img/viber-icon.png' %}" alt="Viber">-->
-<!--    </a>-->
-<!--  </div>-->
-
-</body>
-</html>
+{% endblock %}
