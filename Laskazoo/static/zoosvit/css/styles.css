@@ -1919,7 +1919,7 @@ a.info-link:hover{
 section.catalog .product-grid::after{
   content: "";
   display: block;
-  height: calc(var(--prod-max-height, 520px) - 150px); /* підлаштовується під картку */
+  height: calc(var(--prod-max-height, 520px) - 550px); /* підлаштовується під картку */
 }
 
 
