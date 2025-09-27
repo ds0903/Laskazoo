@@ -1,4 +1,4 @@
-{# templates/zoosvit/products/catalog.html #}
+{# templates/zoosvit/products/catalog.html - ОПТИМІЗОВАНА ВЕРСІЯ #}
 {% extends 'zoosvit/core/base.html' %}
 {% load static %}
 
@@ -30,30 +30,63 @@
     .top-cats-btn:hover{ background:rgba(9,94,86,.08); transform:translateY(-1px);}
     .top-cats-btn img{ width:20px; height:20px; object-fit:contain; }
 
-    /* макет каталогу (ліва колонка + права сітка) */
-    .catalog.container{ position:relative; z-index:2; }
-    .catalog-wrapper{ display:flex; gap:24px; align-items:flex-start; }
-    .filter-sidebar{ width:260px; min-width:240px; }
-    .catalog-main{ flex:1; min-width:0; }
+    /* Оптимізовані стилі для карток товарів */
+    .catalog.container { position: relative; z-index: 2; }
+    .catalog-wrapper { display: flex; gap: 24px; align-items: flex-start; }
+    .filter-sidebar { width: 260px; min-width: 240px; }
+    .catalog-main { flex: 1; min-width: 0; }
 
-    /* щоб картка “росла” поверх і з білим фоном (як ми зробили вище) */
-    .catalog .product-grid{ overflow:visible; position:relative; }
-    .catalog .prod-card{ height:var(--prod-min-height); overflow:visible; position:relative; background:transparent; box-shadow:none; }
-    .catalog .prod-card::before{
-      content:""; position:absolute; inset:0 auto auto 0; right:0;
-      height:var(--prod-min-height); background:#fff; border-radius:12px;
-      box-shadow:0 2px 6px rgba(0,0,0,.1); transition:height .25s, box-shadow .25s;
-      z-index:0;
+    /* Покращена система карток з кешованою висотою */
+    .catalog .product-grid { 
+      overflow: visible; 
+      position: relative;
+      contain: layout; /* CSS containment для кращої продуктивності */
     }
-    .catalog .prod-card:hover{ z-index:30; }
-    .catalog .prod-card:hover::before{
-      height:clamp(var(--prod-min-height),
-                   var(--hover-height, var(--prod-min-height)),
-                   var(--prod-max-height));
-      box-shadow:0 12px 24px rgba(0,0,0,.18);
+    
+    .catalog .prod-card { 
+      height: var(--prod-min-height, 320px); 
+      overflow: visible; 
+      position: relative; 
+      background: transparent; 
+      box-shadow: none;
+      transform: translateZ(0); /* Створюємо композитний слой */
+      will-change: z-index; /* Оптимізація для анімацій */
     }
+    
+    .catalog .prod-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      right: 0;
+      height: var(--prod-min-height, 320px);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      transition: height .25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .25s ease;
+      z-index: 0;
+      will-change: height, box-shadow;
+    }
+    
+    .catalog .prod-card:hover { 
+      z-index: 30; 
+    }
+    
+    .catalog .prod-card:hover::before {
+      height: clamp(
+        var(--prod-min-height, 320px),
+        var(--hover-height, var(--prod-min-height, 320px)),
+        var(--prod-max-height, 820px)
+      );
+      box-shadow: 0 12px 24px rgba(0,0,0,.18);
+    }
+    
     .catalog .prod-card .card-front,
-    .catalog .prod-card .card-back{ position:absolute; inset:0; z-index:1; }
+    .catalog .prod-card .card-back { 
+      position: absolute; 
+      inset: 0; 
+      z-index: 1;
+      backface-visibility: hidden; /* Оптимізація для перемикання */
+    }
 
   </style>
 {% endblock %}
@@ -74,7 +107,7 @@
   {% for m in mains %}
     <a class="top-cats-btn" href="{% url 'products:subcategory_list' m.slug %}">
       {% if m.image %}
-        <img src="{{ m.image.url }}" alt="{{ m.name }}">
+        <img src="{{ m.image.url }}" alt="{{ m.name }}" loading="lazy">
       {% endif %}
       {{ m.name }}
     </a>
@@ -140,21 +173,20 @@
         
         <div class="product-grid">
           {% for product in products %}
-  <div class="prod-card">
+  <div class="prod-card" data-product-id="{{ product.id }}">
     {# ---- FRONT ---- #}
     <div class="card-front">
       {% with v0=product.variants_for_card.0 %}
         <a href="{{ product.get_absolute_url|default:'#' }}">
           {% if v0 and v0.image %}
-            <img src="{{ v0.image.url }}" alt="{{ product.name }}">
+            <img src="{{ v0.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% elif product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% else %}
-            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% endif %}
         </a>
         <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
-<!--        <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>-->
 
         <h3 class="card-title" data-base-title="{{ product.name }}">
       {{ product.name }}
@@ -166,8 +198,6 @@
     </span>
   {% endif %}
 {% endif %}
-
-
     </h3>
 
         <div class="card-price">₴ {{ v0.retail_price|default:product.retail_price }}</div>
@@ -179,14 +209,13 @@
       {% with v0=product.variants_for_card.0 %}
         <a href="{{ product.get_absolute_url|default:'#' }}">
           {% if v0 and v0.image %}
-            <img src="{{ v0.image.url }}" alt="{{ product.name }}">
+            <img src="{{ v0.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% elif product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% else %}
-            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% endif %}
           <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
-<!--          <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>-->
           <h3 class="card-title" data-base-title="{{ product.name }}">
       {{ product.name }}
       {% if v0 %}
@@ -197,8 +226,6 @@
     </span>
   {% endif %}
 {% endif %}
-
-
     </h3>
         </a>
 
@@ -258,12 +285,6 @@
             <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
           {% else %} — {% endif %}
         </div>
-<!--        <div class="card-info">-->
-<!--          Країна:-->
-<!--          {% if product.brand and product.brand.country_slug %}-->
-<!--            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>-->
-<!--          {% else %} — {% endif %}-->
-<!--        </div>-->
       {% endwith %}
     </div>
   </div>
@@ -314,5 +335,16 @@ function changePerPage(perPage) {
   url.searchParams.delete('page'); // скидаємо номер сторінки, щоб почати з першої
   window.location.href = url.toString();
 }
+
+// Оптимізація: Повідомляємо product_cards.js що сторінка завантажена
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('[CATALOG] Page loaded, product cards optimization active');
+  
+  // Якщо є callback для завершення preload - можна додати індикатор
+  window.onCardPreloadComplete = function() {
+    console.log('[CATALOG] All product cards optimized');
+    // Можна додати візуальний індикатор що завантаження завершено
+  };
+});
 </script>
 {% endblock %}

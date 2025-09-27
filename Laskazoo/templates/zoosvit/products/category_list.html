@@ -9,7 +9,62 @@
   <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
   <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
   <script defer src="{% static 'zoosvit/js/filters.js' %}"></script>
+  
+  <style>
+    /* Оптимізовані стилі для карток товарів в категоріях */
+    .catalog .product-grid { 
+      overflow: visible; 
+      position: relative;
+      contain: layout; 
+    }
+    
+    .catalog .prod-card { 
+      height: var(--prod-min-height, 320px); 
+      overflow: visible; 
+      position: relative; 
+      background: transparent; 
+      box-shadow: none;
+      transform: translateZ(0);
+      will-change: z-index;
+    }
+    
+    .catalog .prod-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      right: 0;
+      height: var(--prod-min-height, 320px);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      transition: height .25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .25s ease;
+      z-index: 0;
+      will-change: height, box-shadow;
+    }
+    
+    .catalog .prod-card:hover { 
+      z-index: 30; 
+    }
+    
+    .catalog .prod-card:hover::before {
+      height: clamp(
+        var(--prod-min-height, 320px),
+        var(--hover-height, var(--prod-min-height, 320px)),
+        var(--prod-max-height, 820px)
+      );
+      box-shadow: 0 12px 24px rgba(0,0,0,.18);
+    }
+    
+    .catalog .prod-card .card-front,
+    .catalog .prod-card .card-back { 
+      position: absolute; 
+      inset: 0; 
+      z-index: 1;
+      backface-visibility: hidden;
+    }
+  </style>
 {% endblock %}
+
 {% block breadcrumbs %}
 <nav class="breadcrumbs" aria-label="Breadcrumb">
   <a href="{% url 'home' %}">Головна</a>
@@ -26,7 +81,6 @@
   <span class="current">{{ category.name }}</span>
 </nav>
 {% endblock %}
-
 
 {% block content %}
 
@@ -104,14 +158,14 @@
       {% if products %}
         <div class="product-grid">
           {% for product in products %}
-          <div class="prod-card">
+          <div class="prod-card" data-product-id="{{ product.id }}">
             <!-- FRONT -->
             <div class="card-front">
               <a href="{{ product.get_absolute_url|default:'#' }}">
                 {% if product.image %}
-                  <div class="media"><img src="{{ product.image.url }}" alt="{{ product.name }}"></div>
+                  <div class="media"><img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200"></div>
                 {% else %}
-                  <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+                  <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
                 {% endif %}
               </a>
                   <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
@@ -125,9 +179,9 @@
             <div class="card-back">
               <a href="{{ product.get_absolute_url|default:'#' }}">
                 {% if product.image %}
-                  <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                  <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
                 {% else %}
-                  <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+                  <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
                 {% endif %}
                   <div class="card-article">Артикул: {{ product.sku|default:'—' }}</div>
                 <h3 class="card-title">{{ product.name }}</h3>
@@ -177,15 +231,6 @@
                   </a>
                 {% else %} — {% endif %}
               </div>
-
-<!--              <div class="card-info">-->
-<!--                Країна:-->
-<!--                {% if product.brand and product.brand.country_slug %}-->
-<!--                  <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">-->
-<!--                    {{ product.brand.country }}-->
-<!--                  </a>-->
-<!--                {% else %} — {% endif %}-->
-<!--              </div>-->
             </div>
           </div>
           {% endfor %}
@@ -225,9 +270,6 @@
 
     </main>
   </div>
-
-
-
 </section>
 
 <script>
@@ -238,5 +280,14 @@
     url.searchParams.delete('page'); // скидаємо номер сторінки, щоб почати з першої
     window.location.href = url.toString();
   }
+
+  // Оптимізація для category_list
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('[CATEGORY] Page loaded, product cards optimization active');
+    
+    window.onCardPreloadComplete = function() {
+      console.log('[CATEGORY] All product cards optimized');
+    };
+  });
 </script>
 {% endblock %}

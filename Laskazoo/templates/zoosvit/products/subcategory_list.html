@@ -1,4 +1,4 @@
-{# templates/zoosvit/products/subcategory_list.html #}
+{# templates/zoosvit/products/subcategory_list.html - ОПТИМІЗОВАНА ВЕРСІЯ #}
 {% extends 'zoosvit/core/base.html' %}
 {% load static %}
 
@@ -6,6 +6,7 @@
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -29,10 +30,10 @@
           <a href="{% url 'products:category_products' main.slug sub.slug %}"
              class="subcategory-card">
             {% if sub.image %}
-              <img src="{{ sub.image.url }}" alt="{{ sub.name }}">
+              <img src="{{ sub.image.url }}" alt="{{ sub.name }}" loading="lazy" width="80" height="80">
             {% else %}
               <img src="{% static 'zoosvit/img/placeholder.png' %}"
-                   alt="no image">
+                   alt="no image" loading="lazy" width="80" height="80">
             {% endif %}
             <span class="subcategory-name">{{ sub.name }}</span>
           </a>
@@ -43,4 +44,11 @@
     </main>
   </div>
 </section>
+
+<script>
+// Навіть якщо тут немає карток товарів, підключаємо для консистентності
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('[SUBCATEGORY] Page loaded, ready for navigation to product pages');
+});
+</script>
 {% endblock %}
