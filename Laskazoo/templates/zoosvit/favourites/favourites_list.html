@@ -1,4 +1,4 @@
-{# Zoosvit_shop/Zoosvit/templates/zoosvit/favourites/list.html #}
+{# Zoosvit_shop/Zoosvit/templates/zoosvit/favourites/list.html - ОПТИМІЗОВАНА ВЕРСІЯ #}
 {% extends 'zoosvit/core/base.html' %}
 {% load static %}
 
@@ -8,6 +8,62 @@
   <link rel="stylesheet" href="{% static 'zoosvit/css/favourites/ favourites_list.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/users/profile.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
+  
+  <style>
+    /* Оптимізовані стилі для карток товарів в улюблених */
+    .favourites-page .product-grid { 
+      overflow: visible; 
+      position: relative;
+      contain: layout; 
+    }
+    
+    .favourites-page .prod-card { 
+      height: var(--prod-min-height, 320px); 
+      overflow: visible; 
+      position: relative; 
+      background: transparent; 
+      box-shadow: none;
+      transform: translateZ(0);
+      will-change: z-index;
+    }
+    
+    .favourites-page .prod-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      right: 0;
+      height: var(--prod-min-height, 320px);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      transition: height .25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .25s ease;
+      z-index: 0;
+      will-change: height, box-shadow;
+    }
+    
+    .favourites-page .prod-card:hover { 
+      z-index: 30; 
+    }
+    
+    .favourites-page .prod-card:hover::before {
+      height: clamp(
+        var(--prod-min-height, 320px),
+        var(--hover-height, var(--prod-min-height, 320px)),
+        var(--prod-max-height, 820px)
+      );
+      box-shadow: 0 12px 24px rgba(0,0,0,.18);
+    }
+    
+    .favourites-page .prod-card .card-front,
+    .favourites-page .prod-card .card-back { 
+      position: absolute; 
+      inset: 0; 
+      z-index: 1;
+      backface-visibility: hidden;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -34,16 +90,16 @@
       <div class="product-grid">
   {% for f in favs %}
     {% with product=f.product v=f.variant %}
-    <div class="prod-card">
+    <div class="prod-card" data-product-id="{{ product.id }}">
       <!-- FRONT -->
       <div class="card-front">
         <a href="{{ product.get_absolute_url|default:'#' }}">
           {% if v and v.image %}
-            <img src="{{ v.image.url }}" alt="{{ product.name }}">
+            <img src="{{ v.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% elif product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% else %}
-            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% endif %}
         </a>
 
@@ -62,11 +118,11 @@
       <div class="card-back">
         <a href="{{ product.get_absolute_url|default:'#' }}">
           {% if v and v.image %}
-            <img src="{{ v.image.url }}" alt="{{ product.name }}">
+            <img src="{{ v.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% elif product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% else %}
-            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% endif %}
           <div class="card-article">Артикул: {{ v.sku|default:product.sku|default:'—' }}</div>
           <h3 class="card-title" data-base-title="{{ product.name }}">
@@ -94,19 +150,9 @@
             <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
           {% else %} — {% endif %}
         </div>
-<!--        <div class="card-info">-->
-<!--          Країна:-->
-<!--          {% if product.brand and product.brand.country_slug %}-->
-<!--            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>-->
-<!--          {% else %} — {% endif %}-->
-<!--        </div>-->
       </div>
     </div>
     {% endwith %}
-  {% empty %}
-    <div class="product-grid is-empty">
-      <p class="no-favourites">У вас поки що немає обраних товарів. ;(</p>
-    </div>
   {% endfor %}
 </div>
 
@@ -123,6 +169,15 @@
     window.__favVarSet = new Set(JSON.parse(
       document.getElementById('fav-variant-ids').textContent || '[]'
     ));
+
+    // Оптимізація для favourites_list
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('[FAVOURITES] Page loaded, product cards optimization active');
+      
+      window.onCardPreloadComplete = function() {
+        console.log('[FAVOURITES] All product cards optimized');
+      };
+    });
   </script>
 {% endif %}
 

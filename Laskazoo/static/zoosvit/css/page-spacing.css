@@ -1,0 +1,139 @@
+/* ====================== ВИПРАВЛЕННЯ ДЛЯ КОРОТКИХ СТОРІНОК ====================== */
+
+/* Для головної сторінки (з багатьма секціями) */
+.home-page .site-main {
+  min-height: auto; /* Головна сторінка має достатньо контенту */
+  padding-bottom: 40px;
+}
+
+/* Для сторінок з мінімальним контентом */
+.short-page .site-main {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Спеціально для категорій з малою кількістю елементів */
+.subcategory-grid,
+.main-category-grid {
+  min-height: 300px;
+  margin-bottom: 60px;
+}
+
+/* Якщо в сітці мало елементів, додаємо простір */
+.subcategory-grid:has(.subcategory-card:nth-child(-n+4)),
+.main-category-grid:has(.category-card:nth-child(-n+4)) {
+  min-height: 50vh;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 20px;
+  padding: 40px 0;
+}
+
+/* Для порожніх або майже порожніх сторінок */
+.empty-state {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+.empty-message {
+  text-align: center;
+  color: #666;
+  font-size: 1.2rem;
+  background: #f8f9fa;
+  padding: 60px 40px;
+  border-radius: 16px;
+  border: 2px dashed #ddd;
+  max-width: 500px;
+}
+
+/* Для сторінок з фільтрами (каталог) */
+.catalog-wrapper {
+  min-height: calc(100vh - 200px);
+}
+
+/* Забезпечуємо мінімальну висоту для різних типів контенту */
+.product-grid,
+.brands-grid,
+.category-slider,
+.product-slider {
+  margin-bottom: 50px;
+}
+
+/* Останній блок на сторінці має більший відступ */
+.site-main > section:last-child,
+.site-main > div:last-child {
+  margin-bottom: 60px;
+}
+
+/* Мобільна адаптація */
+@media (max-width: 768px) {
+  .short-page .site-main {
+    min-height: 60vh;
+  }
+  
+  .subcategory-grid,
+  .main-category-grid {
+    min-height: 200px;
+    margin-bottom: 40px;
+  }
+  
+  .empty-state {
+    min-height: 50vh;
+    padding: 40px 20px;
+  }
+  
+  .empty-message {
+    padding: 40px 20px;
+    font-size: 1.1rem;
+  }
+  
+  .site-main > section:last-child,
+  .site-main > div:last-child {
+    margin-bottom: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .short-page .site-main {
+    min-height: 50vh;
+  }
+  
+  .subcategory-grid,
+  .main-category-grid {
+    min-height: 150px;
+    margin-bottom: 30px;
+  }
+  
+  .empty-state {
+    min-height: 40vh;
+    padding: 30px 15px;
+  }
+  
+  .empty-message {
+    padding: 30px 15px;
+    font-size: 1rem;
+  }
+}
+
+/* Виправлення для конкретних сторінок */
+.favourites-page.is-empty {
+  min-height: 60vh;
+}
+
+.catalog-main:empty::before {
+  content: "Товарів не знайдено";
+  display: block;
+  text-align: center;
+  color: #666;
+  font-size: 1.2rem;
+  padding: 100px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin: 40px 0;
+}

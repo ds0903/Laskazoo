@@ -1,0 +1,116 @@
+/* ====================== ПРОСТИЙ І ЕФЕКТИВНИЙ STICKY FOOTER ====================== */
+
+/* Базова структура */
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Montserrat', sans-serif;
+  line-height: 1.6;
+  background-color: #f1f5f6;
+}
+
+/* Header зверху */
+.site-header {
+  flex-shrink: 0;
+}
+
+/* Контент займає всю доступну висоту */
+.site-content {
+  flex: 1; /* Розтягується на весь доступний простір */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.site-main {
+  flex: 1;
+  width: 100%;
+  padding-bottom: 60px; /* Простий відступ перед футером */
+}
+
+/* Футер завжди внизу */
+.site-footer,
+.site-subfooter {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* Мінімальна висота для коротких сторінок */
+.site-main {
+  min-height: 60vh; /* 60% висоти вікна мінімум */
+}
+
+/* Для дуже коротких сторінок */
+.empty-page,
+.short-content {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+/* Мобільна адаптація */
+@media (max-width: 768px) {
+  .site-main {
+    min-height: 50vh;
+    padding-bottom: 40px;
+  }
+  
+  body {
+    overflow-x: hidden;
+  }
+}
+
+/* Для дуже маленьких екранів */
+@media (max-width: 480px) {
+  .site-main {
+    min-height: 40vh;
+    padding-bottom: 30px;
+  }
+}
+
+/* Спеціальні випадки */
+.no-favourites,
+.no-products {
+  padding: 80px 20px;
+  text-align: center;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin: 40px auto;
+  max-width: 400px;
+}
+
+/* Прибираємо конфліктуючі стилі */
+.container,
+.catalog,
+.product-detail,
+.profile-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Забезпечуємо правильну роботу слайдерів */
+.hero-carousel,
+.category-slider,
+.product-slider,
+.why-us-bar,
+#mega-categories,
+#brands {
+  margin-bottom: 40px;
+}
+
+/* Останній елемент контенту має додатковий відступ */
+.site-main > :last-child {
+  margin-bottom: 40px;
+}

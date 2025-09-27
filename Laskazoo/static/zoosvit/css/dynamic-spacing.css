@@ -1,0 +1,421 @@
+/* Оптимізовані стилі для карток - ВИПРАВЛЕНА ВЕРСІЯ */
+
+/* ====================== ОПТИМІЗАЦІЯ ПРОДУКТИВНОСТІ ====================== */
+
+/* Використовуємо CSS containment для ізоляції перерахунків */
+.prod-card {
+  contain: layout style paint;
+  will-change: transform;
+}
+
+/* Використовуємо фіксовані розміри для мінімізації reflow */
+.prod-card {
+  --card-width: 100%;
+  --card-min-height: var(--prod-min-height, 320px);
+  --card-max-height: var(--prod-max-height, 820px);
+  --hover-height: var(--card-min-height); /* За замовчуванням */
+  
+  width: var(--card-width);
+  min-height: var(--card-min-height);
+  position: relative;
+  overflow: visible !important; /* ВИПРАВЛЕНО: дозволяємо розширення */
+  z-index: 1; /* Базовий z-index */
+}
+
+/* HOVER СТАН - картка піднімається над іншими */
+.prod-card:hover {
+  z-index: 100 !important; /* Піднімаємо над іншими картками */
+}
+
+/* МИТТЄВИЙ HOVER - БЕЗ ОБЧИСЛЕНЬ */
+.prod-card:hover .card-back,
+.prod-card:focus-within .card-back {
+  /* Миттєве розгортання з предобчисленою висотою */
+  height: var(--hover-height) !important;
+  max-height: var(--hover-height) !important;
+  transform: translateY(0) translateZ(0);
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10;
+}
+
+/* Базовий стан карток */
+.card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  overflow: visible !important; /* ВИПРАВЛЕНО: дозволяємо виступання */
+  visibility: hidden;
+  opacity: 0;
+  background: white; /* Білий фон для видимості поверх інших карток */
+  border-radius: 8px; /* Заокруглення кутів */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Тінь для виділення */
+  
+  /* Швидкі переходи */
+  transition: height 0.2s ease, opacity 0.2s ease, visibility 0.2s ease, box-shadow 0.2s ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Стан без hover */
+.prod-card:not(:hover):not(:focus-within) .card-back {
+  height: 0 !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  box-shadow: none;
+}
+
+/* Card-front також потребує білого фону та тіні */
+.card-front {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Оптимізація для зображень */
+.prod-card img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  loading: lazy;
+  decoding: async;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+}
+
+/* Попереднє встановлення розмірів для контенту */
+.card-back .card-content {
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.card-back .card-title {
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.card-back .card-price {
+  margin: 8px 0;
+  font-weight: bold;
+}
+
+.card-back .card-article {
+  margin: 4px 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* Внутрішній padding для card-back */
+.card-back {
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+/* ====================== ТЕХНІЧНІ КЛАСИ ДЛЯ ВИМІРУ ====================== */
+
+.prod-card.is-measuring .card-back {
+  position: static !important;
+  inset: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  transform: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 1 !important;
+  transition: none !important;
+  overflow: visible !important;
+  z-index: -1 !important;
+}
+
+/* ====================== КЕШ ДРУЖНІ СТИЛІ ====================== */
+
+/* Картки з предобчисленою висотою */
+.prod-card[data-hover-h] {
+  --hover-height: attr(data-hover-h px, var(--card-min-height));
+}
+
+/* Маркери для дебагу */
+.prod-card[data-clamped="1"] {
+  border: 2px dashed orange;
+}
+
+/* ====================== СІТКА ПРОДУКТІВ ====================== */
+
+/* Забезпечуємо достатньо місця між картками для розширення */
+.product-grid {
+  display: grid;
+  gap: 20px 16px; /* Збільшили вертикальний gap */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* ====================== ДИНАМІЧНА ВИСОТА ДЛЯ СТОРІНОК З КАРТКАМИ ====================== */
+
+.catalog-main,
+.subcategory-grid,
+.main-category-grid,
+.product-grid {
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+.catalog-wrapper,
+.catalog.container {
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+.catalog-page .site-main,
+.category-page .site-main {
+  min-height: auto !important;
+  padding-bottom: 10px;
+  overflow: visible !important;
+}
+
+.short-page:not(.catalog-page):not(.category-page) .site-main {
+  min-height: 50vh;
+  padding-bottom: 30px;
+}
+
+/* Спеціальні правила залежно від кількості карток */
+.cards-1-row {
+  min-height: var(--dynamic-min-height, 280px) !important;
+  margin-bottom: var(--dynamic-margin-bottom, 50px) !important; /* Збільшили відступ */
+}
+
+.cards-2-rows {
+  min-height: var(--dynamic-min-height, 350px) !important;
+  margin-bottom: var(--dynamic-margin-bottom, 60px) !important; /* Збільшили відступ */
+}
+
+.cards-3-rows {
+  min-height: var(--dynamic-min-height, 420px) !important;
+  margin-bottom: var(--dynamic-margin-bottom, 70px) !important; /* Збільшили відступ */
+}
+
+.cards-4-5-rows {
+  min-height: var(--dynamic-min-height, 520px) !important;
+  margin-bottom: var(--dynamic-margin-bottom, 80px) !important; /* Збільшили відступ */
+}
+
+.cards-many-rows {
+  min-height: auto !important;
+  margin-bottom: var(--dynamic-margin-bottom, 100px) !important; /* Збільшили відступ */
+}
+
+.empty-grid {
+  min-height: var(--dynamic-min-height, 200px) !important;
+  margin-bottom: var(--dynamic-margin-bottom, 20px) !important;
+}
+
+/* Оптимізації елементів сторінки */
+.pagination-wrapper {
+  margin-top: 30px !important; /* Збільшили відступ зверху */
+  margin-bottom: 10px !important;
+}
+
+.site-main > section:last-child,
+.site-main > .container:last-child {
+  margin-bottom: 50px !important; /* Збільшили відступ */
+}
+
+.empty-state,
+.no-products,
+.no-categories {
+  min-height: 200px !important;
+  padding: 20px !important;
+}
+
+.catalog-page-heading {
+  margin-bottom: 10px !important;
+}
+
+.top-cats-bar {
+  margin-bottom: 8px !important;
+}
+
+.filter-sidebar {
+  margin-bottom: 8px !important;
+}
+
+.catalog-page .site-main {
+  min-height: auto !important;
+}
+
+.category-page .site-main {
+  min-height: auto !important;
+}
+
+.catalog-main {
+  padding-bottom: 0 !important;
+  overflow: visible !important;
+}
+
+.catalog .container {
+  padding-bottom: 50px !important; /* Збільшили відступ */
+  overflow: visible !important;
+}
+
+.catalog-controls {
+  margin-bottom: 10px !important;
+}
+
+.catalog-header {
+  margin-bottom: 10px !important;
+}
+
+.category-nav {
+  margin-bottom: 10px !important;
+}
+
+.breadcrumbs {
+  margin-bottom: 8px !important;
+  padding-bottom: 3px !important;
+}
+
+/* ====================== ОПТИМІЗАЦІЯ GRID LAYOUT ====================== */
+
+.product-grid {
+  contain: layout;
+  grid-auto-rows: minmax(var(--card-min-height), auto);
+  overflow: visible !important;
+}
+
+.product-grid .prod-card {
+  min-height: var(--card-min-height);
+  /* ВИДАЛИЛИ max-height обмеження */
+}
+
+/* ====================== АДАПТИВНІ ОПТИМІЗАЦІЇ ====================== */
+
+@media (max-width: 768px) {
+  .prod-card {
+    --card-min-height: 280px;
+    --card-max-height: 600px;
+  }
+  
+  .card-back {
+    transition: height 0.15s ease, opacity 0.15s ease, visibility 0.15s ease;
+  }
+  
+  .product-grid {
+    gap: 16px 12px; /* Менший gap на мобільних */
+  }
+  
+  .catalog-page .site-main,
+  .category-page .site-main {
+    padding-bottom: 8px;
+  }
+  
+  .cards-1-row {
+    min-height: 220px !important;
+    margin-bottom: 30px !important;
+  }
+  
+  .cards-2-rows {
+    min-height: 300px !important;
+    margin-bottom: 40px !important;
+  }
+  
+  .cards-3-rows {
+    min-height: 380px !important;
+    margin-bottom: 50px !important;
+  }
+  
+  .pagination-wrapper {
+    margin-top: 20px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .site-main > section:last-child,
+  .site-main > .container:last-child {
+    margin-bottom: 30px !important;
+  }
+  
+  .empty-state,
+  .no-products,
+  .no-categories {
+    min-height: 150px !important;
+    padding: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .prod-card {
+    --card-min-height: 260px;
+    --card-max-height: 500px;
+  }
+  
+  .card-back {
+    transition: height 0.1s ease, opacity 0.1s ease, visibility 0.1s ease;
+  }
+  
+  .product-grid {
+    gap: 12px 8px; /* Ще менший gap на дуже малих екранах */
+  }
+  
+  .catalog-page .site-main,
+  .category-page .site-main {
+    padding-bottom: 5px;
+  }
+  
+  .cards-1-row {
+    min-height: 180px !important;
+    margin-bottom: 25px !important;
+  }
+  
+  .cards-2-rows {
+    min-height: 250px !important;
+    margin-bottom: 30px !important;
+  }
+  
+  .cards-3-rows {
+    min-height: 320px !important;
+    margin-bottom: 35px !important;
+  }
+  
+  .empty-state,
+  .no-products,
+  .no-categories {
+    min-height: 120px !important;
+    padding: 10px !important;
+  }
+}
+
+/* ====================== СКАСУВАННЯ АНІМАЦІЙ ДЛЯ ACCESSIBILITY ====================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .card-back {
+    transition: none !important;
+  }
+}
+
+/* ====================== ДЕБАГ СТИЛІ ====================== */
+
+.debug-cards .prod-card {
+  outline: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.debug-cards .prod-card.is-measuring {
+  outline: 3px solid rgba(0, 255, 0, 0.5);
+}
+
+.debug-cards .prod-card[data-card-id]::before {
+  content: attr(data-card-id);
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 4px;
+  font-size: 10px;
+  z-index: 1000;
+}

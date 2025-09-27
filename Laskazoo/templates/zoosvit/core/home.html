@@ -7,6 +7,62 @@
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <script defer src="{% static 'zoosvit/js/variant_pills.js' %}"></script>
   <script defer src="{% static 'zoosvit/js/home_sliders.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+  
+  <style>
+    /* Оптимізовані стилі для карток товарів на головній сторінці */
+    .products .grid-slider { 
+      overflow: visible; 
+      position: relative;
+      contain: layout; 
+    }
+    
+    .products .prod-card { 
+      height: var(--prod-min-height, 320px); 
+      overflow: visible; 
+      position: relative; 
+      background: transparent; 
+      box-shadow: none;
+      transform: translateZ(0);
+      will-change: z-index;
+    }
+    
+    .products .prod-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      right: 0;
+      height: var(--prod-min-height, 320px);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      transition: height .25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .25s ease;
+      z-index: 0;
+      will-change: height, box-shadow;
+    }
+    
+    .products .prod-card:hover { 
+      z-index: 30; 
+    }
+    
+    .products .prod-card:hover::before {
+      height: clamp(
+        var(--prod-min-height, 320px),
+        var(--hover-height, var(--prod-min-height, 320px)),
+        var(--prod-max-height, 820px)
+      );
+      box-shadow: 0 12px 24px rgba(0,0,0,.18);
+    }
+    
+    .products .prod-card .card-front,
+    .products .prod-card .card-back { 
+      position: absolute; 
+      inset: 0; 
+      z-index: 1;
+      backface-visibility: hidden;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -40,15 +96,15 @@
         {% for pc in popular_cats %}
           <a href="{{ pc.url }}" class="cat-card">
             {% if pc.image %}
-              <img src="{{ pc.image.url }}" alt="{{ pc.title }}">
+              <img src="{{ pc.image.url }}" alt="{{ pc.title }}" loading="lazy">
             {% else %}
-              <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="{{ pc.title }}">
+              <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="{{ pc.title }}" loading="lazy">
             {% endif %}
             <p class="cat-title">{{ pc.title }}</p>
           </a>
         {% empty %}
           <a href="#" class="cat-card">
-            <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Категорія">
+            <img src="{% static 'zoosvit/img/category-populare/feed_for_cats.png' %}" alt="Категорія" loading="lazy">
             <p class="cat-title">В базі відсутні популярні категорії!</p>
           </a>
         {% endfor %}
@@ -68,17 +124,17 @@
   <div class="grid-slider">
   {% for pp in populars %}
     {% with product=pp.product %}
-    <div class="prod-card">
+    <div class="prod-card" data-product-id="{{ product.id }}">
   {# ---- FRONT ---- #}
 <div class="card-front">
   {% with v0=product.variants_for_card.0 %}
     <a href="{{ product.get_absolute_url|default:'#' }}">
       {% if v0 and v0.image %}
-        <img src="{{ v0.image.url }}" alt="{{ product.name }}">
+        <img src="{{ v0.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
       {% elif product.image %}
-        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
       {% else %}
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
       {% endif %}
     </a>
     {% if v0.sku %}
@@ -104,11 +160,11 @@
   {% with v0=product.variants_for_card.0 %}
     <a href="{{ product.get_absolute_url|default:'#' }}">
       {% if v0 and v0.image %}
-        <img src="{{ v0.image.url }}" alt="{{ product.name }}">
+        <img src="{{ v0.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
       {% elif product.image %}
-        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
       {% else %}
-        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+        <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
       {% endif %}
       {% if v0.sku %}
         <div class="card-article">Артикул: {{ v0.sku|default:'—' }}</div>
@@ -198,15 +254,15 @@
 <section class="why-us-bar">
   <div class="container why-us-inner">
     <div class="why-us-item">
-      <img src="{% static 'zoosvit/img/other/delivery-icon.png' %}" alt="Швидка доставка">
+      <img src="{% static 'zoosvit/img/other/delivery-icon.png' %}" alt="Швидка доставка" loading="lazy">
       <p>Швидка доставка</p>
     </div>
     <div class="why-us-item">
-      <img src="{% static 'zoosvit/img/other/help-icon.png' %}" alt="Найкращий рівень сервісу">
+      <img src="{% static 'zoosvit/img/other/help-icon.png' %}" alt="Найкращий рівень сервісу" loading="lazy">
       <p>Найкращий рівень сервісу</p>
     </div>
     <div class="why-us-item">
-      <img src="{% static 'zoosvit/img/other/happy-icon.png' %}" alt="100% задоволені клієнти та їх пухнасті">
+      <img src="{% static 'zoosvit/img/other/happy-icon.png' %}" alt="100% задоволені клієнти та їх пухнасті" loading="lazy">
       <p>100% задоволені клієнти та їх пухнасті</p>
     </div>
   </div>
@@ -216,7 +272,7 @@
   <div class="category-col">
     <h3 class="category-title">
       <a href="{% url 'products:subcategory_list' 'shares' %}" class="category-link">
-        <img src="{% static 'zoosvit/img/category-detailed/new-icon.png' %}" alt="Акції">
+        <img src="{% static 'zoosvit/img/category-detailed/new-icon.png' %}" alt="Акції" loading="lazy">
         Акції
       </a>
     </h3>
@@ -225,7 +281,7 @@
   <div class="category-col">
     <h3 class="category-title">
       <a href="{% url 'products:subcategory_list' 'dogs' %}" class="category-link">
-        <img src="{% static 'zoosvit/img/category-detailed/dog-icon.png' %}" alt="Собаки">
+        <img src="{% static 'zoosvit/img/category-detailed/dog-icon.png' %}" alt="Собаки" loading="lazy">
         Собаки
       </a>
     </h3>
@@ -239,7 +295,7 @@
   <div class="category-col">
     <h3 class="category-title">
       <a href="{% url 'products:subcategory_list' 'cats' %}" class="category-link">
-        <img src="{% static 'zoosvit/img/category-detailed/cat-icon.png' %}" alt="Коти">
+        <img src="{% static 'zoosvit/img/category-detailed/cat-icon.png' %}" alt="Коти" loading="lazy">
         Коти
       </a>
     </h3>
@@ -257,27 +313,27 @@
   <div class="brands-grid core">
     <div class="brand-item">
       <a href="/categories/categories/brand/club4paws/" title="club4paws.png">
-        <img src="{% static 'zoosvit/img/brands/club4paws.png' %}" alt="club4paws.png">
+        <img src="{% static 'zoosvit/img/brands/club4paws.png' %}" alt="club4paws.png" loading="lazy">
       </a>
     </div>
     <div class="brand-item">
       <a href="/categories/categories/brand/optimeal/" title="optimeal.png">
-        <img src="{% static 'zoosvit/img/brands/optimeal.png' %}" alt="optimeal.png">
+        <img src="{% static 'zoosvit/img/brands/optimeal.png' %}" alt="optimeal.png" loading="lazy">
       </a>
     </div>
     <div class="brand-item">
       <a href="/categories/categories/brand/delickcious/" title="delickcious_Logo.png">
-        <img src="{% static 'zoosvit/img/brands/delickcious_Logo.png' %}" alt="delickcious_Logo.png">
+        <img src="{% static 'zoosvit/img/brands/delickcious_Logo.png' %}" alt="delickcious_Logo.png" loading="lazy">
       </a>
     </div>
     <div class="brand-item">
       <a href="/categories/categories/brand/myau/" title="myau.png">
-        <img src="{% static 'zoosvit/img/brands/myau.png' %}" alt="myau.png">
+        <img src="{% static 'zoosvit/img/brands/myau.png' %}" alt="myau.png" loading="lazy">
       </a>
     </div>
     <div class="brand-item">
       <a href="/categories/categories/brand/gav/" title="gav.png">
-        <img src="{% static 'zoosvit/img/brands/gav.png' %}" alt="gav.png">
+        <img src="{% static 'zoosvit/img/brands/gav.png' %}" alt="gav.png" loading="lazy">
       </a>
     </div>
   </div>
@@ -294,5 +350,14 @@
       window.__favVarSet = new Set((data || []).map(Number));
     } catch (e) { window.__favVarSet = new Set(); }
   })();
+
+  // Оптимізація для home page
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('[HOME] Page loaded, product cards optimization active');
+    
+    window.onCardPreloadComplete = function() {
+      console.log('[HOME] All product cards optimized');
+    };
+  });
 </script>
 {% endblock %}

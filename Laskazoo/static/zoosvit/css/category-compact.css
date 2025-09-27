@@ -1,0 +1,149 @@
+/* ====================== СПЕЦІАЛЬНІ СТИЛІ ДЛЯ СТОРІНОК КАТЕГОРІЙ ====================== */
+
+/* Визначаємо сторінки категорій за URL */
+body[class*="category"] .site-main,
+body.category-page .site-main,
+.catalog-page .site-main {
+  min-height: auto !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Агресивно прибираємо простір для всіх каталогних сторінок */
+.product-grid {
+  margin-bottom: 3px !important;
+  padding-bottom: 0 !important;
+  min-height: auto !important;
+}
+
+/* Спеціально для пагінації - максимально близько до карток */
+.pagination-wrapper {
+  margin-top: 3px !important;
+  margin-bottom: 3px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Контейнери каталогу */
+.catalog.container,
+.catalog-wrapper,
+.catalog-main {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: auto !important;
+}
+
+/* Всі section в main */
+.site-main section,
+.site-main .container {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Останній елемент в main */
+.site-main > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Footer - мінімальний відступ */
+footer {
+  margin-top: 5px !important;
+  padding-top: 15px !important;
+}
+
+/* Спеціально для URL з /categories/ */
+body:not(.home-page) .product-grid {
+  margin-bottom: 2px !important;
+}
+
+body:not(.home-page) .pagination-wrapper {
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+}
+
+/* Екстремальне зменшення для конкретних елементів */
+.catalog-controls {
+  margin-bottom: 5px !important;
+}
+
+.catalog-header {
+  margin-bottom: 5px !important;
+}
+
+.category-nav {
+  margin-bottom: 5px !important;
+}
+
+/* Хлібні крошки */
+.breadcrumbs {
+  margin-bottom: 3px !important;
+  padding-bottom: 0 !important;
+}
+
+/* Заголовки сторінок */
+.catalog-page-heading,
+h1 {
+  margin-bottom: 5px !important;
+  margin-top: 5px !important;
+}
+
+/* Кнопки категорій */
+.top-cats-bar {
+  margin-bottom: 3px !important;
+  margin-top: 3px !important;
+}
+
+/* Прибираємо всі можливі gap та spaces */
+* {
+  --catalog-gap: 0px !important;
+}
+
+/* Для мобільних пристроїв */
+@media (max-width: 768px) {
+  .product-grid {
+    margin-bottom: 2px !important;
+  }
+  
+  .pagination-wrapper {
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+  }
+  
+  footer {
+    margin-top: 3px !important;
+    padding-top: 10px !important;
+  }
+}
+
+/* Додаткові правила для body класів */
+.short-page.catalog-page .site-main,
+.short-page.category-page .site-main {
+  min-height: auto !important;
+  padding-bottom: 0 !important;
+}
+
+/* Спеціально для brand сторінок */
+body[class*="brand"] .site-main,
+body[class*="category"] .site-main {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Прибираємо відступи з site-content */
+.site-content {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Максимально компактний макет */
+.ultra-compact .site-main,
+.ultra-compact .product-grid,
+.ultra-compact .pagination-wrapper {
+  margin: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.ultra-compact .pagination-wrapper {
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+}
