@@ -6,69 +6,767 @@
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'zoosvit/css/catalog.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+  <style>
+    /* === ОНОВЛЕНА СТОРІНКА ТОВАРУ ЗА ЗРАЗКОМ КОНКУРЕНТІВ === */
+    
+    /* Назва товару над навігацією */
+    .product-page-title {
+      background: #f8f9fa;
+      padding: 15px 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e9ecef;
+    }
+    
+    .product-page-title .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .product-page-title h1 {
+      font-size: 1.8rem;
+      color: var(--color-primary);
+      margin: 0;
+      font-weight: 700;
+    }
+    
+    .product-detail {
+      margin: 0 auto;
+      max-width: 1200px;
+      padding: 0 20px;
+    }
+    
+    .detail-wrapper {
+      display: grid;
+      grid-template-columns: 400px 300px 1fr;
+      gap: 40px;
+      align-items: start;
+      margin-bottom: 40px;
+    }
+    
+    /* ЛІВА КОЛОНКА - ФОТО */
+    .image-section {
+      position: sticky;
+      top: 20px;
+    }
+    
+    .main-image {
+      width: 100%;
+      height: 400px;
+      background: #fff;
+      border-radius: 16px;
+      border: 2px solid #f0f0f0;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .main-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 15px;
+      background: #fff;
+    }
+    
+    .thumbnail-gallery {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+    
+    .thumbnail {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.3s;
+      background: #fff;
+    }
+    
+    .thumbnail:hover,
+    .thumbnail.active {
+      border-color: var(--color-primary);
+    }
+    
+    .thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 5px;
+    }
+    
+    /* ЦЕНТРАЛЬНА КОЛОНКА - ІНФОРМАЦІЯ */
+    .product-info-section {
+      padding: 10px 0;
+    }
+    
+    .product-sku {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    
+    .product-actions {
+      margin-bottom: 20px;
+    }
+    
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .btn-favorite {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #fff;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      color: #666;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      width: 100%;
+      justify-content: flex-start;
+    }
+    
+    .btn-favorite:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+    
+    /* АКТИВНИЙ стан обраного - салатовий колір */
+    .btn-favorite.is-on {
+      background: var(--badge-green, #27ae60);
+      border-color: var(--badge-green, #27ae60);
+      color: #fff;
+    }
+    
+    .btn-favorite.is-on:hover {
+      background: var(--badge-green, #27ae60);
+      border-color: var(--badge-green, #27ae60);
+      color: #fff;
+      opacity: 0.9;
+    }
+    
+    .btn-compare {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #fff;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #666;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-compare:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+    
+    .product-meta {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .meta-row:last-child {
+      border-bottom: none;
+    }
+    
+    .meta-label {
+      font-weight: 600;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    
+    .meta-value {
+      color: #333;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    .meta-value a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    
+    .meta-value a:hover {
+      text-decoration: underline;
+    }
+    
+    /* ПРАВА КОЛОНКА - КУПІВЛЯ */
+    .purchase-section {
+      padding: 20px;
+      background: #fff;
+      border: 2px solid #f0f0f0;
+      border-radius: 16px;
+      position: sticky;
+      top: 20px;
+    }
+    
+    /* Варіанти фасування */
+    .variants-section {
+      margin-bottom: 20px;
+    }
+    
+    .variants-title {
+      font-size: 1rem;
+      color: var(--color-primary);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .variants-grid {
+      display: grid;
+      gap: 8px;
+    }
+    
+    .variant-card {
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      text-align: left;
+    }
+    
+    .variant-card:hover {
+      border-color: var(--color-primary);
+      background: rgba(9,94,86,0.05);
+    }
+    
+    .variant-card.selected {
+      border-color: var(--color-primary);
+      background: rgba(9,94,86,0.1);
+    }
+    
+    .variant-weight {
+      font-weight: 600;
+      color: var(--color-primary);
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+    
+    .variant-price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #333;
+    }
+    
+    /* Ціни */
+    .price-section {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .price-wrapper {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    
+    .price-old {
+      font-size: 1.2rem;
+      color: #999;
+      text-decoration: line-through;
+    }
+    
+    .price-current {
+      font-size: 2rem;
+      color: var(--color-primary);
+      font-weight: 800;
+    }
+    
+    .price-discount {
+      background: #dc3545;
+      color: #fff;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    
+    /* Кнопка купити */
+    .buy-button {
+      width: 100%;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, var(--color-primary) 0%, #0a6b61 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(9,94,86,0.3);
+      margin-bottom: 20px;
+    }
+    
+    .buy-button:hover {
+      background: linear-gradient(135deg, #0a6b61 0%, var(--color-primary) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(9,94,86,0.4);
+      color: #fff;
+    }
+    
+    /* Оплата та доставка */
+    .payment-delivery {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    .payment-section,
+    .delivery-section {
+      margin-bottom: 16px;
+    }
+    
+    .section-title {
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-bottom: 6px;
+    }
+    
+    .payment-methods,
+    .delivery-methods {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .payment-method,
+    .delivery-method {
+      background: #f8f9fa;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      border: 1px solid #e0e0e0;
+    }
+    
+    /* ОПИС ТОВАРУ */
+    .description-section {
+      margin-top: 40px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .description-title {
+      font-size: 1.5rem;
+      color: var(--color-primary);
+      margin-bottom: 20px;
+      font-weight: 600;
+      padding-left: 20px;
+    }
+    
+    .description-content {
+      background: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      border: 2px solid #f0f0f0;
+      line-height: 1.7;
+      color: #555;
+      font-size: 1rem;
+    }
+    
+    .description-placeholder {
+      color: #888;
+      font-style: italic;
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    /* МОБІЛЬНА АДАПТАЦІЯ */
+    @media (max-width: 992px) {
+      .detail-wrapper {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+      
+      .purchase-section {
+        position: static;
+      }
+      
+      .main-image {
+        height: 300px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .product-page-title h1 {
+        font-size: 1.4rem;
+      }
+      
+      .main-image {
+        height: 250px;
+      }
+      
+      .price-current {
+        font-size: 1.6rem;
+      }
+      
+      .variants-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 {% endblock %}
 
 {% block breadcrumbs %}
 <nav class="breadcrumbs" aria-label="Breadcrumb">
-  <a href="{% url 'home' %}">Головна</a>
-  <span class="separator">›</span>
+  <div class="container">
+    <a href="{% url 'home' %}">Головна</a>
+    <span class="separator">›</span>
 
-  <a href="{% url 'products:catalog' %}">Каталог</a>
-  <span class="separator">›</span>
+    <a href="{% url 'products:catalog' %}">Каталог</a>
+    <span class="separator">›</span>
 
-  <a href="{% url 'products:subcategory_list' main_slug %}">
-    {{ category.main_category.name }}
-  </a>
-  <span class="separator">›</span>
+    <a href="{% url 'products:subcategory_list' main_slug %}">
+      {{ category.main_category.name }}
+    </a>
+    <span class="separator">›</span>
 
-  <a href="{% url 'products:category_products' main_slug category.slug %}">
-    {{ category.name }}
-  </a>
-  <span class="separator">›</span>
+    <a href="{% url 'products:category_products' main_slug category.slug %}">
+      {{ category.name }}
+    </a>
+    <span class="separator">›</span>
 
-  <span class="current">{{ product.name }}</span>
+    <span class="current">{{ product.name }}</span>
+  </div>
 </nav>
 {% endblock %}
 
 {% block content %}
-<section class="product-detail container">
+<!-- Назва товару над навігацією -->
+<div class="product-page-title">
+  <div class="container">
+    <h1>{{ product.name }}</h1>
+  </div>
+</div>
+
+<section class="product-detail">
   <div class="detail-wrapper">
-    {# --- ЛІВА КОЛОНКА: ЗОБРАЖЕННЯ --- #}
-    <div class="detail-images">
-      {% if product.image %}
-        <img src="{{ product.image.url }}" alt="{{ product.name }}">
-      {% endif %}
+    {# --- ЛІВА КОЛОНКА: ФОТО --- #}
+    <div class="image-section">
+      <div class="main-image">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" id="main-product-image">
+        {% else %}
+          <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" id="main-product-image">
+        {% endif %}
+      </div>
+      
+      <div class="thumbnail-gallery">
+        <div class="thumbnail active">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+          {% endif %}
+        </div>
+        
+        {# Варіанти фото з варіантів товару #}
+        {% for variant in variants %}
+          {% if variant.image %}
+            <div class="thumbnail">
+              <img src="{{ variant.image.url }}" alt="{{ variant.name|default:product.name }}">
+            </div>
+          {% endif %}
+        {% endfor %}
+        
+        {# Плейсхолдери для додаткових фото #}
+        {% if variants|length < 3 %}
+          <div class="thumbnail" style="opacity: 0.3; border-style: dashed;">
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #ccc; font-size: 16px;">+</div>
+          </div>
+          <div class="thumbnail" style="opacity: 0.3; border-style: dashed;">
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #ccc; font-size: 16px;">+</div>
+          </div>
+        {% endif %}
+      </div>
     </div>
 
-    {# --- ПРАВА КОЛОНКА: ІНФОРМАЦІЯ --- #}
-    <div class="detail-info">
-      <h1 class="detail-title">{{ product.name }}</h1>
+    {# --- ЦЕНТРАЛЬНА КОЛОНКА: ІНФОРМАЦІЯ --- #}
+    <div class="product-info-section">
       {% if product.sku %}
-        <p class="detail-sku">Артикул: {{ product.sku }}</p>
+        <p class="product-sku">Артикул: {{ product.sku }}</p>
       {% endif %}
-      <p class="detail-price">₴ {{ product.retail_price }}</p>
+      
+      {# Кнопки дій #}
+      <div class="product-actions">
+        <div class="action-buttons">
+          <button class="btn-favorite js-fav{% if variants.0 and variants.0.id in fav_variant_ids %} is-on{% elif product.id in fav_product_ids %} is-on{% endif %}" 
+                  data-url="{% url 'favourites:toggle' product.id %}" 
+                  data-variant="{% if variants.0 %}{{ variants.0.id }}{% endif %}"
+                  data-product="{{ product.id }}"
+                  aria-pressed="{% if variants.0 and variants.0.id in fav_variant_ids %}true{% elif product.id in fav_product_ids %}true{% else %}false{% endif %}"
+                  type="button"
+                  id="favorite-btn">
+            <span>♥</span>
+            <span id="favorite-text">{% if variants.0 and variants.0.id in fav_variant_ids %}Видалити з обраного{% elif product.id in fav_product_ids %}Видалити з обраного{% else %}Додати до обраного{% endif %}</span>
+          </button>
+          <!-- Порівняння поки що приховане, бо у нас його немає
+          <a href="#" class="btn-compare">
+            <span>⚖</span>
+            Порівняти
+          </a>
+          -->
+        </div>
+      </div>
+      
+      {# Характеристики товару #}
+      <div class="product-meta">
+        {% if product.brand %}
+          <div class="meta-row">
+            <span class="meta-label">Виробник:</span>
+            <span class="meta-value">
+              <a href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
+            </span>
+          </div>
+        {% endif %}
+        
+        {% if product.brand.country %}
+          <div class="meta-row">
+            <span class="meta-label">Країна-виробник:</span>
+            <span class="meta-value">
+              <a href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>
+            </span>
+          </div>
+        {% endif %}
+        
+        <div class="meta-row">
+          <span class="meta-label">Категорія:</span>
+          <span class="meta-value">
+            <a href="{% url 'products:category_products' main_slug category.slug %}">{{ product.category.name }}</a>
+          </span>
+        </div>
+        
+        <div class="meta-row">
+          <span class="meta-label">Наявність:</span>
+          <span class="meta-value">
+            {% if product.warehouse_quantity > 0 %}
+              <span style="color: #27ae60; font-weight: 600;">✓ В наявності</span>
+            {% else %}
+              <span style="color: #e74c3c; font-weight: 600;">⚠ Немає в наявності</span>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
 
+    {# --- ПРАВА КОЛОНКА: КУПІВЛЯ --- #}
+    <div class="purchase-section">
+      {# Варіанти фасування #}
       {% if variants %}
-        <h3>Варіанти:</h3>
-        <ul class="variant-list">
-          {% for v in variants %}
-            <li>{{ v.weight }} — ₴ {{ v.price }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-
-      {% if product.description %}
-        <div class="detail-description">
-          {{ product.description|linebreaks }}
+        <div class="variants-section">
+          <h3 class="variants-title">Фасування:</h3>
+          <div class="variants-grid">
+            {% for v in variants %}
+              <div class="variant-card" data-variant-id="{{ v.id }}" data-price="{{ v.retail_price }}" data-discount-price="{{ v.retail_price_with_discount }}">
+                <div class="variant-weight">
+                  {% if v.weight %}{{ v.weight }} г{% endif %}
+                  {% if v.size %}{{ v.size }}{% endif %}
+                  {% if not v.weight and not v.size %}Стандартний{% endif %}
+                </div>
+                <div class="variant-price">₴ {{ v.retail_price }}</div>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       {% endif %}
 
-      <a class="btn add-to-cart"
-     href="{% url 'orders:add' product.id %}{% if v0 %}?variant={{ v0.id }}{% endif %}"
-     data-add-base="{% url 'orders:add' product.id %}">
-    В кошик
-  </a>
+      {# Ціна #}
+      <div class="price-section">
+        <div class="price-wrapper">
+          <div class="price-current" id="current-price">
+            ₴ {{ product.retail_price }}
+          </div>
+          {% if product.retail_price_with_discount and product.retail_price_with_discount > 0 and product.retail_price_with_discount < product.retail_price %}
+            <div class="price-old">₴ {{ product.retail_price }}</div>
+            <div class="price-discount">-{{ product.retail_price|floatformat:0|add:"-"|add:product.retail_price_with_discount|floatformat:0 }} грн</div>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Кнопка купити #}
+      <a class="buy-button add-to-cart" href="{% url 'orders:add' product.id %}" id="add-to-cart-link">
+        <span>🛒</span>
+        Купити
+      </a>
+
+      {# Оплата #}
+      <div class="payment-delivery">
+        <div class="payment-section">
+          <div class="section-title">💳 Оплата:</div>
+          <div class="payment-methods">
+            <span class="payment-method">Visa/Mastercard</span>
+            <span class="payment-method">Apple Pay</span>
+            <span class="payment-method">Google Pay</span>
+          </div>
+        </div>
+
+        {# Доставка #}
+        <div class="delivery-section">
+          <div class="section-title">🚚 Доставка:</div>
+          <div class="delivery-methods">
+            <span class="delivery-method">Нова пошта</span>
+            <span class="delivery-method">Укрпошта</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
+
+{# ОПИС ТОВАРУ #}
+<section class="description-section">
+  <h3 class="description-title">Опис</h3>
+  {% if product.description %}
+    <div class="description-content">
+      {{ product.description|linebreaks }}
+    </div>
+  {% else %}
+    <div class="description-content">
+      <div class="description-placeholder">
+        📄 Опис товару буде додано найближчим часом.
+        <br><small>По всіх питаннях звертайтесь до наших менеджерів.</small>
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+<script>
+  // Передаємо дані про обрані варіанти в JavaScript
+  const favVariantIds = [{% for vid in fav_variant_ids %}{{ vid }}{% if not forloop.last %},{% endif %}{% endfor %}];
+  const favProductIds = [{% for pid in fav_product_ids %}{{ pid }}{% if not forloop.last %},{% endif %}{% endfor %}];
+  const productId = {{ product.id }};
+  
+  // Функція для оновлення кнопки обраного
+  function updateFavoriteButton(variantId) {
+    const favBtn = document.getElementById('favorite-btn');
+    const favText = document.getElementById('favorite-text');
+    
+    if (!favBtn || !favText) return;
+    
+    let isInFavorites = false;
+    
+    if (variantId) {
+      // Перевіряємо чи варіант в обраному
+      isInFavorites = favVariantIds.includes(parseInt(variantId));
+      favBtn.setAttribute('data-variant', variantId);
+    } else {
+      // Перевіряємо чи продукт в обраному (без варіанта)
+      isInFavorites = favProductIds.includes(productId);
+      favBtn.removeAttribute('data-variant');
+    }
+    
+    if (isInFavorites) {
+      favBtn.classList.add('is-on');
+      favBtn.setAttribute('aria-pressed', 'true');
+      favText.textContent = 'Видалити з обраного';
+    } else {
+      favBtn.classList.remove('is-on');
+      favBtn.setAttribute('aria-pressed', 'false');
+      favText.textContent = 'Додати до обраного';
+    }
+  }
+  
+  // Перемикання між варіантами
+  document.querySelectorAll('.variant-card').forEach(card => {
+    card.addEventListener('click', () => {
+      // Прибираємо виділення з усіх карток
+      document.querySelectorAll('.variant-card').forEach(c => c.classList.remove('selected'));
+      
+      // Відзначаємо поточну картку
+      card.classList.add('selected');
+      
+      // Оновлюємо ціну
+      const price = card.dataset.price;
+      const discountPrice = card.dataset.discountPrice;
+      const priceElement = document.getElementById('current-price');
+      
+      if (priceElement) {
+        // Якщо є ціна зі знижкою і вона менша за звичайну ціну
+        if (discountPrice && parseFloat(discountPrice) > 0 && parseFloat(discountPrice) < parseFloat(price)) {
+          priceElement.innerHTML = '₴ ' + discountPrice;
+          // Тут можна додати логіку показу старої ціни
+        } else {
+          priceElement.innerHTML = '₴ ' + price;
+        }
+      }
+      
+      // Оновлюємо посилання на кошик
+      const variantId = card.dataset.variantId;
+      const addToCartLink = document.getElementById('add-to-cart-link');
+      if (addToCartLink && variantId) {
+        const baseUrl = '{% url "orders:add" product.id %}';
+        addToCartLink.href = baseUrl + '?variant=' + variantId;
+      }
+      
+      // Оновлюємо кнопку обраного
+      updateFavoriteButton(variantId);
+    });
+  });
+  
+  // Вибираємо перший варіант за замовчуванням
+  const firstVariant = document.querySelector('.variant-card');
+  if (firstVariant) {
+    firstVariant.click();
+  } else {
+    // Якщо немає варіантів, оновлюємо кнопку для продукту
+    updateFavoriteButton(null);
+  }
+  
+  // Перемикання фото в галереї
+  document.querySelectorAll('.thumbnail').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      const img = thumb.querySelector('img');
+      if (img && img.src) {
+        // Прибираємо активний клас з усіх мініатюр
+        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+        // Додаємо активний клас до поточної
+        thumb.classList.add('active');
+        // Змінюємо основне фото
+        const mainImg = document.getElementById('main-product-image');
+        if (mainImg) {
+          mainImg.src = img.src;
+          mainImg.alt = img.alt;
+        }
+      }
+    });
+  });
+</script>
 {% endblock %}

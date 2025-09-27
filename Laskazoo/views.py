@@ -168,6 +168,39 @@ PAGES = {
 Дані зберігаються належним чином і не передаються третім особам, окрім випадків, передбачених законом.</p>
 """,
     },
+    "contacts": {
+        "title": "Контакти",
+        "date":  "10.03.2025",
+        "body": """
+<div class="contacts-info">
+  <div class="contact-section">
+    <h3>📞 Контактна інформація</h3>
+    <div class="contact-item">
+      <strong>Телефон:</strong> <a href="tel:+380932384730">+38 093 238 47 30</a>
+    </div>
+    <div class="contact-item">
+      <strong>E-mail:</strong> <a href="mailto:zoosvitoffice15@gmail.com">zoosvitoffice15@gmail.com</a>
+    </div>
+    <div class="contact-item">
+      <strong>Telegram:</strong> <a href="https://t.me/ds0903" target="_blank">@ds0903</a>
+    </div>
+    <div class="contact-item">
+      <strong>Графік роботи:</strong> Пн–Нд, 9:00 – 20:00
+    </div>
+  </div>
+</div>
+
+<style>
+.contacts-info { max-width: 600px; margin: 0 auto; }
+.contact-section { background: #f8f9fa; padding: 2rem; border-radius: 10px; border-left: 4px solid var(--color-primary); }
+.contact-section h3 { color: var(--color-primary); margin-bottom: 1.5rem; font-size: 1.5rem; text-align: center; }
+.contact-item { margin-bottom: 1rem; padding: 0.75rem; background: #fff; border-radius: 6px; text-align: center; }
+.contact-item strong { color: #333; display: block; margin-bottom: 0.25rem; }
+.contact-item a { color: var(--color-primary); text-decoration: none; font-size: 1.1rem; }
+.contact-item a:hover { text-decoration: underline; }
+</style>
+""",
+    },
 }
 
 LEFT_NAV = [
@@ -175,6 +208,7 @@ LEFT_NAV = [
     ("payment-delivery", "Оплата та доставка"),
     ("returns",          "Обмін та повернення"),
     ("privacy",          "Політика конфіденційності"),
+    ("contacts",         "Контакти"),
 ]
 
 def info_page(request, slug: str):

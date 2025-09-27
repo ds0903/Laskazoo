@@ -7,6 +7,7 @@ class TSGoods(models.Model):
     # текстові
     good_name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    new_description = models.TextField(blank=True, null=True)
     country = models.CharField(max_length=128, blank=True, null=True)
     articul = models.CharField(max_length=128, blank=True, null=True)
     category = models.CharField(max_length=255, blank=True, null=True)
