@@ -31,6 +31,7 @@ class UserLoginView(View):
             )
             if user:
                 login(request, user)
+                request.session.save()  # Явне збереження сесії
 
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'redirect_url': '/'})
@@ -104,6 +105,7 @@ def register(request):
                     # Якщо все ОК - створюємо користувача
                     user = form.save()
                     login(request, user)
+                    request.session.save()  # Явне збереження сесії
                     logger.info(f'Успішна реєстрація користувача: {user.username}')
                     
                     if request.headers.get('x-requested-with') == 'XMLHttpRequest':

@@ -1,3 +1,4 @@
 .idea/
 .env
 comand_for_me.py
+migrations
