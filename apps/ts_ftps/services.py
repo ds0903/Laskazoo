@@ -132,8 +132,20 @@ def import_ts_goods(mode: str = 'upsert'):
     # upsert (оновити або створити)
     for rec in items:
         rec = dict(rec)
-        good_id = str(rec.pop("good_id"))
-        obj, was_created = TSGoods.objects.update_or_create(good_id=good_id, defaults=rec)
+
+        good_id = str(rec.pop("good_id", "")).strip()
+        if not good_id:
+            # якщо раптом попався пустий good_id — пропускаємо
+            continue
+
+        # ВАЖЛИВО: не даємо Django вставити чужий PK
+        safe_defaults = {k: v for k, v in rec.items() if k not in ("id", "pk")}
+
+        obj, was_created = TSGoods.objects.update_or_create(
+            good_id=good_id,
+            defaults=safe_defaults,
+        )
+
         if was_created:
             created += 1
         else:
