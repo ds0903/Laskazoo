@@ -1,0 +1,330 @@
+{% extends 'manager/base.html' %}
+
+{% block manager_content %}
+<div class="manager-header">
+  <h1>🏆 ТОП категорії</h1>
+  <button onclick="document.getElementById('add-modal').style.display='flex'" 
+          style="padding: 10px 20px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
+    + Додати категорію
+  </button>
+</div>
+
+<p style="background: #e3f2fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+  💡 <strong>Підказка:</strong> Перетягуйте рядки мишкою для зміни порядку показу
+</p>
+
+<table style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr style="background: #f8f9fa;">
+      <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; width: 60px;">№</th>
+      <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Категорія</th>
+      <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Головна категорія</th>
+      <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Статус</th>
+      <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Дії</th>
+    </tr>
+  </thead>
+  <tbody id="categories-list">
+    {% for item in popular_categories %}
+    <tr class="category-row" data-id="{{ item.id }}" draggable="true" style="border-bottom: 1px solid #dee2e6; cursor: move;">
+      <td style="padding: 12px; text-align: center;">
+        <span style="background: var(--color-primary); color: white; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 1.1rem;">
+          {{ forloop.counter }}
+        </span>
+      </td>
+      <td style="padding: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          {% if item.category.image %}
+            <img src="{{ item.category.image.url }}" alt="" style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px;">
+          {% endif %}
+          <strong>{{ item.category.name }}</strong>
+        </div>
+      </td>
+      <td style="padding: 12px;">{{ item.category.main_category.name }}</td>
+      <td style="padding: 12px; text-align: center;">
+        {% if item.is_active %}
+          <span style="color: #28a745; font-weight: 600;">✓ Активна</span>
+        {% else %}
+          <span style="color: #dc3545; font-weight: 600;">✗ Неактивна</span>
+        {% endif %}
+      </td>
+      <td style="padding: 12px; text-align: center;">
+        <button onclick="editItem({{ item.id }}, {{ item.is_active|lower }})" 
+                style="padding: 6px 12px; background: #ffc107; color: #000; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">
+          Редагувати
+        </button>
+        <button onclick="deleteItem({{ item.id }})" 
+                style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Видалити
+        </button>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+        Популярних категорій ще немає. Додайте першу!
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Модальне вікно додавання -->
+<div id="add-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+    <h3 style="margin-top: 0;">Додати категорію в ТОП</h3>
+    <form id="add-form">
+      {% csrf_token %}
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Категорія:</label>
+        <select name="category_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="">Оберіть категорію...</option>
+          {% for category in all_categories %}
+            <option value="{{ category.id }}">{{ category.main_category.name }} → {{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="submit" style="flex: 1; padding: 10px; background: var(--color-primary); color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Додати
+        </button>
+        <button type="button" onclick="document.getElementById('add-modal').style.display='none'" 
+                style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Скасувати
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Модальне вікно редагування -->
+<div id="edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+    <h3 style="margin-top: 0;">Редагувати</h3>
+    <form id="edit-form">
+      {% csrf_token %}
+      <input type="hidden" id="edit-id">
+      <div style="margin-bottom: 15px;">
+        <label style="display: flex; align-items: center; cursor: pointer;">
+          <input type="checkbox" id="edit-is-active" name="is_active" style="margin-right: 8px;">
+          <span>Активна</span>
+        </label>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="submit" style="flex: 1; padding: 10px; background: #ffc107; color: #000; border: none; border-radius: 4px; cursor: pointer;">
+          Зберегти
+        </button>
+        <button type="button" onclick="document.getElementById('edit-modal').style.display='none'" 
+                style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Скасувати
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Drag & Drop
+let draggedElement = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const rows = document.querySelectorAll('.category-row');
+  
+  rows.forEach(row => {
+    row.addEventListener('dragstart', handleDragStart);
+    row.addEventListener('dragover', handleDragOver);
+    row.addEventListener('drop', handleDrop);
+    row.addEventListener('dragend', handleDragEnd);
+  });
+});
+
+function handleDragStart(e) {
+  draggedElement = this;
+  this.style.opacity = '0.4';
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  if (draggedElement !== this) {
+    const tbody = document.getElementById('categories-list');
+    const allRows = [...tbody.querySelectorAll('.category-row')];
+    const draggedIndex = allRows.indexOf(draggedElement);
+    const targetIndex = allRows.indexOf(this);
+    
+    if (draggedIndex < targetIndex) {
+      this.parentNode.insertBefore(draggedElement, this.nextSibling);
+    } else {
+      this.parentNode.insertBefore(draggedElement, this);
+    }
+    
+    updatePositions();
+  }
+  
+  return false;
+}
+
+function handleDragEnd(e) {
+  this.style.opacity = '1';
+}
+
+async function updatePositions() {
+  const tbody = document.getElementById('categories-list');
+  const rows = tbody.querySelectorAll('.category-row');
+  const order = [];
+  
+  rows.forEach((row, index) => {
+    order.push({
+      id: parseInt(row.dataset.id),
+      position: index
+    });
+    
+    const badge = row.querySelector('span');
+    if (badge) {
+      badge.textContent = index + 1;
+    }
+  });
+  
+  try {
+    const response = await fetch('/manager/api/reorder-popular-categories/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ order: order })
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      alert('Помилка при збереженні порядку');
+      location.reload();
+    }
+  } catch (error) {
+    console.error('Помилка:', error);
+  }
+}
+
+document.getElementById('add-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  const tbody = document.getElementById('categories-list');
+  const currentCount = tbody.querySelectorAll('.category-row').length;
+  formData.append('position', currentCount);
+  
+  try {
+    const response = await fetch("{% url 'manager:popular_category_add' %}", {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Категорію додано в ТОП!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+});
+
+document.getElementById('edit-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-id').value;
+  const formData = new FormData(e.target);
+  
+  if (document.getElementById('edit-is-active').checked) {
+    formData.append('is_active', 'true');
+  } else {
+    formData.append('is_active', 'false');
+  }
+  
+  try {
+    const response = await fetch(`/manager/popular-categories/${id}/update/`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Категорію оновлено!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+});
+
+function editItem(id, isActive) {
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-is-active').checked = isActive;
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+async function deleteItem(id) {
+  if (!confirm('Видалити цю категорію з ТОП?')) return;
+  
+  try {
+    const response = await fetch(`/manager/popular-categories/${id}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Категорію видалено з ТОП!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+
+<style>
+.category-row {
+  transition: opacity 0.3s ease, background-color 0.2s ease;
+}
+
+.category-row:hover {
+  background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

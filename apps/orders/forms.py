@@ -16,9 +16,23 @@ class OrderCheckoutForm(forms.ModelForm):
         required=True
     )
     
+    # Спосіб оплати
+    PAYMENT_CHOICES = [
+        ('cash', 'Готівка при отриманні'),
+        ('card_online', 'Оплата карткою онлайн'),
+    ]
+    
+    payment_method = forms.ChoiceField(
+        choices=PAYMENT_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'payment-radio'}),
+        label='Спосіб оплати *',
+        initial='cash',
+        required=True
+    )
+    
     class Meta:
         model = Order
-        fields = ['full_name', 'phone', 'email', 'city', 'delivery_address', 'comment']
+        fields = ['full_name', 'phone', 'email', 'city', 'delivery_address', 'comment', 'payment_method']
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

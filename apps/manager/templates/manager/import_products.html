@@ -1,0 +1,316 @@
+{% extends 'manager/base.html' %}
+
+{% block manager_content %}
+<div class="manager-header">
+  <h1>➕ Додати товари з ТоргСофт</h1>
+</div>
+
+<div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+  <strong>💡 Інструкція:</strong>
+  <ol style="margin: 10px 0 0 20px; padding: 0;">
+    <li>Знайдіть товар за штрих-кодом, артикулом або назвою</li>
+    <li>Виберіть потрібні товари зі списку</li>
+    <li>Заповніть атрибути: категорію, бренд</li>
+    <li>Натисніть "Опублікувати на сайт"</li>
+  </ol>
+</div>
+
+<div style="margin-bottom: 30px;">
+  <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+    <input type="text" id="search-input" 
+           placeholder="Введіть штрих-код, артикул або назву товару..." 
+           style="flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+    <button onclick="searchGoods()" 
+            style="padding: 12px 30px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+      🔍 Шукати
+    </button>
+  </div>
+  
+  <div id="search-results" style="display: none; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+    <h3 style="margin-top: 0; color: var(--color-primary);">Результати пошуку</h3>
+    <div id="results-list"></div>
+  </div>
+</div>
+
+<div id="selected-goods" style="display: none; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+  <h3 style="margin-top: 0; color: var(--color-primary);">Вибрані товари для публікації</h3>
+  <div id="selected-list"></div>
+  <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #dee2e6; text-align: right;">
+    <button onclick="publishProducts()" 
+            style="padding: 12px 40px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 1rem;">
+      🚀 Опублікувати на сайт
+    </button>
+  </div>
+</div>
+
+<script>
+let searchResults = [];
+let selectedGoods = [];
+let categoriesData = [];
+let brandsData = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const response = await fetch("{% url 'manager:categories_brands' %}");
+    const data = await response.json();
+    categoriesData = data.main_categories || [];
+    brandsData = data.brands || [];
+  } catch (error) {
+    console.error('Помилка завантаження категорій та брендів:', error);
+  }
+  
+  document.getElementById('search-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') searchGoods();
+  });
+});
+
+async function searchGoods() {
+  const query = document.getElementById('search-input').value.trim();
+  
+  console.log('Пошук:', query);
+  
+  if (query.length < 2) {
+    alert('Введіть мінімум 2 символи для пошуку');
+    return;
+  }
+  
+  try {
+    const url = `{% url 'manager:search_ts_goods' %}?q=${encodeURIComponent(query)}`;
+    console.log('Запит до:', url);
+    
+    const response = await fetch(url);
+    console.log('Статус відповіді:', response.status);
+    
+    const data = await response.json();
+    console.log('Отримані дані:', data);
+    
+    searchResults = data.results || [];
+    console.log('Знайдено товарів:', searchResults.length);
+    
+    displaySearchResults();
+  } catch (error) {
+    console.error('Помилка пошуку:', error);
+    alert('Помилка при пошуку товарів: ' + error.message);
+  }
+}
+
+function displaySearchResults() {
+  const container = document.getElementById('search-results');
+  const list = document.getElementById('results-list');
+  
+  if (searchResults.length === 0) {
+    list.innerHTML = '<p style="color: #6c757d; text-align: center; padding: 20px;">Товарів не знайдено</p>';
+    container.style.display = 'block';
+    return;
+  }
+  
+  let html = '<table style="width: 100%; border-collapse: collapse;">';
+  html += '<thead><tr style="background: #f8f9fa;">';
+  html += '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Назва</th>';
+  html += '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Артикул</th>';
+  html += '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Штрих-код</th>';
+  html += '<th style="padding: 10px; text-align: right; border-bottom: 2px solid #dee2e6;">Ціна</th>';
+  html += '<th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6;">Кількість</th>';
+  html += '<th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6;">Дії</th>';
+  html += '</tr></thead><tbody>';
+  
+  searchResults.forEach((good, index) => {
+    html += `<tr style="border-bottom: 1px solid #dee2e6;">`;
+    html += `<td style="padding: 10px;">${good.name || '—'}</td>`;
+    html += `<td style="padding: 10px;">${good.articul || '—'}</td>`;
+    html += `<td style="padding: 10px;">${good.barcode || '—'}</td>`;
+    html += `<td style="padding: 10px; text-align: right; font-weight: 600;">${good.price.toFixed(2)} грн</td>`;
+    html += `<td style="padding: 10px; text-align: center;">${good.quantity.toFixed(0)}</td>`;
+    html += `<td style="padding: 10px; text-align: center;">`;
+    html += `<button onclick="selectGood(${index})" style="padding: 6px 15px; background: var(--color-primary); color: white; border: none; border-radius: 4px; cursor: pointer;">Вибрати</button>`;
+    html += `</td></tr>`;
+  });
+  
+  html += '</tbody></table>';
+  list.innerHTML = html;
+  container.style.display = 'block';
+}
+
+function selectGood(index) {
+  const good = searchResults[index];
+  
+  if (selectedGoods.find(g => g.good_id === good.id)) {
+    alert('Цей товар вже вибрано');
+    return;
+  }
+  
+  selectedGoods.push({
+    good_id: good.id,
+    name: good.name,
+    articul: good.articul,
+    barcode: good.barcode,
+    price: good.price,
+    main_category_id: null,
+    category_id: null,
+    brand_id: null,
+    image_url: ''
+  });
+  
+  displaySelectedGoods();
+}
+
+function displaySelectedGoods() {
+  const container = document.getElementById('selected-goods');
+  const list = document.getElementById('selected-list');
+  
+  if (selectedGoods.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  
+  let html = '';
+  selectedGoods.forEach((good, index) => {
+    html += `<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid ${good.category_id && good.brand_id ? '#28a745' : '#ffc107'};">`;
+    html += `<div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: start;">`;
+    html += `<div>`;
+    html += `<strong style="display: block; margin-bottom: 5px;">${good.name}</strong>`;
+    html += `<small style="color: #6c757d;">Артикул: ${good.articul || '—'} | Ціна: ${good.price.toFixed(2)} грн</small>`;
+    html += `</div>`;
+    
+    html += `<div>`;
+    html += `<label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Головна категорія:</label>`;
+    html += `<select onchange="updateMainCategory(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
+    html += `<option value="">Оберіть...</option>`;
+    categoriesData.forEach(mainCat => {
+      const selected = good.main_category_id == mainCat.id ? 'selected' : '';
+      html += `<option value="${mainCat.id}" ${selected}>${mainCat.name}</option>`;
+    });
+    html += `</select>`;
+    html += `<div id="subcategory-${index}" style="margin-top: 10px;"></div>`;
+    html += `</div>`;
+    
+    html += `<div>`;
+    html += `<label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Бренд:</label>`;
+    html += `<select onchange="updateBrand(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
+    html += `<option value="">Оберіть...</option>`;
+    brandsData.forEach(brand => {
+      const selected = good.brand_id == brand.id ? 'selected' : '';
+      html += `<option value="${brand.id}" ${selected}>${brand.name}</option>`;
+    });
+    html += `</select>`;
+    html += `</div>`;
+    
+    html += `<div style="display: flex; align-items: center;">`;
+    html += `<button onclick="removeGood(${index})" style="padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Видалити</button>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    
+    if (good.main_category_id) {
+      updateSubcategorySelect(index);
+    }
+  });
+  
+  list.innerHTML = html;
+  container.style.display = 'block';
+}
+
+function updateMainCategory(index, mainCategoryId) {
+  selectedGoods[index].main_category_id = mainCategoryId;
+  selectedGoods[index].category_id = null;
+  updateSubcategorySelect(index);
+  displaySelectedGoods();
+}
+
+function updateSubcategorySelect(index) {
+  const good = selectedGoods[index];
+  const container = document.getElementById(`subcategory-${index}`);
+  
+  if (!good.main_category_id) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  const mainCat = categoriesData.find(c => c.id == good.main_category_id);
+  if (!mainCat || !mainCat.categories || mainCat.categories.length === 0) {
+    container.innerHTML = '<p style="color: #6c757d; font-size: 0.85rem; margin-top: 5px;">Немає підкатегорій</p>';
+    return;
+  }
+  
+  let html = '<label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Підкатегорія:</label>';
+  html += `<select onchange="updateCategory(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
+  html += `<option value="">Оберіть...</option>`;
+  mainCat.categories.forEach(cat => {
+    const selected = good.category_id == cat.id ? 'selected' : '';
+    html += `<option value="${cat.id}" ${selected}>${cat.name}</option>`;
+  });
+  html += `</select>`;
+  
+  container.innerHTML = html;
+}
+
+function updateCategory(index, categoryId) {
+  selectedGoods[index].category_id = categoryId;
+  displaySelectedGoods();
+}
+
+function updateBrand(index, brandId) {
+  selectedGoods[index].brand_id = brandId;
+  displaySelectedGoods();
+}
+
+function removeGood(index) {
+  selectedGoods.splice(index, 1);
+  displaySelectedGoods();
+}
+
+async function publishProducts() {
+  const invalid = selectedGoods.filter(g => !g.category_id || !g.brand_id);
+  
+  if (invalid.length > 0) {
+    alert(`Заповніть категорію та бренд для всіх товарів! Не заповнено: ${invalid.length}`);
+    return;
+  }
+  
+  if (!confirm(`Опублікувати ${selectedGoods.length} товар(ів) на сайт?`)) {
+    return;
+  }
+  
+  try {
+    const response = await fetch("{% url 'manager:create_products' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ goods: selectedGoods })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(`Успішно створено ${data.created} товар(ів)!${data.errors.length > 0 ? '\n\nПомилки:\n' + data.errors.join('\n') : ''}`);
+      selectedGoods = [];
+      displaySelectedGoods();
+      document.getElementById('search-input').value = '';
+      document.getElementById('search-results').style.display = 'none';
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    console.error('Помилка публікації:', error);
+    alert('Помилка при публікації товарів');
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+{% endblock %}

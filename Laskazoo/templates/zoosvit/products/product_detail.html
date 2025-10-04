@@ -704,6 +704,48 @@
     }
   }
   
+  // Слухач для обробки кліку по кнопці обраного та оновлення стану
+  document.addEventListener('click', function(e) {
+    const favBtn = e.target.closest('#favorite-btn');
+    if (!favBtn) return;
+    
+    e.preventDefault();
+    
+    // Отримуємо поточний ID варіанта
+    const currentVariantId = favBtn.getAttribute('data-variant');
+    const variantIdNum = currentVariantId ? parseInt(currentVariantId) : null;
+    
+    // Оновлюємо локальні масиви
+    const currentlyInFavorites = variantIdNum 
+      ? favVariantIds.includes(variantIdNum)
+      : favProductIds.includes(productId);
+    
+    if (currentlyInFavorites) {
+      // Видаляємо з обраного
+      if (variantIdNum) {
+        const idx = favVariantIds.indexOf(variantIdNum);
+        if (idx > -1) favVariantIds.splice(idx, 1);
+      } else {
+        const idx = favProductIds.indexOf(productId);
+        if (idx > -1) favProductIds.splice(idx, 1);
+      }
+    } else {
+      // Додаємо до обраного
+      if (variantIdNum) {
+        if (!favVariantIds.includes(variantIdNum)) {
+          favVariantIds.push(variantIdNum);
+        }
+      } else {
+        if (!favProductIds.includes(productId)) {
+          favProductIds.push(productId);
+        }
+      }
+    }
+    
+    // Оновлюємо вигляд кнопки
+    updateFavoriteButton(currentVariantId);
+  });
+  
   // Перемикання між варіантами
   document.querySelectorAll('.variant-card').forEach(card => {
     card.addEventListener('click', () => {

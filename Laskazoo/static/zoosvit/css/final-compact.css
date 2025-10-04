@@ -1,0 +1,143 @@
+/* ====================== FINAL COMPACT - НАЙВИЩИЙ ПРІОРИТЕТ ====================== */
+
+/* Застосовуємо до всіх сторінок крім головної з максимальним пріоритетом */
+body:not(.home-page) .site-main {
+  min-height: auto !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  height: auto !important;
+}
+
+body:not(.home-page) .product-grid {
+  margin-bottom: 1px !important;
+  padding-bottom: 0 !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+body:not(.home-page) .pagination-wrapper {
+  margin-top: 1px !important;
+  margin-bottom: 1px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Всі можливі контейнери */
+body:not(.home-page) .catalog.container,
+body:not(.home-page) .catalog-wrapper,
+body:not(.home-page) .catalog-main,
+body:not(.home-page) .site-content {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+/* Footer */
+body:not(.home-page) footer {
+  margin-top: 2px !important;
+  padding-top: 8px !important;
+}
+
+/* Всі section та div в main */
+body:not(.home-page) .site-main section,
+body:not(.home-page) .site-main div,
+body:not(.home-page) .site-main .container {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Останній дочірній елемент */
+body:not(.home-page) .site-main > *:last-child {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Спеціально для сторінок з URL що містить categories */
+[class*="category"] .site-main,
+[class*="brand"] .site-main {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: auto !important;
+}
+
+/* Екстремальне зменшення - до 0 */
+.ultra-compact .site-main,
+.ultra-compact .product-grid,
+.ultra-compact .catalog.container,
+.ultra-compact .site-content {
+  margin: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: auto !important;
+}
+
+.ultra-compact .pagination-wrapper {
+  margin: 1px 0 !important;
+  padding: 0 !important;
+}
+
+/* Для body з класом short-page */
+.short-page:not(.home-page) .site-main {
+  min-height: auto !important;
+  padding-bottom: 0 !important;
+}
+
+/* Забираємо всі можливі CSS властивості що додають висоту */
+body:not(.home-page) * {
+  --spacing-bottom: 0 !important;
+  --margin-bottom: 0 !important;
+  --padding-bottom: 0 !important;
+}
+
+/* Мобільна версія */
+@media (max-width: 768px) {
+  body:not(.home-page) .product-grid {
+    margin-bottom: 1px !important;
+  }
+  
+  body:not(.home-page) .pagination-wrapper {
+    margin: 1px 0 !important;
+  }
+  
+  body:not(.home-page) footer {
+    margin-top: 2px !important;
+    padding-top: 5px !important;
+  }
+}
+
+/* Мікро екрани */
+@media (max-width: 480px) {
+  body:not(.home-page) .site-main {
+    padding-bottom: 0 !important;
+  }
+  
+  body:not(.home-page) footer {
+    margin-top: 1px !important;
+    padding-top: 3px !important;
+  }
+}
+
+/* Додаткове правило для конкретної сторінки з скріншота */
+body[class*="club4paws"] .site-main,
+body[class*="brand"] .site-main,
+body[class*="categories"] .site-main {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: auto !important;
+}
+
+/* Прибираємо всі можливі flex gap та grid gap */
+body:not(.home-page) .product-grid {
+  gap: 0 !important;
+  row-gap: 0 !important;
+  column-gap: 20px !important; /* залишаємо тільки горизонтальний gap між картками */
+}
+
+/* Негайне застосування без очікування JS */
+body:not(.home-page) {
+  --site-padding-bottom: 0 !important;
+}
+
+body:not(.home-page) .site-main {
+  padding-bottom: var(--site-padding-bottom, 0) !important;
+}

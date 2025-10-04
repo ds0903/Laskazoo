@@ -9,12 +9,15 @@
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/products/catalog.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/orders/cart-modal.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/mobile-responsive.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/sticky-footer.css' %}">
+  <link rel="stylesheet" href="{% static 'zoosvit/css/page-spacing.css' %}">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 
   {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body{% if request.resolver_match.url_name == 'home' %} class="home-page"{% else %} class="short-page"{% endif %}>
   <header class="site-header">
     {% include 'zoosvit/core/partials/header.html' %}
   </header>
@@ -47,7 +50,6 @@
 
   <!-- Основні скрипти -->
   <script defer src="{% static 'zoosvit/js/cart-modal.js' %}"></script>
-  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
   <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
   <script defer src="{% static 'zoosvit/js/login_modal.js' %}"></script>
 

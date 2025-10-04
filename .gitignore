@@ -1,3 +1,45 @@
-.idea/
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/static
+/staticfiles
+migrations
+#Env
 .env
-comand_for_me.py
+.env.local
+.env.*.local
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup
+*.bak
+backups/
+*.sql
+
+# Logs
+logs/
+*.log
+
+# Credentials
+*.pem
+*.key
+*.crt
+portmone_config.py

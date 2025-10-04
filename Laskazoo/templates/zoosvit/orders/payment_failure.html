@@ -1,0 +1,232 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Помилка оплати{% endblock %}
+
+{% block extra_css %}
+<style>
+    .failure-container {
+        max-width: 700px;
+        margin: 60px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .failure-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+        color: #d32f2f;
+    }
+    
+    .failure-container h1 {
+        color: #d32f2f;
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+    }
+    
+    .failure-message {
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 30px;
+    }
+    
+    .order-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .order-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .order-info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .failure-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #b71c1c 0%, #d32f2f 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(211, 47, 47, 0.3);
+    }
+    
+    .btn-secondary {
+        background: white;
+        color: #333;
+        border: 2px solid #e0e0e0;
+        padding: 14px 30px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-secondary:hover {
+        background: #f8f9fa;
+        border-color: #0f6b38;
+        color: #0f6b38;
+        transform: translateY(-2px);
+    }
+    
+    .help-info {
+        background: #fff3cd;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+        text-align: left;
+        border-left: 4px solid #ffc107;
+    }
+    
+    .help-info h3 {
+        color: #856404;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .help-info p {
+        color: #856404;
+        margin: 5px 0;
+    }
+    
+    .help-info strong {
+        color: #333;
+    }
+    
+    .possible-reasons {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+        text-align: left;
+    }
+    
+    .possible-reasons h3 {
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .possible-reasons ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .possible-reasons li {
+        padding: 8px 0;
+        padding-left: 30px;
+        position: relative;
+        color: #666;
+    }
+    
+    .possible-reasons li:before {
+        content: "⚠️";
+        position: absolute;
+        left: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .failure-container {
+            margin: 20px;
+            padding: 25px;
+        }
+        
+        .failure-actions {
+            flex-direction: column;
+        }
+        
+        .btn-primary, .btn-secondary {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="failure-container">
+    <div class="failure-icon">❌</div>
+    
+    <h1>Оплата не пройшла</h1>
+    
+    <p class="failure-message">
+        На жаль, під час обробки платежу сталася помилка. Замовлення №{{ order.order_number|default:order.id }} не оплачено.
+    </p>
+    
+    <div class="order-info">
+        <div class="order-info-row">
+            <span>Номер замовлення:</span>
+            <strong>#{{ order.order_number|default:order.id }}</strong>
+        </div>
+        <div class="order-info-row">
+            <span>Сума:</span>
+            <strong>{{ order.total_amount }} грн</strong>
+        </div>
+        <div class="order-info-row">
+            <span>Статус оплати:</span>
+            <strong style="color: #d32f2f;">✗ Не оплачено</strong>
+        </div>
+    </div>
+    
+    <div class="possible-reasons">
+        <h3>Можливі причини помилки:</h3>
+        <ul>
+            <li>Недостатньо коштів на картці</li>
+            <li>Перевищено ліміт картки</li>
+            <li>Картка заблокована або прострочена</li>
+            <li>Введено невірні дані картки</li>
+            <li>Проблеми зі зв'язком під час транзакції</li>
+        </ul>
+    </div>
+    
+    <div class="failure-actions">
+        <a href="{% url 'orders:payment' order.id %}" class="btn-primary">
+            🔄 Спробувати знову
+        </a>
+        <a href="{% url 'orders:detail' order.id %}" class="btn-secondary">
+            📋 Переглянути замовлення
+        </a>
+        <a href="{% url 'products:catalog' %}" class="btn-secondary">
+            🛍️ До каталогу
+        </a>
+    </div>
+    
+    <div class="help-info">
+        <h3>📞 Потрібна допомога?</h3>
+        <p>Якщо проблема не вирішується, зв'яжіться з нашою підтримкою:</p>
+        <p><strong>Телефон:</strong> +380 XX XXX XX XX</p>
+        <p><strong>Email:</strong> support@laskazoo.com</p>
+        <p><strong>Графік роботи:</strong> Пн-Пт 9:00-18:00</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,12 +1,69 @@
-{# Zoosvit_shop/Zoosvit/templates/zoosvit/favourites/list.html #}
+{# Zoosvit_shop/Zoosvit/templates/zoosvit/favourites/list.html - ОПТИМІЗОВАНА ВЕРСІЯ #}
 {% extends 'zoosvit/core/base.html' %}
 {% load static %}
 
 {% block title %}Обране{% endblock %}
 
 {% block extra_css %}
+  <link rel="stylesheet" href="{% static 'zoosvit/css/favourites/ favourites_list.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/users/profile.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
+  <script defer src="{% static 'zoosvit/js/fav.js' %}"></script>
+  <script defer src="{% static 'zoosvit/js/product_cards.js' %}"></script>
+  
+  <style>
+    /* Оптимізовані стилі для карток товарів в улюблених */
+    .favourites-page .product-grid { 
+      overflow: visible; 
+      position: relative;
+      contain: layout; 
+    }
+    
+    .favourites-page .prod-card { 
+      height: var(--prod-min-height, 320px); 
+      overflow: visible; 
+      position: relative; 
+      background: transparent; 
+      box-shadow: none;
+      transform: translateZ(0);
+      will-change: z-index;
+    }
+    
+    .favourites-page .prod-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      right: 0;
+      height: var(--prod-min-height, 320px);
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      transition: height .25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow .25s ease;
+      z-index: 0;
+      will-change: height, box-shadow;
+    }
+    
+    .favourites-page .prod-card:hover { 
+      z-index: 30; 
+    }
+    
+    .favourites-page .prod-card:hover::before {
+      height: clamp(
+        var(--prod-min-height, 320px),
+        var(--hover-height, var(--prod-min-height, 320px)),
+        var(--prod-max-height, 820px)
+      );
+      box-shadow: 0 12px 24px rgba(0,0,0,.18);
+    }
+    
+    .favourites-page .prod-card .card-front,
+    .favourites-page .prod-card .card-back { 
+      position: absolute; 
+      inset: 0; 
+      z-index: 1;
+      backface-visibility: hidden;
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -33,16 +90,16 @@
       <div class="product-grid">
   {% for f in favs %}
     {% with product=f.product v=f.variant %}
-    <div class="prod-card">
+    <div class="prod-card" data-product-id="{{ product.id }}">
       <!-- FRONT -->
       <div class="card-front">
         <a href="{{ product.get_absolute_url|default:'#' }}">
           {% if v and v.image %}
-            <img src="{{ v.image.url }}" alt="{{ product.name }}">
+            <img src="{{ v.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% elif product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% else %}
-            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% endif %}
         </a>
 
@@ -61,11 +118,11 @@
       <div class="card-back">
         <a href="{{ product.get_absolute_url|default:'#' }}">
           {% if v and v.image %}
-            <img src="{{ v.image.url }}" alt="{{ product.name }}">
+            <img src="{{ v.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% elif product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% else %}
-            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}">
+            <img src="{% static 'zoosvit/img/food1.jpg' %}" alt="{{ product.name }}" loading="lazy" width="200" height="200">
           {% endif %}
           <div class="card-article">Артикул: {{ v.sku|default:product.sku|default:'—' }}</div>
           <h3 class="card-title" data-base-title="{{ product.name }}">
@@ -93,19 +150,9 @@
             <a class="info-link" href="{% url 'products:brand' product.brand.brand_slug %}">{{ product.brand.name }}</a>
           {% else %} — {% endif %}
         </div>
-<!--        <div class="card-info">-->
-<!--          Країна:-->
-<!--          {% if product.brand and product.brand.country_slug %}-->
-<!--            <a class="info-link" href="{% url 'products:country' product.brand.country_slug %}">{{ product.brand.country }}</a>-->
-<!--          {% else %} — {% endif %}-->
-<!--        </div>-->
       </div>
     </div>
     {% endwith %}
-  {% empty %}
-    <div class="product-grid is-empty">
-      <p class="no-favourites">У вас поки що немає обраних товарів. ;(</p>
-    </div>
   {% endfor %}
 </div>
 
@@ -114,133 +161,6 @@
       <p class="no-favourites">У вас поки що немає обраних товарів. ;(</p>
     </div>
     {% endif %}
-    <script>
-(function () {
-  'use strict';
-
-  /* ---------- УТИЛІТИ ---------- */
-  const log = (...a) => console.debug('[card-height]', ...a);
-  const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-
-  function debounce(fn, ms = 120){ let t; return (...a)=>{clearTimeout(t); t=setTimeout(()=>fn(...a),ms);} }
-  const rerun = debounce(() => requestAnimationFrame(recomputeCardHeights), 60);
-
-  /* ---------- СЛАЙДЕР ТОВАРІВ ---------- */
-  function initProductSlider() {
-    const w = document.querySelector('.product-slider');
-    if (!w) return;
-    const slider   = w.querySelector('.grid-slider');
-    const leftBtn  = w.querySelector('.slide-btn.left');
-    const rightBtn = w.querySelector('.slide-btn.right');
-
-    const cs   = getComputedStyle(document.documentElement);
-    const cardW= parseInt(cs.getPropertyValue('--prod-card-width'),10);
-    const gap  = parseInt(cs.getPropertyValue('--prod-gap'),10);
-    const perV = parseInt(cs.getPropertyValue('--prod-per-page'),10);
-    const perS = parseInt(cs.getPropertyValue('--prod-scroll'),10);
-    const total= w.querySelectorAll('.prod-card').length;
-
-    const maxPage = Math.max(0, Math.ceil((total - perV) / perS));
-    let page = 0;
-
-    function go(delta){
-      page = Math.min(maxPage, Math.max(0, page + delta));
-      slider.style.transform = `translateX(-${page * perS * (cardW + gap)}px)`;
-      leftBtn.style.display  = page === 0 ? 'none' : 'block';
-      rightBtn.style.display = page >= maxPage ? 'none' : 'block';
-      requestAnimationFrame(recomputeCardHeights); // після зсуву — перерахувати
-    }
-    leftBtn?.addEventListener('click',  ()=>go(-1));
-    rightBtn?.addEventListener('click', ()=>go(+1));
-    // первинний стан
-    leftBtn && (leftBtn.style.display = 'none');
-    rightBtn && (rightBtn.style.display = maxPage ? 'block':'none');
-  }
-
-/* ---------- ВИМІР ВИСОТИ КАРТКИ ---------- */
-function measureBack(back){
-  // тимчасово робимо видимим для правильного виміру
-  const keep = {
-    display: back.style.display,
-    position: back.style.position,
-    opacity: back.style.opacity,
-    pointerEvents: back.style.pointerEvents,
-    visibility: back.style.visibility,
-    height: back.style.height,
-    maxHeight: back.style.maxHeight
-  };
-  back.style.display       = 'block';
-  back.style.position      = 'static';
-  back.style.opacity       = '0';
-  back.style.pointerEvents = 'none';
-  back.style.visibility    = 'hidden';
-  back.style.height        = 'auto';
-  back.style.maxHeight     = 'none';
-
-  // scrollHeight зазвичай стабільніший на прихованих елементах
-  const h = Math.ceil(back.scrollHeight);
-
-  Object.assign(back.style, keep);
-  return h;
-}
-
-function recomputeCardHeights(){
-  const cs  = getComputedStyle(document.documentElement);
-  const MIN = parseInt(cs.getPropertyValue('--prod-min-height')) || 320;
-  const MAX = parseInt(cs.getPropertyValue('--prod-max-height')) || 520;
-
-  document.querySelectorAll('.prod-card').forEach((card, idx) => {
-    const back = card.querySelector('.card-back');
-    if (!back) return;
-
-    const desired  = measureBack(back);
-    const adjusted = Math.max(0, desired + 20);   // мінус 10px
-    const clamped  = Math.min(MAX, Math.max(MIN, adjusted));
-
-    card.style.setProperty('--hover-height', clamped + 'px');
-    // console.log(`card #${idx}: desired=${desired} → adjusted=${adjusted} → ${clamped}`);
-  });
-}
-
-  /* ---------- ТРИГЕРИ ПЕРЕРАХУНКУ ---------- */
-  function initCardHeightAutofit(){
-    // 1) коли все завантажилось (включно з картинками)
-    if (document.readyState === 'complete') rerun();
-    else window.addEventListener('load', rerun, {once:true});
-
-    // 2) коли підтягнуться шрифти (змінюється перенесення рядків)
-    if (document.fonts?.ready) document.fonts.ready.then(rerun);
-
-    // 3) коли дозавантажиться будь-яка картинка у картках
-    $all('.prod-card img').forEach(img=>{
-      if (!img.complete) {
-        img.addEventListener('load',  rerun, {once:true});
-        img.addEventListener('error', rerun, {once:true});
-      }
-    });
-
-    // 4) на зміну розміру/орієнтації
-    window.addEventListener('resize', rerun);
-    window.addEventListener('orientationchange', rerun);
-
-    // 5) реагуємо на пізні зміни контенту всередині .card-back
-    if ('ResizeObserver' in window) {
-      const ro = new ResizeObserver(rerun);
-      $all('.prod-card .card-back').forEach(el => ro.observe(el));
-    }
-
-    // 6) перший прохід + невелика страховка
-    rerun();
-    setTimeout(rerun, 800);
-  }
-
-  /* ---------- ТОЧКА ВХОДУ ---------- */
-  document.addEventListener('DOMContentLoaded', ()=>{
-    initProductSlider();
-    initCardHeightAutofit();
-  });
-})();
-</script>
 
 {% if favs %}
 {{ fav_variant_ids|json_script:"fav-variant-ids" }}
@@ -249,12 +169,18 @@ function recomputeCardHeights(){
     window.__favVarSet = new Set(JSON.parse(
       document.getElementById('fav-variant-ids').textContent || '[]'
     ));
+
+    // Оптимізація для favourites_list
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('[FAVOURITES] Page loaded, product cards optimization active');
+      
+      window.onCardPreloadComplete = function() {
+        console.log('[FAVOURITES] All product cards optimized');
+      };
+    });
   </script>
 {% endif %}
 
   </section>
 </div>
 {% endblock %}
-
-
-

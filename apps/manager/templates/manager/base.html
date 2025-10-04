@@ -1,0 +1,123 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Кабінет менеджера{% endblock %}
+
+{% block extra_css %}
+<style>
+  .manager-layout {
+    display: flex;
+    min-height: calc(100vh - 200px);
+    margin: 20px 0;
+  }
+  
+  .manager-sidebar {
+    width: 250px;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-right: 20px;
+  }
+  
+  .manager-sidebar h3 {
+    color: var(--color-primary);
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+  }
+  
+  .manager-nav {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .manager-nav li {
+    margin-bottom: 10px;
+  }
+  
+  .manager-nav a {
+    display: block;
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s;
+  }
+  
+  .manager-nav a:hover,
+  .manager-nav a.active {
+    background: var(--color-primary);
+    color: white;
+  }
+  
+  .manager-content {
+    flex: 1;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  
+  .manager-header h1 {
+    color: var(--color-primary);
+    margin: 0;
+  }
+  
+  @media (max-width: 768px) {
+    .manager-layout {
+      flex-direction: column;
+    }
+    
+    .manager-sidebar {
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 20px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="manager-layout">
+    <aside class="manager-sidebar">
+      <h3>🔧 Панель менеджера</h3>
+      <ul class="manager-nav">
+        <li><a href="{% url 'manager:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>
+          📊 Головна
+        </a></li>
+        <li><a href="{% url 'manager:users' %}" {% if request.resolver_match.url_name == 'users' %}class="active"{% endif %}>
+          👥 Користувачі
+        </a></li>
+        <li><a href="{% url 'manager:orders' %}" {% if request.resolver_match.url_name == 'orders' or request.resolver_match.url_name == 'order_detail' %}class="active"{% endif %}>
+          📦 Замовлення
+        </a></li>
+        <li><a href="{% url 'manager:import_products' %}" {% if request.resolver_match.url_name == 'import_products' %}class="active"{% endif %}>
+          ➕ Додати товари
+        </a></li>
+        <li><a href="{% url 'manager:banners' %}" {% if request.resolver_match.url_name == 'banners' %}class="active"{% endif %}>
+          🖼️ Банери
+        </a></li>
+        <li><a href="{% url 'manager:popular_products' %}" {% if request.resolver_match.url_name == 'popular_products' %}class="active"{% endif %}>
+          ⭐ ТОП товари
+        </a></li>
+        <li><a href="{% url 'manager:popular_categories' %}" {% if request.resolver_match.url_name == 'popular_categories' %}class="active"{% endif %}>
+          🏆 ТОП категорії
+        </a></li>
+      </ul>
+    </aside>
+    
+    <main class="manager-content">
+      {% block manager_content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}

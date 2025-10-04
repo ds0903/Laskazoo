@@ -1,0 +1,341 @@
+{% extends 'manager/base.html' %}
+
+{% block manager_content %}
+<div class="manager-header">
+  <h1>🖼️ Банери (максимум 4)</h1>
+  <button onclick="document.getElementById('add-banner-modal').style.display='flex'" 
+          style="padding: 10px 20px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
+    + Додати банер
+  </button>
+</div>
+
+<p style="background: #e3f2fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+  💡 <strong>Підказка:</strong> Перетягуйте картки мишкою для зміни порядку показу
+</p>
+
+<div id="banners-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+  {% for banner in banners %}
+  <div class="banner-card" data-id="{{ banner.id }}" draggable="true" 
+       style="background: white; border: 2px solid {% if banner.is_active %}#28a745{% else %}#dc3545{% endif %}; border-radius: 8px; padding: 15px; cursor: move;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <span style="background: var(--color-primary); color: white; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 1.2rem;">
+        #{{ forloop.counter }}
+      </span>
+      <span style="font-size: 1.5rem; cursor: grab;">⋮⋮</span>
+    </div>
+    <img src="{{ banner.image.url }}" alt="{{ banner.title }}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+    <h4 style="margin: 10px 0 5px 0;">{{ banner.title|default:"Банер без назви" }}</h4>
+    <p style="font-size: 0.9rem; color: #666; margin: 5px 0;">
+      {% if banner.link %}
+        Посилання: <a href="{{ banner.link }}" target="_blank" style="color: var(--color-primary); text-decoration: none;">{{ banner.link|truncatechars:30 }}</a>
+      {% else %}
+        Без посилання
+      {% endif %}
+    </p>
+    <p style="font-size: 0.85rem; color: #999; margin: 5px 0;">
+      Створено: {{ banner.created_at|date:"d.m.Y H:i" }}
+    </p>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <button onclick="editBanner({{ banner.id }}, '{{ banner.title|escapejs }}', '{{ banner.link|escapejs }}', {{ banner.is_active|lower }})" 
+              style="flex: 1; padding: 8px; background: #ffc107; color: #000; border: none; border-radius: 4px; cursor: pointer;">
+        Редагувати
+      </button>
+      <button onclick="deleteBanner({{ banner.id }})" 
+              style="flex: 1; padding: 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Видалити
+      </button>
+    </div>
+  </div>
+  {% empty %}
+  <p style="grid-column: 1/-1; text-align: center; color: #666; padding: 40px;">
+    Банерів ще немає. Додайте перший банер!
+  </p>
+  {% endfor %}
+</div>
+
+<!-- Модальне вікно додавання -->
+<div id="add-banner-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+    <h3 style="margin-top: 0;">Додати новий банер</h3>
+    <form id="add-banner-form" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Назва:</label>
+        <input type="text" name="title" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Зображення (обов'язково):</label>
+        <input type="file" name="image" required accept="image/*" style="width: 100%; padding: 8px;">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Посилання (необов'язково):</label>
+        <input type="url" name="link" placeholder="https://..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="submit" style="flex: 1; padding: 10px; background: var(--color-primary); color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Додати
+        </button>
+        <button type="button" onclick="document.getElementById('add-banner-modal').style.display='none'" 
+                style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Скасувати
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Модальне вікно редагування -->
+<div id="edit-banner-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+    <h3 style="margin-top: 0;">Редагувати банер</h3>
+    <form id="edit-banner-form" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" id="edit-banner-id">
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Назва:</label>
+        <input type="text" id="edit-title" name="title" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Зображення (залишіть порожнім, якщо не змінювати):</label>
+        <input type="file" name="image" accept="image/*" style="width: 100%; padding: 8px;">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Посилання:</label>
+        <input type="url" id="edit-link" name="link" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="display: flex; align-items: center; cursor: pointer;">
+          <input type="checkbox" id="edit-is-active" name="is_active" style="margin-right: 8px;">
+          <span>Активний</span>
+        </label>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="submit" style="flex: 1; padding: 10px; background: #ffc107; color: #000; border: none; border-radius: 4px; cursor: pointer;">
+          Зберегти
+        </button>
+        <button type="button" onclick="document.getElementById('edit-banner-modal').style.display='none'" 
+                style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Скасувати
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Drag & Drop
+let draggedElement = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('banners-list');
+  const cards = container.querySelectorAll('.banner-card');
+  
+  cards.forEach(card => {
+    card.addEventListener('dragstart', handleDragStart);
+    card.addEventListener('dragover', handleDragOver);
+    card.addEventListener('drop', handleDrop);
+    card.addEventListener('dragend', handleDragEnd);
+  });
+});
+
+function handleDragStart(e) {
+  draggedElement = this;
+  this.style.opacity = '0.4';
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  if (draggedElement !== this) {
+    const container = document.getElementById('banners-list');
+    const allCards = [...container.querySelectorAll('.banner-card')];
+    const draggedIndex = allCards.indexOf(draggedElement);
+    const targetIndex = allCards.indexOf(this);
+    
+    if (draggedIndex < targetIndex) {
+      this.parentNode.insertBefore(draggedElement, this.nextSibling);
+    } else {
+      this.parentNode.insertBefore(draggedElement, this);
+    }
+    
+    updatePositions();
+  }
+  
+  return false;
+}
+
+function handleDragEnd(e) {
+  this.style.opacity = '1';
+}
+
+async function updatePositions() {
+  const container = document.getElementById('banners-list');
+  const cards = container.querySelectorAll('.banner-card');
+  const order = [];
+  
+  cards.forEach((card, index) => {
+    order.push({
+      id: parseInt(card.dataset.id),
+      position: index
+    });
+    
+    // Оновлюємо номер на картці
+    const badge = card.querySelector('span');
+    if (badge) {
+      badge.textContent = `#${index + 1}`;
+    }
+  });
+  
+  try {
+    const response = await fetch('/manager/api/reorder-banners/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ order: order })
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      alert('Помилка при збереженні порядку');
+      location.reload();
+    }
+  } catch (error) {
+    console.error('Помилка:', error);
+  }
+}
+
+// Форми
+document.getElementById('add-banner-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const container = document.getElementById('banners-list');
+  const currentCount = container.querySelectorAll('.banner-card').length;
+  
+  if (currentCount >= 4) {
+    alert('Максимум 4 банери! Видаліть старий перед додаванням нового.');
+    return;
+  }
+  
+  const formData = new FormData(e.target);
+  formData.append('position', currentCount);
+  
+  try {
+    const response = await fetch("{% url 'manager:banner_add' %}", {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Банер успішно додано!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+});
+
+document.getElementById('edit-banner-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const bannerId = document.getElementById('edit-banner-id').value;
+  const formData = new FormData(e.target);
+  
+  if (document.getElementById('edit-is-active').checked) {
+    formData.append('is_active', 'true');
+  } else {
+    formData.append('is_active', 'false');
+  }
+  
+  try {
+    const response = await fetch(`/manager/banners/${bannerId}/update/`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Банер оновлено!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+});
+
+function editBanner(id, title, link, isActive) {
+  document.getElementById('edit-banner-id').value = id;
+  document.getElementById('edit-title').value = title;
+  document.getElementById('edit-link').value = link;
+  document.getElementById('edit-is-active').checked = isActive;
+  document.getElementById('edit-banner-modal').style.display = 'flex';
+}
+
+async function deleteBanner(id) {
+  if (!confirm('Видалити цей банер?')) return;
+  
+  try {
+    const response = await fetch(`/manager/banners/${id}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Банер видалено!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+
+<style>
+.banner-card {
+  transition: opacity 0.3s ease;
+}
+
+.banner-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+</style>
+{% endblock %}

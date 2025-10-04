@@ -1,0 +1,355 @@
+{% extends 'manager/base.html' %}
+
+{% block manager_content %}
+<div class="manager-header">
+  <h1>⭐ ТОП товари</h1>
+  <button onclick="document.getElementById('add-modal').style.display='flex'" 
+          style="padding: 10px 20px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
+    + Додати товар
+  </button>
+</div>
+
+<p style="background: #e3f2fd; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+  💡 <strong>Підказка:</strong> Перетягуйте рядки мишкою для зміни порядку показу
+</p>
+
+<table style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr style="background: #f8f9fa;">
+      <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; width: 60px;">№</th>
+      <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Товар</th>
+      <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Штрих-код</th>
+      <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Статус</th>
+      <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Дії</th>
+    </tr>
+  </thead>
+  <tbody id="products-list">
+    {% for item in popular_products %}
+    <tr class="product-row" data-id="{{ item.id }}" draggable="true" style="border-bottom: 1px solid #dee2e6; cursor: move;">
+      <td style="padding: 12px; text-align: center;">
+        <span style="background: var(--color-primary); color: white; padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 1.1rem;">
+          {{ forloop.counter }}
+        </span>
+      </td>
+      <td style="padding: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          {% if item.product.image %}
+            <img src="{{ item.product.image.url }}" alt="" style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px;">
+          {% endif %}
+          <strong>{{ item.product.name }}</strong>
+        </div>
+      </td>
+      <td style="padding: 12px; font-family: monospace; font-size: 0.95rem;">{{ item.product.barcode|default:"—" }}</td>
+      <td style="padding: 12px; text-align: center;">
+        {% if item.is_active %}
+          <span style="color: #28a745; font-weight: 600;">✓ Активний</span>
+        {% else %}
+          <span style="color: #dc3545; font-weight: 600;">✗ Неактивний</span>
+        {% endif %}
+      </td>
+      <td style="padding: 12px; text-align: center;">
+        <button onclick="editItem({{ item.id }}, {{ item.is_active|lower }})" 
+                style="padding: 6px 12px; background: #ffc107; color: #000; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px;">
+          Редагувати
+        </button>
+        <button onclick="deleteItem({{ item.id }})" 
+                style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Видалити
+        </button>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+        Популярних товарів ще немає. Додайте перший!
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Модальне вікно додавання -->
+<div id="add-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+    <h3 style="margin-top: 0;">Додати товар в ТОП</h3>
+    <form id="add-form">
+      {% csrf_token %}
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Товар:</label>
+        <input type="text" id="search-product" placeholder="Почніть вводити назву або штрих-код..." 
+               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px;">
+        <select name="product_id" id="product-select" required size="10" 
+                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <option value="">Оберіть товар...</option>
+          {% for product in all_products %}
+            <option value="{{ product.id }}" data-name="{{ product.name|lower }}" data-barcode="{{ product.barcode|default:'' }}">
+              {{ product.name }} {% if product.barcode %}({{ product.barcode }}){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="submit" style="flex: 1; padding: 10px; background: var(--color-primary); color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Додати
+        </button>
+        <button type="button" onclick="document.getElementById('add-modal').style.display='none'" 
+                style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Скасувати
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Модальне вікно редагування -->
+<div id="edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+    <h3 style="margin-top: 0;">Редагувати</h3>
+    <form id="edit-form">
+      {% csrf_token %}
+      <input type="hidden" id="edit-id">
+      <div style="margin-bottom: 15px;">
+        <label style="display: flex; align-items: center; cursor: pointer;">
+          <input type="checkbox" id="edit-is-active" name="is_active" style="margin-right: 8px;">
+          <span>Активний</span>
+        </label>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="submit" style="flex: 1; padding: 10px; background: #ffc107; color: #000; border: none; border-radius: 4px; cursor: pointer;">
+          Зберегти
+        </button>
+        <button type="button" onclick="document.getElementById('edit-modal').style.display='none'" 
+                style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          Скасувати
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Пошук товарів
+document.getElementById('search-product')?.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase();
+  const select = document.getElementById('product-select');
+  const options = select.querySelectorAll('option');
+  
+  options.forEach(option => {
+    if (option.value === '') return;
+    
+    const name = option.dataset.name || '';
+    const barcode = option.dataset.barcode || '';
+    
+    if (name.includes(query) || barcode.includes(query)) {
+      option.style.display = '';
+    } else {
+      option.style.display = 'none';
+    }
+  });
+});
+
+// Drag & Drop
+let draggedElement = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const rows = document.querySelectorAll('.product-row');
+  
+  rows.forEach(row => {
+    row.addEventListener('dragstart', handleDragStart);
+    row.addEventListener('dragover', handleDragOver);
+    row.addEventListener('drop', handleDrop);
+    row.addEventListener('dragend', handleDragEnd);
+  });
+});
+
+function handleDragStart(e) {
+  draggedElement = this;
+  this.style.opacity = '0.4';
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+  
+  if (draggedElement !== this) {
+    const tbody = document.getElementById('products-list');
+    const allRows = [...tbody.querySelectorAll('.product-row')];
+    const draggedIndex = allRows.indexOf(draggedElement);
+    const targetIndex = allRows.indexOf(this);
+    
+    if (draggedIndex < targetIndex) {
+      this.parentNode.insertBefore(draggedElement, this.nextSibling);
+    } else {
+      this.parentNode.insertBefore(draggedElement, this);
+    }
+    
+    updatePositions();
+  }
+  
+  return false;
+}
+
+function handleDragEnd(e) {
+  this.style.opacity = '1';
+}
+
+async function updatePositions() {
+  const tbody = document.getElementById('products-list');
+  const rows = tbody.querySelectorAll('.product-row');
+  const order = [];
+  
+  rows.forEach((row, index) => {
+    order.push({
+      id: parseInt(row.dataset.id),
+      position: index
+    });
+    
+    const badge = row.querySelector('span');
+    if (badge) {
+      badge.textContent = index + 1;
+    }
+  });
+  
+  try {
+    const response = await fetch('/manager/api/reorder-popular-products/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ order: order })
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      alert('Помилка при збереженні порядку');
+      location.reload();
+    }
+  } catch (error) {
+    console.error('Помилка:', error);
+  }
+}
+
+document.getElementById('add-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  const tbody = document.getElementById('products-list');
+  const currentCount = tbody.querySelectorAll('.product-row').length;
+  formData.append('position', currentCount);
+  
+  try {
+    const response = await fetch("{% url 'manager:popular_product_add' %}", {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Товар додано в ТОП!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+});
+
+document.getElementById('edit-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-id').value;
+  const formData = new FormData(e.target);
+  
+  if (document.getElementById('edit-is-active').checked) {
+    formData.append('is_active', 'true');
+  } else {
+    formData.append('is_active', 'false');
+  }
+  
+  try {
+    const response = await fetch(`/manager/popular-products/${id}/update/`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Товар оновлено!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+});
+
+function editItem(id, isActive) {
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-is-active').checked = isActive;
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+async function deleteItem(id) {
+  if (!confirm('Видалити цей товар з ТОП?')) return;
+  
+  try {
+    const response = await fetch(`/manager/popular-products/${id}/delete/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('Товар видалено з ТОП!');
+      location.reload();
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    alert('Помилка: ' + error.message);
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+
+<style>
+.product-row {
+  transition: opacity 0.3s ease, background-color 0.2s ease;
+}
+
+.product-row:hover {
+  background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

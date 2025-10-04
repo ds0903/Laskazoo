@@ -31,11 +31,13 @@
   margin: 10px 0;
   margin-left: -160px;
   border: 1px solid #f0f0f0;
-  position: sticky;
-  top: 20px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
+  position: static;
+  max-height: none;
+  overflow-y: visible;
+  overflow-x: hidden;
 }
+
+
 
 .fs-title {
   font-size: 1.35rem;
@@ -794,6 +796,53 @@ section.catalog .prod-card,
   box-shadow: none !important;
   transform: none !important;                  /* без scale, щоб не «дригалось» */
   z-index: 1;
+}
+
+/* ФІКСОВАНИЙ РОЗМІР ЗОБРАЖЕННЯ В КАРТЦІ */
+section.catalog .prod-card img,
+.favourites-page .prod-card img,
+.products .prod-card img {
+  width: 100%;
+  max-width: 250px;
+  height: 250px;
+  object-fit: contain !important;
+  object-position: center;
+  margin: 0 auto;
+  display: block;
+}
+
+/* КОМПАКТНА СТРУКТУРА КАРТКИ */
+section.catalog .prod-card .card-front,
+section.catalog .prod-card .card-back,
+.favourites-page .prod-card .card-front,
+.favourites-page .prod-card .card-back {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ТЕКСТ КОМПАКТНО ВНИЗУ */
+section.catalog .prod-card .card-title,
+.favourites-page .prod-card .card-title {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  margin: 8px 0 4px;
+  text-align: center;
+}
+
+section.catalog .prod-card .card-price,
+.favourites-page .prod-card .card-price {
+  font-size: 1rem;
+  margin: 4px 0;
+  text-align: center;
+}
+
+section.catalog .prod-card .card-article,
+.favourites-page .prod-card .card-article {
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 4px 0;
 }
 
 /* БІЛИЙ ФОН, що росте за рахунок змінної --hover-height */

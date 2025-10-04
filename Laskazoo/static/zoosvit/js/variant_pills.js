@@ -67,7 +67,10 @@
           favBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
         }
 
-        if (typeof window.recomputeCardHeights === 'function') {
+        // Використовуємо нашу оптимізовану систему переміру
+        if (window.ProductCards && window.ProductCards.recomputeOneCard) {
+          window.ProductCards.recomputeOneCard(card);
+        } else if (typeof window.recomputeCardHeights === 'function') {
           requestAnimationFrame(window.recomputeCardHeights);
         }
       }

@@ -12,7 +12,7 @@
 # sudo systemctl restart gunicorn        # якщо сервіс називається gunicorn
 # # або
 # sudo systemctl restart laskazoo        # якщо ти робив systemd unit laskazoo.service
-#
+# sudo nano /etc/systemd/system/laskazoo-sync.timer таймер як часто синхронізуємо товари
 # # 2) nginx
 # sudo nginx -t && sudo systemctl reload nginx
 # sudo tail -n 30 /var/log/nginx/error.log
@@ -20,6 +20,7 @@
 # sudo systemctl restart vsftpd
 # TODO: перезавантаженян статичних файлів !!!
 # export DJANGO_SETTINGS_MODULE=Laskazoo.settings.prod
+# python manage.py collectstatic --noinput --settings=Laskazoo.settings.dev
 # python manage.py collectstatic --noinput
 # ngrok http http://localhost:8080
 # python manage.py import_tsgoods імпорт в базу з сервера

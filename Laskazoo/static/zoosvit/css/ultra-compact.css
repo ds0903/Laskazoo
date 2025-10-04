@@ -1,0 +1,186 @@
+/* ====================== УЛЬТРА-КОМПАКТНИЙ МАКЕТ ДЛЯ КАТАЛОГУ ====================== */
+
+/* Повністю прибираємо порожній простір на каталогних сторінках */
+.catalog-page .site-main,
+.category-page .site-main {
+  min-height: auto !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Основні контейнери каталогу */
+.catalog.container,
+.catalog-wrapper,
+.catalog-main {
+  min-height: auto !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Сітка продуктів - мінімальні відступи */
+.product-grid {
+  margin-bottom: 5px !important;
+  min-height: auto !important;
+}
+
+/* Агресивне зменшення висоти для різної кількості карток */
+.cards-1-row {
+  min-height: auto !important;
+  margin-bottom: 5px !important;
+  padding-bottom: 5px !important;
+}
+
+.cards-2-rows {
+  min-height: auto !important;
+  margin-bottom: 8px !important;
+  padding-bottom: 5px !important;
+}
+
+.cards-3-rows {
+  min-height: auto !important;
+  margin-bottom: 10px !important;
+  padding-bottom: 5px !important;
+}
+
+.cards-4-5-rows {
+  min-height: auto !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 5px !important;
+}
+
+.cards-many-rows {
+  min-height: auto !important;
+  margin-bottom: 15px !important;
+  padding-bottom: 5px !important;
+}
+
+/* Пагінація - максимально близько до карток */
+.pagination-wrapper {
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Всі інші елементи каталогу */
+.catalog-page-heading {
+  margin-bottom: 5px !important;
+  margin-top: 5px !important;
+}
+
+.breadcrumbs {
+  margin-bottom: 3px !important;
+  padding-bottom: 0 !important;
+}
+
+.top-cats-bar {
+  margin-bottom: 3px !important;
+  margin-top: 3px !important;
+}
+
+.catalog-controls {
+  margin-bottom: 5px !important;
+}
+
+.catalog-header,
+.category-nav {
+  margin-bottom: 5px !important;
+}
+
+/* Прибираємо всі можливі відступи */
+.site-main > section:last-child,
+.site-main > .container:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Footer - мінімальний відступ */
+.catalog-page footer,
+.category-page footer {
+  margin-top: 5px !important;
+  padding-top: 15px !important;
+}
+
+/* Спеціально для сторінки з 5 картками як на скріншоті */
+.product-grid[data-card-count="5"] {
+  min-height: auto !important;
+  margin-bottom: 5px !important;
+}
+
+/* Агресивне прибирання відступів для body */
+.catalog-page,
+.category-page {
+  padding-bottom: 0 !important;
+}
+
+/* Контент після сітки */
+.product-grid + * {
+  margin-top: 5px !important;
+}
+
+/* Додаткові оптимізації */
+.catalog-page .site-content,
+.category-page .site-content {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Прибираємо gap між элементами */
+.catalog-wrapper > * {
+  margin-bottom: 0 !important;
+}
+
+.catalog-main > * {
+  margin-bottom: 5px !important;
+}
+
+.catalog-main > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Мобільні пристрої */
+@media (max-width: 768px) {
+  .pagination-wrapper {
+    margin-top: 3px !important;
+    margin-bottom: 3px !important;
+  }
+  
+  .product-grid {
+    margin-bottom: 3px !important;
+  }
+  
+  .catalog-page footer,
+  .category-page footer {
+    margin-top: 3px !important;
+    padding-top: 10px !important;
+  }
+}
+
+/* Екстремально малі екрани */
+@media (max-width: 480px) {
+  .catalog-page .site-main,
+  .category-page .site-main {
+    padding-bottom: 0 !important;
+  }
+  
+  .pagination-wrapper {
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+  }
+}
+
+/* Прибираємо всі можливі padding та margin */
+.catalog-page * {
+  box-sizing: border-box;
+}
+
+/* Спеціально для випадків з малою кількістю карток */
+.product-grid:has(.prod-card:nth-child(-n+5):last-child) {
+  min-height: auto !important;
+  margin-bottom: 5px !important;
+  padding-bottom: 0 !important;
+}
+
+/* Якщо є пагінація, то зменшуємо відступ до неї */
+.product-grid:has(+ .pagination-wrapper) {
+  margin-bottom: 3px !important;
+}

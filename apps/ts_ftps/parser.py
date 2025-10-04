@@ -44,6 +44,7 @@ HEADER_MAP = {
     "PrimeCost": "prime_cost",
     "SupplierCode": "supplier_code",
     "Analogs": "analogs",
+    "new_description" :"new_description",
 }
 
 NUMERIC_FIELDS = {

@@ -1,0 +1,174 @@
+/* ====================== КОМПАКТНИЙ МАКЕТ ДЛЯ КАТАЛОГУ ====================== */
+
+/* Суттєво зменшуємо всі відступи для каталогу та категорій */
+.catalog-page, 
+.category-page {
+  --compact-spacing: 8px;
+  --ultra-compact-spacing: 5px;
+}
+
+/* Основний контент - максимально компактно */
+.catalog-page .site-main,
+.category-page .site-main {
+  min-height: auto !important;
+  padding-bottom: var(--ultra-compact-spacing) !important;
+  margin-bottom: 0 !important;
+}
+
+/* Всі основні елементи каталогу */
+.catalog-page-heading {
+  margin-bottom: var(--compact-spacing) !important;
+  margin-top: var(--compact-spacing) !important;
+}
+
+.breadcrumbs {
+  margin-bottom: var(--ultra-compact-spacing) !important;
+  padding-bottom: 2px !important;
+}
+
+.top-cats-bar {
+  margin-bottom: var(--ultra-compact-spacing) !important;
+  margin-top: var(--ultra-compact-spacing) !important;
+}
+
+.catalog-controls {
+  margin-bottom: var(--compact-spacing) !important;
+}
+
+.catalog-header,
+.category-nav {
+  margin-bottom: var(--compact-spacing) !important;
+}
+
+/* Сітка продуктів - компактні відступи */
+.product-grid.dynamic-spacing {
+  margin-bottom: var(--compact-spacing) !important;
+}
+
+/* Динамічні класи для різної кількості карток */
+.cards-1-row {
+  min-height: 260px !important;
+  margin-bottom: var(--ultra-compact-spacing) !important;
+}
+
+.cards-2-rows {
+  min-height: 320px !important;
+  margin-bottom: var(--compact-spacing) !important;
+}
+
+.cards-3-rows {
+  min-height: 380px !important;
+  margin-bottom: 10px !important;
+}
+
+.cards-4-5-rows {
+  min-height: 450px !important;
+  margin-bottom: 12px !important;
+}
+
+.cards-many-rows {
+  min-height: auto !important;
+  margin-bottom: 15px !important;
+}
+
+/* Пагінація - максимально компактно */
+.pagination-wrapper {
+  margin-top: var(--ultra-compact-spacing) !important;
+  margin-bottom: var(--ultra-compact-spacing) !important;
+  padding: 0 !important;
+}
+
+/* Контейнери */
+.catalog.container,
+.catalog-wrapper {
+  min-height: auto !important;
+  margin-bottom: 0 !important;
+  padding-bottom: var(--ultra-compact-spacing) !important;
+}
+
+.catalog-main {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Останні елементи сторінки */
+.site-main > section:last-child,
+.site-main > .container:last-child {
+  margin-bottom: var(--compact-spacing) !important;
+}
+
+/* Footer для каталогних сторінок */
+.catalog-page footer,
+.category-page footer {
+  margin-top: var(--compact-spacing) !important;
+}
+
+/* Порожні стани */
+.empty-state,
+.no-products,
+.no-categories,
+.product-grid.is-empty {
+  min-height: 180px !important;
+  padding: 15px !important;
+  margin-bottom: var(--compact-spacing) !important;
+}
+
+/* Мобільна оптимізація */
+@media (max-width: 768px) {
+  .catalog-page, 
+  .category-page {
+    --compact-spacing: 6px;
+    --ultra-compact-spacing: 3px;
+  }
+  
+  .cards-1-row {
+    min-height: 200px !important;
+  }
+  
+  .cards-2-rows {
+    min-height: 260px !important;
+  }
+  
+  .cards-3-rows {
+    min-height: 320px !important;
+  }
+  
+  .empty-state,
+  .no-products,
+  .no-categories {
+    min-height: 120px !important;
+    padding: 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .catalog-page, 
+  .category-page {
+    --compact-spacing: 4px;
+    --ultra-compact-spacing: 2px;
+  }
+  
+  .cards-1-row {
+    min-height: 160px !important;
+  }
+  
+  .cards-2-rows {
+    min-height: 220px !important;
+  }
+  
+  .cards-3-rows {
+    min-height: 280px !important;
+  }
+}
+
+/* Звичайні сторінки залишаються без змін */
+.short-page:not(.catalog-page):not(.category-page) .site-main {
+  min-height: 50vh;
+  padding-bottom: 30px;
+}
+
+/* Спеціальні випадки */
+body:not(.catalog-page):not(.category-page) .product-grid,
+body:not(.catalog-page):not(.category-page) .subcategory-grid {
+  margin-bottom: 30px !important;
+}

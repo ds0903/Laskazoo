@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from apps.products.models import Product, Product_Variant
 
 class Order(models.Model):
@@ -33,6 +34,11 @@ class Order(models.Model):
         ('pickup', 'Самовивіз'),
         ('courier', 'Кур\'єр'),
     ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Готівка при отриманні'),
+        ('card_online', 'Картка онлайн'),
+    ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE,
@@ -54,6 +60,11 @@ class Order(models.Model):
     delivery_address = models.TextField(blank=True, default='')
     comment = models.TextField(blank=True, null=True)
     order_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    
+    # Оплата
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
+    payment_status = models.CharField(max_length=20, default='pending')  # pending, paid, failed
+    payment_id = models.CharField(max_length=255, blank=True, null=True)  # ID транзакції від платіжного сервісу
     
     # Для експорту
     exported = models.BooleanField(default=False)
@@ -105,3 +116,128 @@ class OrderItem(models.Model):
     def __str__(self):
         suffix = f' / {self.variant.sku}' if self.variant_id else ''
         return f'{self.product.name}{suffix} ×{self.quantity}'
+
+
+class PaymentTransaction(models.Model):
+    """
+    Модель для логування всіх платіжних транзакцій
+    Зберігає історію взаємодій з платіжними системами
+    """
+    TRANSACTION_TYPE_CHOICES = [
+        ('payment', 'Оплата'),
+        ('refund', 'Повернення'),
+        ('callback', 'Callback'),
+    ]
+    
+    TRANSACTION_STATUS_CHOICES = [
+        ('initiated', 'Ініційовано'),
+        ('processing', 'В обробці'),
+        ('success', 'Успішно'),
+        ('failed', 'Помилка'),
+        ('cancelled', 'Скасовано'),
+    ]
+    
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='transactions',
+        verbose_name='Замовлення'
+    )
+    transaction_type = models.CharField(
+        max_length=20,
+        choices=TRANSACTION_TYPE_CHOICES,
+        default='payment',
+        verbose_name='Тип транзакції'
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=TRANSACTION_STATUS_CHOICES,
+        default='initiated',
+        verbose_name='Статус'
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name='Сума'
+    )
+    currency = models.CharField(
+        max_length=3,
+        default='UAH',
+        verbose_name='Валюта'
+    )
+    
+    # Дані від платіжної системи
+    payment_system = models.CharField(
+        max_length=50,
+        default='portmone',
+        verbose_name='Платіжна система'
+    )
+    external_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='ID в платіжній системі'
+    )
+    
+    # Request/Response для дебагу
+    request_data = models.JSONField(
+        blank=True,
+        null=True,
+        verbose_name='Дані запиту'
+    )
+    response_data = models.JSONField(
+        blank=True,
+        null=True,
+        verbose_name='Дані відповіді'
+    )
+    error_message = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Повідомлення про помилку'
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Створено'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Оновлено'
+    )
+    completed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Завершено'
+    )
+    
+    class Meta:
+        verbose_name = 'Транзакція'
+        verbose_name_plural = 'Транзакції'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['order', '-created_at']),
+            models.Index(fields=['external_id']),
+            models.Index(fields=['status', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"Транзакція {self.id} | Замовлення #{self.order.order_number or self.order.id} | {self.amount} {self.currency}"
+    
+    def mark_as_success(self, response_data=None):
+        """Позначити транзакцію як успішну"""
+        self.status = 'success'
+        self.completed_at = timezone.now()
+        if response_data:
+            self.response_data = response_data
+        self.save()
+    
+    def mark_as_failed(self, error_message=None, response_data=None):
+        """Позначити транзакцію як невдалу"""
+        self.status = 'failed'
+        self.completed_at = timezone.now()
+        if error_message:
+            self.error_message = error_message
+        if response_data:
+            self.response_data = response_data
+        self.save()

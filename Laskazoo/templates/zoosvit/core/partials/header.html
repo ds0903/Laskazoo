@@ -47,7 +47,6 @@
               </a>
               <a href="https://t.me/ds0903" class="dropdown-link" target="_blank">
                 <img src="{% static 'zoosvit/img/header_icons/telagram-icon.png' %}" alt="Telegram">
-                <span>Telegram</span>
               </a>
             </div>
             <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
@@ -68,6 +67,10 @@
                   <a href="{% url 'users:profile' %}" class="dropdown-link">Мій профіль</a>
                   <a href="{% url 'orders:list' %}" class="dropdown-link">Мої замовлення</a>
                   <a href="{% url 'favourites:list' %}" class="dropdown-link">Обране</a>
+                  {% if user.is_staff %}
+                    <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                    <a href="{% url 'manager:dashboard' %}" class="dropdown-link" style="color: #ff6b35; font-weight: 600;">🔧 Кабінет менеджера</a>
+                  {% endif %}
                   <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
                   <a href="{% url 'users:logout' %}" class="dropdown-link">Вийти</a>
                 </div>

@@ -1,0 +1,215 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Оплата успішна!{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-container {
+        max-width: 700px;
+        margin: 60px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .success-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+        animation: success-bounce 0.5s ease;
+    }
+    
+    @keyframes success-bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .success-container h1 {
+        color: #0f6b38;
+        font-size: 2.2rem;
+        margin-bottom: 15px;
+    }
+    
+    .success-message {
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 30px;
+    }
+    
+    .order-details {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 8px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .order-details-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .order-details-row:last-child {
+        border-bottom: none;
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: #0f6b38;
+        padding-top: 20px;
+        margin-top: 10px;
+        border-top: 2px solid #0f6b38;
+    }
+    
+    .success-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #0f6b38 0%, #1a8f4a 100%);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #0d5a2f 0%, #168040 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(15, 107, 56, 0.3);
+    }
+    
+    .btn-secondary {
+        background: white;
+        color: #0f6b38;
+        border: 2px solid #0f6b38;
+        padding: 14px 30px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-secondary:hover {
+        background: #f8fdf9;
+        transform: translateY(-2px);
+    }
+    
+    .next-steps {
+        background: #e8f5e9;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+        text-align: left;
+    }
+    
+    .next-steps h3 {
+        color: #2e7d32;
+        margin-bottom: 15px;
+    }
+    
+    .next-steps ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .next-steps li {
+        padding: 8px 0;
+        padding-left: 30px;
+        position: relative;
+    }
+    
+    .next-steps li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #0f6b38;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    @media (max-width: 768px) {
+        .success-container {
+            margin: 20px;
+            padding: 25px;
+        }
+        
+        .success-actions {
+            flex-direction: column;
+        }
+        
+        .btn-primary, .btn-secondary {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-icon">✅</div>
+    
+    <h1>Оплата успішна!</h1>
+    
+    <p class="success-message">
+        Дякуємо за оплату! Ваше замовлення №{{ order.order_number|default:order.id }} успішно оплачено.
+    </p>
+    
+    <div class="order-details">
+        <h3>Деталі замовлення:</h3>
+        <div class="order-details-row">
+            <span>Номер замовлення:</span>
+            <strong>#{{ order.order_number|default:order.id }}</strong>
+        </div>
+        <div class="order-details-row">
+            <span>Дата:</span>
+            <strong>{{ order.created_at|date:"d.m.Y H:i" }}</strong>
+        </div>
+        <div class="order-details-row">
+            <span>Спосіб оплати:</span>
+            <strong>💳 Картка онлайн</strong>
+        </div>
+        <div class="order-details-row">
+            <span>Статус оплати:</span>
+            <strong style="color: #2e7d32;">✓ Оплачено</strong>
+        </div>
+        <div class="order-details-row">
+            <span>Сума:</span>
+            <strong>{{ order.total_amount }} грн</strong>
+        </div>
+    </div>
+    
+    <div class="next-steps">
+        <h3>📦 Що далі?</h3>
+        <ul>
+            <li>Найближчим часом наш менеджер зв'яжеться з вами для підтвердження замовлення</li>
+            <li>Ви отримаєте SMS повідомлення про відправку товару</li>
+            <li>Відстежуйте статус замовлення в особистому кабінеті</li>
+            <li>Доставка здійснюється протягом 1-3 робочих днів</li>
+        </ul>
+    </div>
+    
+    <div class="success-actions">
+        <a href="{% url 'orders:detail' order.id %}" class="btn-primary">
+            📋 Переглянути замовлення
+        </a>
+        <a href="{% url 'products:catalog' %}" class="btn-secondary">
+            🛍️ Продовжити покупки
+        </a>
+    </div>
+</div>
+{% endblock %}

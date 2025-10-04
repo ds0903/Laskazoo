@@ -248,13 +248,15 @@
     }
 
     /* ВИПРАВЛЕННЯ СТИЛІВ ДЛЯ RADIO КНОПОК */
-    .delivery-type-options {
+    .delivery-type-options,
+    .payment-type-options {
       display: flex;
       gap: 16px;
       margin: 16px 0;
     }
     
-    .delivery-type-option {
+    .delivery-type-option,
+    .payment-type-option {
       flex: 1;
       display: flex;
       align-items: center;
@@ -267,17 +269,20 @@
       position: relative;
     }
     
-    .delivery-type-option:hover {
+    .delivery-type-option:hover,
+    .payment-type-option:hover {
       border-color: #0f6b38;
       background-color: #f8fdf9;
     }
     
-    .delivery-type-option.selected {
+    .delivery-type-option.selected,
+    .payment-type-option.selected {
       border-color: #0f6b38;
       background-color: #f0f8f0;
     }
     
-    .delivery-type-option input[type="radio"] {
+    .delivery-type-option input[type="radio"],
+    .payment-type-option input[type="radio"] {
       width: 20px;
       height: 20px;
       margin-right: 12px;
@@ -287,12 +292,14 @@
     }
     
     /* ДОДАТКОВЕ ВИПРАВЛЕННЯ КВАДРАТИКА */
-    .delivery-type-option input[type="radio"]:checked {
+    .delivery-type-option input[type="radio"]:checked,
+    .payment-type-option input[type="radio"]:checked {
       background-color: #0f6b38;
       border: 2px solid #0f6b38;
     }
     
-    .delivery-type-option label {
+    .delivery-type-option label,
+    .payment-type-option label {
       flex: 1;
       cursor: pointer;
       margin: 0;
@@ -612,6 +619,36 @@
           </div>
         {% endif %}
         <small class="form-help" id="delivery-address-help">Спочатку виберіть місто</small>
+      </div>
+    </div>
+
+    <!-- Спосіб оплати -->
+    <div class="form-section">
+      <h3>Спосіб оплати</h3>
+      
+      <div class="form-group">
+        <div class="payment-type-options">
+          {% for radio in form.payment_method %}
+            <div class="payment-type-option" data-value="{{ radio.choice_value }}">
+              {{ radio.tag }}
+              <label for="{{ radio.id_for_label }}">
+                {% if radio.choice_value == 'cash' %}
+                  💵 {{ radio.choice_label }}
+                {% else %}
+                  💳 {{ radio.choice_label }}
+                {% endif %}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+        {% if form.payment_method.errors %}
+          <div class="form-errors">
+            {% for error in form.payment_method.errors %}
+              <span class="error">{{ error }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+        <small class="form-help" id="payment-help">Оплата карткою проходить через захищений сервіс Portmone</small>
       </div>
     </div>
 
@@ -1230,6 +1267,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Робимо payment option кнопки клікабельними
+    const paymentOptions = document.querySelectorAll('.payment-type-option');
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+            if (e.target.type !== 'radio') {
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio && !radio.disabled) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        });
+    });
+    
     // ФУНКЦІЯ ВІЗУАЛЬНОГО ОНОВЛЕННЯ ТИПУ ДОСТАВКИ
     function updateDeliveryTypeVisual() {
         deliveryOptions.forEach(option => {
@@ -1242,8 +1293,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // ФУНКЦІЯ ВІЗУАЛЬНОГО ОНОВЛЕННЯ СПОСОБУ ОПЛАТИ
+    function updatePaymentTypeVisual() {
+        paymentOptions.forEach(option => {
+            const radio = option.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                option.classList.add('selected');
+            } else {
+                option.classList.remove('selected');
+            }
+        });
+        
+        // Оновлюємо текст підказки
+        const paymentHelp = document.getElementById('payment-help');
+        const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+        if (selectedPayment && paymentHelp) {
+            if (selectedPayment.value === 'card_online') {
+                paymentHelp.textContent = 'Оплата карткою проходить через захищений сервіс Portmone';
+                submitText.textContent = 'Перейти до оплати';
+            } else {
+                paymentHelp.textContent = 'Оплата при отриманні товару';
+                submitText.textContent = 'Підтвердити замовлення';
+            }
+        }
+    }
+    
     // Початкове візуальне оновлення
     updateDeliveryTypeVisual();
+    updatePaymentTypeVisual();
+    
+    // Обробник зміни способу оплати
+    const paymentMethodInputs = document.querySelectorAll('input[name="payment_method"]');
+    paymentMethodInputs.forEach(input => {
+        input.addEventListener('change', updatePaymentTypeVisual);
+    });
     
     // *** МАСКА ДЛЯ ТЕЛЕФОНУ ***
     const phoneInput = document.querySelector('input[name="phone"]');
