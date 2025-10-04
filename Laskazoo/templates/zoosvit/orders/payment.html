@@ -1,0 +1,243 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Оплата замовлення №{{ order.order_number|default:order.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .payment-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .payment-header h1 {
+        color: #0f6b38;
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .payment-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    
+    .payment-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .payment-info-row:last-child {
+        border-bottom: none;
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: #0f6b38;
+    }
+    
+    .payment-methods {
+        margin-bottom: 30px;
+    }
+    
+    .payment-method-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .payment-method-card:hover {
+        border-color: #0f6b38;
+        background-color: #f8fdf9;
+    }
+    
+    .payment-method-card.active {
+        border-color: #0f6b38;
+        background-color: #f0f8f0;
+    }
+    
+    .payment-method-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .payment-method-icon {
+        font-size: 2rem;
+    }
+    
+    .payment-method-description {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .payment-form {
+        display: none;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .payment-form.active {
+        display: block;
+    }
+    
+    .btn-pay {
+        background: linear-gradient(135deg, #0f6b38 0%, #1a8f4a 100%);
+        color: white;
+        border: none;
+        padding: 16px 40px;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-pay:hover {
+        background: linear-gradient(135deg, #0d5a2f 0%, #168040 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 107, 56, 0.3);
+    }
+    
+    .security-info {
+        background: #e8f5e9;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: #2e7d32;
+    }
+    
+    .security-info strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    @media (max-width: 768px) {
+        .payment-container {
+            margin: 20px;
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-header">
+        <h1>💳 Оплата замовлення</h1>
+        <p>Замовлення №{{ order.order_number|default:order.id }}</p>
+    </div>
+    
+    <div class="payment-info">
+        <div class="payment-info-row">
+            <span>Одержувач:</span>
+            <strong>{{ order.full_name }}</strong>
+        </div>
+        <div class="payment-info-row">
+            <span>Телефон:</span>
+            <strong>{{ order.phone }}</strong>
+        </div>
+        <div class="payment-info-row">
+            <span>Email:</span>
+            <strong>{{ order.email }}</strong>
+        </div>
+        <div class="payment-info-row">
+            <span>Сума до оплати:</span>
+            <strong>{{ amount }} грн</strong>
+        </div>
+    </div>
+    
+    <div class="payment-methods">
+        <h3>Оберіть спосіб оплати:</h3>
+        
+        <!-- Portmone -->
+        <div class="payment-method-card active" data-method="portmone">
+            <div class="payment-method-header">
+                <span class="payment-method-icon">💳</span>
+                <span>Оплата карткою через Portmone</span>
+            </div>
+            <div class="payment-method-description">
+                Безпечна оплата Visa, Mastercard. Підтримка 3D Secure.
+            </div>
+            <div class="payment-form active" id="portmone-form">
+                <form method="POST" action="{{ portmone_url }}" id="portmone-payment-form">
+                    {% for key, value in portmone_params.items %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endfor %}
+                    <button type="submit" class="btn-pay">
+                        🔒 Перейти до оплати Portmone
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Google Pay -->
+        <div class="payment-method-card" data-method="google-pay">
+            <div class="payment-method-header">
+                <span class="payment-method-icon">🔵</span>
+                <span>Google Pay</span>
+            </div>
+            <div class="payment-method-description">
+                Швидка оплата за допомогою Google Pay (доступно в наступній версії).
+            </div>
+            <div class="payment-form" id="google-pay-form">
+                <button type="button" class="btn-pay" disabled>
+                    🔵 Google Pay (скоро)
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="security-info">
+        <strong>🔒 Безпека платежів гарантована</strong>
+        Всі платежі проходять через захищені канали з використанням SSL сертифікатів. 
+        Ваші платіжні дані не зберігаються на нашому сервері.
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentCards = document.querySelectorAll('.payment-method-card');
+    
+    paymentCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Прибираємо active з усіх карток
+            paymentCards.forEach(c => {
+                c.classList.remove('active');
+                const form = c.querySelector('.payment-form');
+                if (form) form.classList.remove('active');
+            });
+            
+            // Додаємо active до обраної
+            this.classList.add('active');
+            const form = this.querySelector('.payment-form');
+            if (form) form.classList.add('active');
+        });
+    });
+});
+</script>
+{% endblock %}

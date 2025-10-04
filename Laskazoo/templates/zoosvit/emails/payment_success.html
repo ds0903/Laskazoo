@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата успішна</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #0f6b38 0%, #1a8f4a 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px;">✅ Оплата успішна!</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 20px 0; font-size: 16px; color: #333333;">
+                                Вітаємо, <strong>{{ order.full_name }}</strong>!
+                            </p>
+                            
+                            <p style="margin: 0 0 30px 0; font-size: 16px; color: #666666; line-height: 1.6;">
+                                Дякуємо за ваше замовлення! Оплата пройшла успішно.
+                            </p>
+                            
+                            <!-- Order Info -->
+                            <table role="presentation" style="width: 100%; background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                                <tr>
+                                    <td>
+                                        <h2 style="margin: 0 0 15px 0; color: #0f6b38;">📦 Замовлення #{{ order.order_number|default:order.id }}</h2>
+                                        <p style="margin: 0; font-size: 14px; color: #666;">Дата: {{ order.created_at|date:"d.m.Y H:i" }}</p>
+                                        <p style="margin: 5px 0 0 0; font-size: 18px; color: #0f6b38; font-weight: bold;">Сума: {{ order.total_amount }} грн</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <div style="text-align: center; margin-top: 30px;">
+                                <a href="{{ site_url }}/orders/{{ order.id }}/" style="display: inline-block; padding: 14px 40px; background-color: #0f6b38; color: #ffffff; text-decoration: none; border-radius: 8px;">
+                                    Переглянути замовлення
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 20px; text-align: center;">
+                            <p style="margin: 0; color: #999999; font-size: 12px;">
+                                З повагою, команда Laskazoo 🐾
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

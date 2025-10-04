@@ -1,0 +1,87 @@
+{% extends 'manager/base.html' %}
+
+{% block manager_content %}
+<div class="manager-header">
+  <h1>👥 Користувачі</h1>
+  <div>
+    <form method="get" style="display: flex; gap: 10px;">
+      <input type="text" name="search" value="{{ search_query }}" 
+             placeholder="Пошук користувачів..." 
+             style="padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; width: 300px;">
+      <button type="submit" 
+              style="padding: 10px 20px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
+        🔍 Шукати
+      </button>
+      {% if search_query %}
+      <a href="{% url 'manager:users' %}" 
+         style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; display: inline-block;">
+        Скинути
+      </a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div style="overflow-x: auto;">
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background: #f8f9fa;">
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">ID</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Користувач</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">ПІБ</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Email</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Телефон</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Дата реєстрації</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Статус</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in page_obj %}
+      <tr style="border-bottom: 1px solid #dee2e6;">
+        <td style="padding: 12px;">{{ user.id }}</td>
+        <td style="padding: 12px; font-weight: 600;">{{ user.username }}</td>
+        <td style="padding: 12px;">{{ user.get_full_name|default:"—" }}</td>
+        <td style="padding: 12px;">{{ user.email }}</td>
+        <td style="padding: 12px;">{{ user.phone_number|default:"—" }}</td>
+        <td style="padding: 12px;">{{ user.date_joined|date:"d.m.Y H:i" }}</td>
+        <td style="padding: 12px;">
+          {% if user.is_active %}
+            <span style="color: #28a745; font-weight: 600;">✓ Активний</span>
+          {% else %}
+            <span style="color: #dc3545; font-weight: 600;">✗ Неактивний</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" style="padding: 30px; text-align: center; color: #6c757d;">
+          Користувачів не знайдено
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<div style="margin-top: 30px; display: flex; justify-content: center; gap: 10px;">
+  {% if page_obj.has_previous %}
+    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" 
+       style="padding: 8px 12px; background: #f8f9fa; color: #333; text-decoration: none; border-radius: 4px;">Перша</a>
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+       style="padding: 8px 12px; background: #f8f9fa; color: #333; text-decoration: none; border-radius: 4px;">← Назад</a>
+  {% endif %}
+  
+  <span style="padding: 8px 12px; background: var(--color-primary); color: white; border-radius: 4px;">
+    Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}
+  </span>
+  
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+       style="padding: 8px 12px; background: #f8f9fa; color: #333; text-decoration: none; border-radius: 4px;">Вперед →</a>
+    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+       style="padding: 8px 12px; background: #f8f9fa; color: #333; text-decoration: none; border-radius: 4px;">Остання</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

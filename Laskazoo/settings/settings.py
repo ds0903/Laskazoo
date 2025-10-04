@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.favourites',
     'apps.ts_ftps',
+    'apps.manager',
 ]
 
 TS_SYNC = {

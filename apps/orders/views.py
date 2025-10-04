@@ -2,14 +2,17 @@ from decimal import Decimal
 from typing import List, Dict
 
 from django.views.decorators.http import require_POST, require_GET
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import requests
 import json
+import hashlib
+import hmac
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import F, Sum, DecimalField, ExpressionWrapper
+from django.conf import settings
 
 from .models import Order, OrderItem
 from .forms import OrderCheckoutForm
@@ -441,14 +444,29 @@ def checkout(request):
             else:
                 order.delivery_condition = 'ukrposhta'
             
+            # Обробка способу оплати
+            payment_method = form.cleaned_data.get('payment_method', 'cash')
+            order.payment_method = payment_method
+            
+            # Якщо оплата карткою - saletype = '2', інакше '1'
+            if payment_method == 'card_online':
+                order.sale_type = '2'  # Оплата карткою
+            else:
+                order.sale_type = '1'  # Готівка
+            
             # Встановлюємо статус "в обробці" (in_process) - буде експортовано в JSON
             order.status = Order.STATUS_IN_PROCESS
-            order.sale_type = '1'  # Роздріб
             order.save()
             
             # Генеруємо номер замовлення
             order_number = order.order_number or order.id
             print(f"DEBUG: Оформлено замовлення #{order_number}, новий статус: {order.status}")
+            
+            # Якщо оплата карткою - перенаправляємо на оплату
+            if payment_method == 'card_online':
+                return redirect('orders:payment', order_id=order.id)
+            
+            # Готівка - одразу в список замовлень
             # messages.success(request, f'Замовлення №{order_number} успішно оформлено!')
             return redirect('orders:list')
     else:

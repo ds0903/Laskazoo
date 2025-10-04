@@ -1,0 +1,86 @@
+{% extends 'manager/base.html' %}
+
+{% block manager_content %}
+<div class="manager-header">
+  <h1>📦 Замовлення #{{ order.order_number|default:order.id }}</h1>
+  <a href="{% url 'manager:orders' %}" 
+     style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; display: inline-block;">
+    ← Назад до списку
+  </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px;">
+  <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+    <h3 style="margin-top: 0; color: var(--color-primary);">Інформація про клієнта</h3>
+    <p><strong>ПІБ:</strong> {{ order.full_name|default:order.user.get_full_name|default:"—" }}</p>
+    <p><strong>Телефон:</strong> {{ order.phone|default:"—" }}</p>
+    <p><strong>Email:</strong> {{ order.email|default:order.user.email }}</p>
+    <p><strong>Тип продажу:</strong> {{ order.get_sale_type_display }}</p>
+    <p><strong>Спосіб доставки:</strong> {{ order.get_delivery_condition_display }}</p>
+    <p><strong>Адреса доставки:</strong> {{ order.delivery_address|default:"—" }}</p>
+    {% if order.comment %}
+    <p><strong>Коментар:</strong> {{ order.comment }}</p>
+    {% endif %}
+  </div>
+  
+  <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+    <h3 style="margin-top: 0; color: var(--color-primary);">Деталі замовлення</h3>
+    <p><strong>Дата створення:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+    <p><strong>Оновлено:</strong> {{ order.updated_at|date:"d.m.Y H:i" }}</p>
+    <p><strong>Сума:</strong> <span style="font-size: 1.5rem; color: var(--color-primary); font-weight: 700;">{{ order.total_amount }} грн</span></p>
+    
+    <form method="post" style="margin-top: 20px;">
+      {% csrf_token %}
+      <label style="display: block; margin-bottom: 10px; font-weight: 600;">Змінити статус:</label>
+      <select name="status" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px;">
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" 
+              style="width: 100%; padding: 10px 20px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+        💾 Зберегти статус
+      </button>
+    </form>
+  </div>
+</div>
+
+<div style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+  <h3 style="margin-top: 0; color: var(--color-primary);">Товари в замовленні</h3>
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background: #f8f9fa;">
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Товар</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Варіант</th>
+        <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Кількість</th>
+        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6;">Ціна</th>
+        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6;">Сума</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in order.items.all %}
+      <tr style="border-bottom: 1px solid #dee2e6;">
+        <td style="padding: 12px;">
+          <strong>{{ item.product.name }}</strong><br>
+          <small style="color: #6c757d;">Артикул: {{ item.product.sku }}</small>
+        </td>
+        <td style="padding: 12px;">
+          {% if item.variant %}
+            {{ item.variant.sku }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td style="padding: 12px; text-align: center; font-weight: 600;">{{ item.quantity }}</td>
+        <td style="padding: 12px; text-align: right;">{{ item.retail_price }} грн</td>
+        <td style="padding: 12px; text-align: right; font-weight: 600;">{{ item.line_total }} грн</td>
+      </tr>
+      {% endfor %}
+      <tr style="background: #f8f9fa; font-weight: 700;">
+        <td colspan="4" style="padding: 12px; text-align: right;">РАЗОМ:</td>
+        <td style="padding: 12px; text-align: right; font-size: 1.2rem; color: var(--color-primary);">{{ order.total_amount }} грн</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

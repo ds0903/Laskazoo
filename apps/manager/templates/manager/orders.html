@@ -1,0 +1,106 @@
+{% extends 'manager/base.html' %}
+
+{% block manager_content %}
+<div class="manager-header">
+  <h1>📦 Замовлення</h1>
+  <div style="display: flex; gap: 10px;">
+    <form method="get" style="display: flex; gap: 10px;">
+      <select name="status" style="padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="">Всі статуси</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="search" value="{{ search_query }}" 
+             placeholder="Пошук замовлень..." 
+             style="padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; width: 250px;">
+      <button type="submit" 
+              style="padding: 10px 20px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer;">
+        🔍 Шукати
+      </button>
+      {% if status_filter or search_query %}
+      <a href="{% url 'manager:orders' %}" 
+         style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; display: inline-block;">
+        Скинути
+      </a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div style="overflow-x: auto;">
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background: #f8f9fa;">
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">№ Замовлення</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Клієнт</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Телефон</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Email</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Дата</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Сума</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Статус</th>
+        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Дії</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in page_obj %}
+      <tr style="border-bottom: 1px solid #dee2e6;">
+        <td style="padding: 12px; font-weight: 600;">{{ order.order_number|default:order.id }}</td>
+        <td style="padding: 12px;">{{ order.full_name|default:order.user.get_full_name|default:order.user.username }}</td>
+        <td style="padding: 12px;">{{ order.phone|default:"—" }}</td>
+        <td style="padding: 12px;">{{ order.email|default:order.user.email }}</td>
+        <td style="padding: 12px;">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+        <td style="padding: 12px; font-weight: 600;">{{ order.total_amount }} грн</td>
+        <td style="padding: 12px;">
+          {% if order.status == 'new' %}
+            <span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">{{ order.get_status_display }}</span>
+          {% elif order.status == 'in_process' or order.status == 'processing' %}
+            <span style="background: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">{{ order.get_status_display }}</span>
+          {% elif order.status == 'completed' %}
+            <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">{{ order.get_status_display }}</span>
+          {% elif order.status == 'canceled' %}
+            <span style="background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">{{ order.get_status_display }}</span>
+          {% else %}
+            <span style="background: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">{{ order.get_status_display }}</span>
+          {% endif %}
+        </td>
+        <td style="padding: 12px;">
+          <a href="{% url 'manager:order_detail' order.id %}" 
+             style="padding: 6px 12px; background: var(--color-primary); color: white; text-decoration: none; border-radius: 4px; font-size: 0.85rem;">
+            Детальніше
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" style="padding: 30px; text-align: center; color: #6c757d;">
+          Замовлень не знайдено
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<div style="margin-top: 30px; display: flex; justify-content: center; gap: 10px;">
+  {% if page_obj.has_previous %}
+    <a href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+       style="padding: 8px 12px; background: #f8f9fa; color: #333; text-decoration: none; border-radius: 4px;">Перша</a>
+    <a href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+       style="padding: 8px 12px; background: #f8f9fa; color: #333; text-decoration: none; border-radius: 4px;">← Назад</a>
+  {% endif %}
+  
+  <span style="padding: 8px 12px; background: var(--color-primary); color: white; border-radius: 4px;">
+    Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}
+  </span>
+  
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+       style="padding: 8px 12px; background: #f8f9fa; color: #333; text-decoration: none; border-radius: 4px;">Вперед →</a>
+    <a href="?page={{ page_obj.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+       style="padding: 8px 12px; background: #f8f9fa; color: #333; text-decoration: none; border-radius: 4px;">Остання</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

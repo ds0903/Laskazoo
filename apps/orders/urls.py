@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import order_list, order_detail
 from . import views
+from . import payment_views
 
 app_name = 'orders'
 
@@ -21,4 +22,11 @@ urlpatterns = [
     path('item/<int:item_id>/remove/', views.cart_item_remove, name='item_remove'),
     path('item/<int:item_id>/set-qty/', views.item_set_qty, name='item_set_qty'),
     path('clear/', views.cart_clear, name='clear'),
+    
+    # Оплата
+    path('payment/<int:order_id>/', payment_views.payment_page, name='payment'),
+    path('payment/<int:order_id>/success/', payment_views.payment_success, name='payment_success'),
+    path('payment/<int:order_id>/failure/', payment_views.payment_failure, name='payment_failure'),
+    path('payment/callback/', payment_views.payment_callback, name='payment_callback'),
+    path('payment/<int:order_id>/google-pay/', payment_views.google_pay_init, name='google_pay_init'),
 ]

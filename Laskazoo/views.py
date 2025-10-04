@@ -192,7 +192,7 @@ PAGES = {
 
 <style>
 .contacts-info { max-width: 600px; margin: 0 auto; }
-.contact-section { background: #f8f9fa; padding: 2rem; border-radius: 10px; border-left: 4px solid var(--color-primary); }
+.contact-section { background: #f8f9fa; padding: 2rem; border-radius: 10px; }
 .contact-section h3 { color: var(--color-primary); margin-bottom: 1.5rem; font-size: 1.5rem; text-align: center; }
 .contact-item { margin-bottom: 1rem; padding: 0.75rem; background: #fff; border-radius: 6px; text-align: center; }
 .contact-item strong { color: #333; display: block; margin-bottom: 0.25rem; }
