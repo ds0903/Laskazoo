@@ -2,6 +2,16 @@ from .settings import *
 import os
 
 DEBUG = True
+from pathlib import Path
+
+# Якщо BASE_DIR не імпортовано, то:
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 SECRET_KEY = os.getenv('SECRET_KEY')

@@ -165,7 +165,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'uk'  # Українська мова за замовчуванням
 
-TIME_ZONE = 'Europe/Kiev'  # Київський часовий пояс
+TIME_ZONE = 'Europe/Kyiv'  # Київський часовий пояс
 
 USE_I18N = True  # Увімкнути інтернаціоналізацію
 
