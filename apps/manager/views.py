@@ -10,7 +10,8 @@ import json
 from apps.users.models import CustomUser
 from apps.orders.models import Order, OrderItem
 from apps.ts_ftps.models import TSGoods
-from apps.products.models import Product, Category, Main_Categories, Brand
+from apps.products.models import Product, Category, Main_Categories, Brand, PopularProduct, PopularCategory
+from apps.manager.models import Banner
 
 
 def is_manager(user):
@@ -296,3 +297,350 @@ def get_categories_and_brands(request):
         'main_categories': main_categories,
         'brands': brands,
     })
+
+
+# ============== БАНЕРИ ==============
+
+@login_required
+def manager_banners(request):
+    """Керування банерами"""
+    if not is_manager(request.user):
+        messages.error(request, 'У вас немає доступу до кабінету менеджера')
+        return redirect('home')
+    
+    banners = Banner.objects.all().order_by('position', '-created_at')
+    
+    context = {
+        'banners': banners,
+    }
+    
+    return render(request, 'manager/banners.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def banner_add(request):
+    """Додавання нового банера"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        title = request.POST.get('title', '')
+        link = request.POST.get('link', '')
+        position = int(request.POST.get('position', 0))
+        image = request.FILES.get('image')
+        
+        if not image:
+            return JsonResponse({'error': 'Зображення обов\'язкове'}, status=400)
+        
+        banner = Banner.objects.create(
+            title=title,
+            link=link,
+            position=position,
+            image=image,
+            is_active=True
+        )
+        
+        messages.success(request, f'Банер "{banner.title or banner.id}" успішно додано!')
+        return JsonResponse({'success': True, 'banner_id': banner.id})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def banner_update(request, banner_id):
+    """Оновлення банера"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        banner = get_object_or_404(Banner, id=banner_id)
+        
+        banner.title = request.POST.get('title', banner.title)
+        banner.link = request.POST.get('link', banner.link)
+        banner.position = int(request.POST.get('position', banner.position))
+        
+        if 'image' in request.FILES:
+            banner.image = request.FILES['image']
+        
+        if 'is_active' in request.POST:
+            banner.is_active = request.POST.get('is_active') == 'true'
+        
+        banner.save()
+        
+        messages.success(request, f'Банер оновлено!')
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def banner_delete(request, banner_id):
+    """Видалення банера"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        banner = get_object_or_404(Banner, id=banner_id)
+        banner.delete()
+        
+        messages.success(request, 'Банер видалено!')
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============== ТОП ТОВАРИ ==============
+
+@login_required
+def manager_popular_products(request):
+    """Керування популярними товарами"""
+    if not is_manager(request.user):
+        messages.error(request, 'У вас немає доступу до кабінету менеджера')
+        return redirect('home')
+    
+    popular_products = PopularProduct.objects.select_related('product').order_by('position', '-created_at')
+    all_products = Product.objects.filter(is_active=True).order_by('name')[:100]
+    
+    context = {
+        'popular_products': popular_products,
+        'all_products': all_products,
+    }
+    
+    return render(request, 'manager/popular_products.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def popular_product_add(request):
+    """Додавання товару в популярні"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        product_id = request.POST.get('product_id')
+        position = int(request.POST.get('position', 0))
+        
+        product = get_object_or_404(Product, id=product_id)
+        
+        if PopularProduct.objects.filter(product=product).exists():
+            return JsonResponse({'error': 'Цей товар вже в популярних'}, status=400)
+        
+        popular = PopularProduct.objects.create(
+            product=product,
+            position=position,
+            is_active=True
+        )
+        
+        messages.success(request, f'Товар "{product.name}" додано в популярні!')
+        return JsonResponse({'success': True, 'id': popular.id})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def popular_product_update(request, popular_id):
+    """Оновлення популярного товару"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        popular = get_object_or_404(PopularProduct, id=popular_id)
+        
+        if 'is_active' in request.POST:
+            popular.is_active = request.POST.get('is_active') == 'true'
+        
+        popular.save()
+        
+        messages.success(request, 'Популярний товар оновлено!')
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def popular_product_delete(request, popular_id):
+    """Видалення з популярних товарів"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        popular = get_object_or_404(PopularProduct, id=popular_id)
+        popular.delete()
+        
+        messages.success(request, 'Товар видалено з популярних!')
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============== ТОП КАТЕГОРІЇ ==============
+
+@login_required
+def manager_popular_categories(request):
+    """Керування популярними категоріями"""
+    if not is_manager(request.user):
+        messages.error(request, 'У вас немає доступу до кабінету менеджера')
+        return redirect('home')
+    
+    popular_categories = PopularCategory.objects.select_related('category__main_category').order_by('position', '-created_at')
+    all_categories = Category.objects.filter(is_active=True).select_related('main_category').order_by('name')
+    
+    context = {
+        'popular_categories': popular_categories,
+        'all_categories': all_categories,
+    }
+    
+    return render(request, 'manager/popular_categories.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def popular_category_add(request):
+    """Додавання категорії в популярні"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        category_id = request.POST.get('category_id')
+        position = int(request.POST.get('position', 0))
+        
+        category = get_object_or_404(Category, id=category_id)
+        
+        if PopularCategory.objects.filter(category=category).exists():
+            return JsonResponse({'error': 'Ця категорія вже в популярних'}, status=400)
+        
+        popular = PopularCategory.objects.create(
+            category=category,
+            position=position,
+            is_active=True
+        )
+        
+        messages.success(request, f'Категорію "{category.name}" додано в популярні!')
+        return JsonResponse({'success': True, 'id': popular.id})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def popular_category_update(request, popular_id):
+    """Оновлення популярної категорії"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        popular = get_object_or_404(PopularCategory, id=popular_id)
+        
+        popular.position = int(request.POST.get('position', popular.position))
+        
+        if 'is_active' in request.POST:
+            popular.is_active = request.POST.get('is_active') == 'true'
+        
+        popular.save()
+        
+        messages.success(request, 'Популярну категорію оновлено!')
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def popular_category_delete(request, popular_id):
+    """Видалення з популярних категорій"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        popular = get_object_or_404(PopularCategory, id=popular_id)
+        popular.delete()
+        
+        messages.success(request, 'Категорію видалено з популярних!')
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============== API ДЛЯ ЗМІНИ ПОРЯДКУ ==============
+
+@login_required
+@require_http_methods(["POST"])
+def reorder_banners(request):
+    """Зміна порядку банерів"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        order = data.get('order', [])
+        
+        for item in order:
+            banner_id = item.get('id')
+            position = item.get('position')
+            
+            Banner.objects.filter(id=banner_id).update(position=position)
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def reorder_popular_products(request):
+    """Зміна порядку популярних товарів"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        order = data.get('order', [])
+        
+        for item in order:
+            popular_id = item.get('id')
+            position = item.get('position')
+            
+            PopularProduct.objects.filter(id=popular_id).update(position=position)
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def reorder_popular_categories(request):
+    """Зміна порядку популярних категорій"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        order = data.get('order', [])
+        
+        for item in order:
+            popular_id = item.get('id')
+            position = item.get('position')
+            
+            PopularCategory.objects.filter(id=popular_id).update(position=position)
+        
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
