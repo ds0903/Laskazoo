@@ -8,7 +8,7 @@
 <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
   <strong>💡 Інструкція:</strong>
   <ol style="margin: 10px 0 0 20px; padding: 0;">
-    <li>Знайдіть товар за штрих-кодом, артикулом або назвою</li>
+    <li>Знайдіть товар за штрих-кодом</li>
     <li>Виберіть потрібні товари зі списку</li>
     <li>Заповніть атрибути: категорію, бренд</li>
     <li>Натисніть "Опублікувати на сайт"</li>
@@ -18,17 +18,23 @@
 <div style="margin-bottom: 30px;">
   <div style="display: flex; gap: 10px; margin-bottom: 20px;">
     <input type="text" id="search-input" 
-           placeholder="Введіть штрих-код, артикул або назву товару..." 
+           placeholder="Введіть штрих-код товару..." 
            style="flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
     <button onclick="searchGoods()" 
             style="padding: 12px 30px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
       🔍 Шукати
     </button>
+    <button onclick="syncTSGoods()" 
+            style="padding: 12px 30px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+      🔄 Оновити таблицю товарів
+    </button>
   </div>
   
-  <div id="search-results" style="display: none; background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
-    <h3 style="margin-top: 0; color: var(--color-primary);">Результати пошуку</h3>
+  <div id="search-results" style="background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px;">
+    <h3 style="margin-top: 0; color: var(--color-primary);">Товари з ТоргСофт (не додані на сайт)</h3>
+    <div id="results-stats" style="margin-bottom: 15px; color: #6c757d; font-size: 0.9rem;"></div>
     <div id="results-list"></div>
+    <div id="pagination-controls" style="margin-top: 20px; text-align: center;"></div>
   </div>
 </div>
 
@@ -48,6 +54,10 @@ let searchResults = [];
 let selectedGoods = [];
 let categoriesData = [];
 let brandsData = [];
+let currentPage = 1;
+let totalPages = 1;
+let totalCount = 0;
+let currentSearchQuery = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -62,45 +72,83 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('search-input').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') searchGoods();
   });
+  
+  // Автоматично завантажуємо товари при відкритті сторінки
+  loadGoods();
 });
 
-async function searchGoods() {
-  const query = document.getElementById('search-input').value.trim();
-  
-  console.log('Пошук:', query);
-  
-  if (query.length < 2) {
-    alert('Введіть мінімум 2 символи для пошуку');
-    return;
-  }
-  
+async function loadGoods(page = 1) {
   try {
-    const url = `{% url 'manager:search_ts_goods' %}?q=${encodeURIComponent(query)}`;
-    console.log('Запит до:', url);
-    
+    const url = `{% url 'manager:search_ts_goods' %}?q=${encodeURIComponent(currentSearchQuery)}&page=${page}`;
     const response = await fetch(url);
-    console.log('Статус відповіді:', response.status);
-    
     const data = await response.json();
-    console.log('Отримані дані:', data);
     
     searchResults = data.results || [];
-    console.log('Знайдено товарів:', searchResults.length);
+    currentPage = data.current_page || 1;
+    totalPages = data.total_pages || 1;
+    totalCount = data.total_count || 0;
     
     displaySearchResults();
   } catch (error) {
-    console.error('Помилка пошуку:', error);
-    alert('Помилка при пошуку товарів: ' + error.message);
+    console.error('Помилка завантаження товарів:', error);
+    alert('Помилка при завантаженні товарів: ' + error.message);
+  }
+}
+
+async function searchGoods() {
+  const query = document.getElementById('search-input').value.trim();
+  currentSearchQuery = query;
+  currentPage = 1;
+  loadGoods(1);
+}
+
+async function syncTSGoods() {
+  if (!confirm('Оновити таблицю товарів з сервера? Це може зайняти деякий час.')) {
+    return;
+  }
+  
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '⏳ Синхронізація...';
+  
+  try {
+    const response = await fetch("{% url 'manager:sync_ts_goods' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(data.message);
+      // Перезавантажуємо товари після синхронізації
+      loadGoods(currentPage);
+    } else {
+      alert('Помилка: ' + (data.error || 'Невідома помилка'));
+    }
+  } catch (error) {
+    console.error('Помилка синхронізації:', error);
+    alert('Помилка при синхронізації: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Оновити таблицю товарів';
   }
 }
 
 function displaySearchResults() {
   const container = document.getElementById('search-results');
+  const stats = document.getElementById('results-stats');
   const list = document.getElementById('results-list');
+  const pagination = document.getElementById('pagination-controls');
+  
+  // Статистика
+  stats.innerHTML = `Знайдено <strong>${totalCount}</strong> товар(ів), які ще не додані на сайт. Сторінка ${currentPage} з ${totalPages}`;
   
   if (searchResults.length === 0) {
-    list.innerHTML = '<p style="color: #6c757d; text-align: center; padding: 20px;">Товарів не знайдено</p>';
-    container.style.display = 'block';
+    list.innerHTML = '<p style="color: #6c757d; text-align: center; padding: 20px;">Всі товари з ТоргСофт вже додані на сайт!</p>';
+    pagination.innerHTML = '';
     return;
   }
   
@@ -128,6 +176,38 @@ function displaySearchResults() {
   
   html += '</tbody></table>';
   list.innerHTML = html;
+  
+  // Пагінація
+  let paginationHtml = '';
+  
+  if (totalPages > 1) {
+    paginationHtml += '<div style="display: flex; gap: 5px; justify-content: center; align-items: center;">';
+    
+    // Попередня
+    if (currentPage > 1) {
+      paginationHtml += `<button onclick="loadGoods(${currentPage - 1})" style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">← Назад</button>`;
+    }
+    
+    // Сторінки
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === currentPage) {
+        paginationHtml += `<button style="padding: 8px 12px; border: 1px solid var(--color-primary); background: var(--color-primary); color: white; border-radius: 4px; font-weight: 600;">${i}</button>`;
+      } else if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        paginationHtml += `<button onclick="loadGoods(${i})" style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">${i}</button>`;
+      } else if (i === currentPage - 3 || i === currentPage + 3) {
+        paginationHtml += `<span style="padding: 8px 4px;">...</span>`;
+      }
+    }
+    
+    // Наступна
+    if (currentPage < totalPages) {
+      paginationHtml += `<button onclick="loadGoods(${currentPage + 1})" style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">Вперед →</button>`;
+    }
+    
+    paginationHtml += '</div>';
+  }
+  
+  pagination.innerHTML = paginationHtml;
   container.style.display = 'block';
 }
 
@@ -169,7 +249,7 @@ function displaySelectedGoods() {
     html += `<div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: start;">`;
     html += `<div>`;
     html += `<strong style="display: block; margin-bottom: 5px;">${good.name}</strong>`;
-    html += `<small style="color: #6c757d;">Артикул: ${good.articul || '—'} | Ціна: ${good.price.toFixed(2)} грн</small>`;
+    html += `<small style="color: #6c757d;">Артикул: ${good.articul || '—'} | Штрих-код: ${good.barcode || '—'} | Ціна: ${good.price.toFixed(2)} грн</small>`;
     html += `</div>`;
     
     html += `<div>`;
@@ -287,8 +367,8 @@ async function publishProducts() {
       alert(`Успішно створено ${data.created} товар(ів)!${data.errors.length > 0 ? '\n\nПомилки:\n' + data.errors.join('\n') : ''}`);
       selectedGoods = [];
       displaySelectedGoods();
-      document.getElementById('search-input').value = '';
-      document.getElementById('search-results').style.display = 'none';
+      // Перезавантажуємо список товарів
+      loadGoods(currentPage);
     } else {
       alert('Помилка: ' + (data.error || 'Невідома помилка'));
     }

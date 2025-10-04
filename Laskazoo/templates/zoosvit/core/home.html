@@ -1,7 +1,11 @@
 {% extends 'zoosvit/core/base.html' %}
 {% load static %}
 
-{% block title %}Ласка – Все для ваших улюбленців{% endblock %}
+{% block title %}Ласка - Інтернет-магазин товарів для котів та собак | Корм, ласощі, іграшки{% endblock %}
+
+{% block description %}Інтернет-магазин Ласка: широкий вибір кормів для котів і собак, ласощів, іграшок та аксесуарів. ✓ Якісна продукція ✓ Вигідні ціни ✓ Доставка по всій Україні{% endblock %}
+
+{% block keywords %}корм для котів київ, корм для собак київ, зоомагазин київ, ласощі для тварин, іграшки для котів, товари для собак, зоотовари онлайн, зоомагазин інтернет{% endblock %}
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
@@ -68,18 +72,30 @@
 {% block content %}
 
 <section class="hero-carousel">
-<div class="carousel-slide"
-     style="background-image: url({% static 'zoosvit/img/slider/slide-1.png' %});">
-</div>
-<div class="carousel-slide"
-     style="background-image: url({% static 'zoosvit/img/slider/slide-2.png' %});">
-</div>
-<div class="carousel-slide"
-     style="background-image: url({% static 'zoosvit/img/slider/slide-3.png' %});">
-</div>
-<div class="carousel-slide"
-     style="background-image: url({% static 'zoosvit/img/slider/slide-4.png' %});">
-</div>
+{% for banner in banners %}
+  <div class="carousel-slide"
+       style="background-image: url({{ banner.image.url }});"{% if banner.link %} data-link="{{ banner.link }}"{% endif %}>
+    {% if banner.title %}
+      <div class="carousel-caption">
+        <h2>{{ banner.title }}</h2>
+      </div>
+    {% endif %}
+  </div>
+{% empty %}
+  {# Якщо банерів немає в базі, показуємо статичні #}
+  <div class="carousel-slide"
+       style="background-image: url({% static 'zoosvit/img/slider/slide-1.png' %});">
+  </div>
+  <div class="carousel-slide"
+       style="background-image: url({% static 'zoosvit/img/slider/slide-2.png' %});">
+  </div>
+  <div class="carousel-slide"
+       style="background-image: url({% static 'zoosvit/img/slider/slide-3.png' %});">
+  </div>
+  <div class="carousel-slide"
+       style="background-image: url({% static 'zoosvit/img/slider/slide-4.png' %});">
+  </div>
+{% endfor %}
 
 <div class="carousel-nav"></div>
 </section>

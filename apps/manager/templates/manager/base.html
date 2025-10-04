@@ -103,14 +103,17 @@
         <li><a href="{% url 'manager:import_products' %}" {% if request.resolver_match.url_name == 'import_products' %}class="active"{% endif %}>
           ➕ Додати товари
         </a></li>
+        <li><a href="{% url 'manager:products' %}" {% if request.resolver_match.url_name == 'products' %}class="active"{% endif %}>
+          📦 Перегляд товарів
+        </a></li>
         <li><a href="{% url 'manager:banners' %}" {% if request.resolver_match.url_name == 'banners' %}class="active"{% endif %}>
           🖼️ Банери
         </a></li>
         <li><a href="{% url 'manager:popular_products' %}" {% if request.resolver_match.url_name == 'popular_products' %}class="active"{% endif %}>
-          ⭐ ТОП товари
+          ⭐ Хіти продаж
         </a></li>
         <li><a href="{% url 'manager:popular_categories' %}" {% if request.resolver_match.url_name == 'popular_categories' %}class="active"{% endif %}>
-          🏆 ТОП категорії
+          🏆 Популярні категорії
         </a></li>
       </ul>
     </aside>

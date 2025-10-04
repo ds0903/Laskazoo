@@ -4,7 +4,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>{% block title %}Ласка{% endblock %}</title>
+  
+  <!-- Title -->
+  <title>{% block title %}Ласка - Все для ваших улюбленців{% endblock %}</title>
+  
+  <!-- Meta Description -->
+  <meta name="description" content="{% block description %}Інтернет-магазин товарів для котів та собак. Корм, ласощі, іграшки, амуніція та аксесуари для домашніх улюбленців. Швидка доставка по Україні.{% endblock %}">
+  
+  <!-- Meta Keywords -->
+  <meta name="keywords" content="{% block keywords %}корм для котів, корм для собак, ласощі для тварин, товари для котів, товари для собак, зоомагазин, зоотовари{% endblock %}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="{% block og_title %}Ласка - Все для ваших улюбленців{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Інтернет-магазин товарів для котів та собак. Широкий асортимент кормів, ласощів, іграшок та аксесуарів.{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{% static 'zoosvit/images/og-image.jpg' %}{% endblock %}">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+  <meta property="twitter:title" content="{% block twitter_title %}Ласка - Все для ваших улюбленців{% endblock %}">
+  <meta property="twitter:description" content="{% block twitter_description %}Інтернет-магазин товарів для котів та собак. Швидка доставка по Україні.{% endblock %}">
+  <meta property="twitter:image" content="{% block twitter_image %}{% static 'zoosvit/images/og-image.jpg' %}{% endblock %}">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}">
 
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/products/catalog.css' %}">

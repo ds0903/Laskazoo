@@ -70,6 +70,17 @@
       clearTimeout(t); t=setTimeout(()=>show((i+1)%slides.length), D);
     }
     show(0);
+    
+    // Клік по банеру з посиланням
+    slides.forEach(slide => {
+      const link = slide.dataset.link;
+      if (link) {
+        slide.style.cursor = 'pointer';
+        slide.addEventListener('click', () => {
+          window.location.href = link;
+        });
+      }
+    });
   }
 
   /* ---------- category slider ---------- */

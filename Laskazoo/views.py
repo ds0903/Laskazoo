@@ -1,5 +1,6 @@
 from apps.products.models import PopularProduct, Product_Variant, PopularCategory
 from apps.favourites.models import Favourite
+from apps.manager.models import Banner
 from django.shortcuts import render, redirect
 
 def stores_map(request):
@@ -67,6 +68,9 @@ def stores_map(request):
     return render(request, 'zoosvit/core/map.html', {"stores": stores})
 
 def home(request):
+    # Банери для карусел головної сторінки
+    banners = Banner.objects.filter(is_active=True).order_by('position', '-created_at')[:4]
+    
     populars = (
        PopularProduct.objects
        .select_related('product', 'product__brand', 'product__category')
@@ -109,6 +113,7 @@ def home(request):
         fav_product_ids = set(map(int, request.session.get('fav_product_ids', [])))
 
     return render(request, 'zoosvit/core/home.html', {
+        'banners': banners,
         'populars': populars,
         'fav_variant_ids': list(fav_variant_ids),
         'fav_product_ids': list(fav_product_ids),

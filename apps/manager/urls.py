@@ -9,6 +9,7 @@ urlpatterns = [
     path('orders/', views.manager_orders, name='orders'),
     path('orders/<int:order_id>/', views.manager_order_detail, name='order_detail'),
     path('import/', views.manager_import_products, name='import_products'),
+    path('products/', views.manager_products, name='products'),
     
     # Банери
     path('banners/', views.manager_banners, name='banners'),
@@ -32,6 +33,7 @@ urlpatterns = [
     path('api/search-ts-goods/', views.search_ts_goods, name='search_ts_goods'),
     path('api/create-products/', views.create_products_from_ts, name='create_products'),
     path('api/categories-brands/', views.get_categories_and_brands, name='categories_brands'),
+    path('api/sync-ts-goods/', views.sync_ts_goods, name='sync_ts_goods'),
     path('api/reorder-banners/', views.reorder_banners, name='reorder_banners'),
     path('api/reorder-popular-products/', views.reorder_popular_products, name='reorder_popular_products'),
     path('api/reorder-popular-categories/', views.reorder_popular_categories, name='reorder_popular_categories'),

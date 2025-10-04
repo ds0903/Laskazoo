@@ -1,0 +1,258 @@
+{% extends 'manager/base.html' %}
+
+{% block manager_content %}
+<div class="manager-header">
+  <h1>📦 Перегляд товарів</h1>
+</div>
+
+<!-- Статистика -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">Всього товарів</div>
+    <div style="font-size: 2rem; font-weight: 700;">{{ total_products }}</div>
+  </div>
+  <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">Активних</div>
+    <div style="font-size: 2rem; font-weight: 700;">{{ active_products }}</div>
+  </div>
+  <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">В наявності</div>
+    <div style="font-size: 2rem; font-weight: 700;">{{ in_stock_products }}</div>
+  </div>
+</div>
+
+<!-- Фільтри -->
+<form method="get" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+    
+    <!-- Пошук -->
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">🔍 Пошук</label>
+      <input type="text" name="search" value="{{ search_query }}" 
+             placeholder="Назва, артикул, штрихкод..." 
+             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+    </div>
+    
+    <!-- Головна категорія -->
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">🐾 Головна категорія</label>
+      <select name="main_category" onchange="this.form.submit()" 
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="">Всі</option>
+        {% for mc in main_categories %}
+          <option value="{{ mc.id }}" {% if main_category_id == mc.id|stringformat:"s" %}selected{% endif %}>
+            {{ mc.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <!-- Категорія -->
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">📁 Категорія</label>
+      <select name="category" onchange="this.form.submit()" 
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="">Всі</option>
+        {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %}selected{% endif %}>
+            {{ cat.main_category.name }} → {{ cat.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <!-- Бренд -->
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">🏷️ Бренд</label>
+      <select name="brand" onchange="this.form.submit()" 
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="">Всі</option>
+        {% for brand in brands %}
+          <option value="{{ brand.id }}" {% if brand_id == brand.id|stringformat:"s" %}selected{% endif %}>
+            {{ brand.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <!-- Статус -->
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">🔘 Статус</label>
+      <select name="is_active" onchange="this.form.submit()" 
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="">Всі</option>
+        <option value="true" {% if is_active == 'true' %}selected{% endif %}>Активні</option>
+        <option value="false" {% if is_active == 'false' %}selected{% endif %}>Неактивні</option>
+      </select>
+    </div>
+    
+    <!-- Наявність -->
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">📊 Наявність</label>
+      <select name="in_stock" onchange="this.form.submit()" 
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="">Всі</option>
+        <option value="yes" {% if in_stock == 'yes' %}selected{% endif %}>В наявності</option>
+        <option value="no" {% if in_stock == 'no' %}selected{% endif %}>Відсутні</option>
+      </select>
+    </div>
+    
+    <!-- Сортування -->
+    <div>
+      <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">↕️ Сортування</label>
+      <select name="sort" onchange="this.form.submit()" 
+              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+        <option value="-id" {% if sort_by == '-id' %}selected{% endif %}>Новіші спочатку</option>
+        <option value="id" {% if sort_by == 'id' %}selected{% endif %}>Старіші спочатку</option>
+        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Назва (А-Я)</option>
+        <option value="-name" {% if sort_by == '-name' %}selected{% endif %}>Назва (Я-А)</option>
+        <option value="retail_price" {% if sort_by == 'retail_price' %}selected{% endif %}>Ціна (зростання)</option>
+        <option value="-retail_price" {% if sort_by == '-retail_price' %}selected{% endif %}>Ціна (спадання)</option>
+        <option value="-warehouse_quantity" {% if sort_by == '-warehouse_quantity' %}selected{% endif %}>Кількість (більше)</option>
+        <option value="warehouse_quantity" {% if sort_by == 'warehouse_quantity' %}selected{% endif %}>Кількість (менше)</option>
+      </select>
+    </div>
+  </div>
+  
+  <div style="display: flex; gap: 10px;">
+    <button type="submit" style="padding: 10px 25px; background: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+      🔍 Застосувати
+    </button>
+    <a href="{% url 'manager:products' %}" style="padding: 10px 25px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block;">
+      🔄 Скинути
+    </a>
+  </div>
+</form>
+
+<!-- Таблиця товарів -->
+{% if page_obj %}
+<div style="background: white; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+  <div style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+          <th style="padding: 12px; text-align: left; font-weight: 600;">Фото</th>
+          <th style="padding: 12px; text-align: left; font-weight: 600;">Назва</th>
+          <th style="padding: 12px; text-align: left; font-weight: 600;">Артикул</th>
+          <th style="padding: 12px; text-align: left; font-weight: 600;">Категорія</th>
+          <th style="padding: 12px; text-align: left; font-weight: 600;">Бренд</th>
+          <th style="padding: 12px; text-align: right; font-weight: 600;">Ціна</th>
+          <th style="padding: 12px; text-align: center; font-weight: 600;">Залишок</th>
+          <th style="padding: 12px; text-align: center; font-weight: 600;">Статус</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in page_obj %}
+        <tr style="border-bottom: 1px solid #dee2e6; transition: all 0.2s; cursor: pointer;" 
+            onmouseover="this.style.background='#f8f9fa'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" 
+            onmouseout="this.style.background='white'; this.style.boxShadow='none'"
+            onclick="window.open('{{ product.get_absolute_url }}', '_blank')">
+          <td style="padding: 12px;">
+            {% if product.image %}
+              <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                   style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+            {% else %}
+              <div style="width: 50px; height: 50px; background: #e9ecef; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                📦
+              </div>
+            {% endif %}
+          </td>
+          <td style="padding: 12px;">
+            <strong>{{ product.name|truncatewords:8 }}</strong>
+            {% if product.barcode %}
+              <br><small style="color: #6c757d;">{{ product.barcode }}</small>
+            {% endif %}
+          </td>
+          <td style="padding: 12px;">
+            <span style="background: #e7f3ff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem;">
+              {{ product.sku|default:"—" }}
+            </span>
+          </td>
+          <td style="padding: 12px;">
+            <small style="color: #6c757d;">{{ product.category.main_category.name }}</small><br>
+            <strong style="font-size: 0.9rem;">{{ product.category.name }}</strong>
+          </td>
+          <td style="padding: 12px;">{{ product.brand.name }}</td>
+          <td style="padding: 12px; text-align: right;">
+            <strong style="color: var(--color-primary); font-size: 1.1rem;">{{ product.retail_price }} ₴</strong>
+            {% if product.retail_price_with_discount != product.retail_price %}
+              <br><small style="color: #28a745;">{{ product.retail_price_with_discount }} ₴</small>
+            {% endif %}
+          </td>
+          <td style="padding: 12px; text-align: center;">
+            {% if product.warehouse_quantity > 0 %}
+              <span style="background: #d4edda; color: #155724; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">
+                {{ product.warehouse_quantity }}
+              </span>
+            {% else %}
+              <span style="background: #f8d7da; color: #721c24; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">
+                Немає
+              </span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px; text-align: center;">
+            {% if product.is_active %}
+              <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem;">
+                ✓ Активний
+              </span>
+            {% else %}
+              <span style="background: #dc3545; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem;">
+                ✗ Неактивний
+              </span>
+            {% endif %}
+          </td>
+
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" style="padding: 40px; text-align: center; color: #6c757d;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">📦</div>
+            <p style="margin: 0; font-size: 1.1rem;">Товарів не знайдено</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Пагінація -->
+{% if page_obj.paginator.num_pages > 1 %}
+<div style="margin-top: 25px; display: flex; justify-content: center; align-items: center; gap: 8px;">
+  {% if page_obj.has_previous %}
+    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if main_category_id %}&main_category={{ main_category_id }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if in_stock %}&in_stock={{ in_stock }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+       style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; color: #333; text-decoration: none; border-radius: 6px; transition: all 0.2s;">
+      « Перша
+    </a>
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if main_category_id %}&main_category={{ main_category_id }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if in_stock %}&in_stock={{ in_stock }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+       style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; color: #333; text-decoration: none; border-radius: 6px; transition: all 0.2s;">
+      ‹ Назад
+    </a>
+  {% endif %}
+  
+  <span style="padding: 8px 16px; background: var(--color-primary); color: white; border-radius: 6px; font-weight: 600;">
+    Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}
+  </span>
+  
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if main_category_id %}&main_category={{ main_category_id }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if in_stock %}&in_stock={{ in_stock }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+       style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; color: #333; text-decoration: none; border-radius: 6px; transition: all 0.2s;">
+      Вперед ›
+    </a>
+    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if main_category_id %}&main_category={{ main_category_id }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if is_active %}&is_active={{ is_active }}{% endif %}{% if in_stock %}&in_stock={{ in_stock }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" 
+       style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; color: #333; text-decoration: none; border-radius: 6px; transition: all 0.2s;">
+      Остання »
+    </a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div style="padding: 60px 20px; text-align: center; background: white; border-radius: 8px; border: 1px solid #dee2e6;">
+  <div style="font-size: 4rem; margin-bottom: 15px;">📦</div>
+  <h3 style="color: #6c757d; margin: 0 0 10px 0;">Товарів не знайдено</h3>
+  <p style="color: #adb5bd; margin: 0;">Спробуйте змінити параметри фільтрації</p>
+</div>
+{% endif %}
+
+{% endblock %}
