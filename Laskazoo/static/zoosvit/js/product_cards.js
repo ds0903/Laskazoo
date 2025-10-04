@@ -1,4 +1,4 @@
-/* static/zoosvit/js/product_cards.js - ОПТИМІЗОВАНА ВЕРСІЯ З ПОКРАЩЕННЯМИ */
+/* static/zoosvit/js/product_cards.js - ВИПРАВЛЕНА ВЕРСІЯ */
 (function (w, d) {
   'use strict';
 
@@ -6,16 +6,16 @@
   const EXTRA_BUFFER = 30;
   const MEASURE_CLASS = 'is-measuring';
   const NS = 'ProductCards';
-  const BATCH_SIZE = 5; // Збільшено з 3 до 5 для швидшої обробки
-  const BATCH_DELAY = 8; // Зменшено з 10 до 8мс
+  const BATCH_SIZE = 5;
+  const BATCH_DELAY = 8;
 
   // ===== Кеш системи
   const heightCache = new Map();
-  const cardObserver = new WeakMap();
+  const cardMeasured = new WeakMap(); // Щоб не рахувати двічі
   let isPreloading = false;
   let preloadComplete = false;
 
-  // ===== Оптимізовані допоміжні функції
+  // ===== Допоміжні функції
   const readLimits = (() => {
     let cachedLimits = null;
     return () => {
@@ -38,7 +38,7 @@
     return card.dataset.cardId;
   };
 
-  // Оптимізована ін'єкція стилю (тільки один раз)
+  // Ін'єкція стилю (тільки один раз)
   const injectMeasureCSS = (() => {
     let injected = false;
     return () => {
@@ -60,17 +60,19 @@
     };
   })();
 
-  // ===== ОПТИМІЗОВАНА ФУНКЦІЯ ВИМІРУ
+  // ===== ВИПРАВЛЕНА ФУНКЦІЯ ВИМІРУ (застосовує одразу!)
   function measureCardOptimized(card) {
     if (!card) return 0;
 
     const cardId = getCardId(card);
 
-    // Швидка перевірка кешу
-    if (heightCache.has(cardId)) {
+    // Якщо вже вимірювали - повертаємо з кешу
+    if (cardMeasured.has(card)) {
       const h = heightCache.get(cardId);
-      card.style.setProperty('--hover-height', h + 'px');
-      return h;
+      if (h) {
+        card.style.setProperty('--hover-height', h + 'px');
+        return h;
+      }
     }
 
     // Перевірка data-атрибуту
@@ -79,6 +81,7 @@
     if (ds) {
       const h = clampH(ds, MIN, MAX);
       heightCache.set(cardId, h);
+      cardMeasured.set(card, true);
       card.style.setProperty('--hover-height', h + 'px');
       return h;
     }
@@ -86,7 +89,7 @@
     const back = card.querySelector('.card-back');
     if (!back) return 0;
 
-    // Оптимізація зображень (batch processing)
+    // Оптимізація зображень
     const images = back.querySelectorAll('img');
     for (let i = 0; i < images.length; i++) {
       const img = images[i];
@@ -98,33 +101,42 @@
       img.removeAttribute?.('srcset');
     }
 
-    // Вимір з мінімальним DOM manipulation
-    card.classList.add(MEASURE_CLASS);
-    
-    let desired = back.scrollHeight;
-    const last = back.lastElementChild;
-    if (last) {
-      desired += parseFloat(getComputedStyle(last).marginBottom) || 0;
-    }
-    desired = Math.ceil(desired + EXTRA_BUFFER);
+    // КРИТИЧНО: додаємо невеликий timeout щоб зображення встигли завантажитись
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Подвійний RAF для впевненості що DOM оновився
+        
+        card.classList.add(MEASURE_CLASS);
+        
+        let desired = back.scrollHeight;
+        const last = back.lastElementChild;
+        if (last) {
+          desired += parseFloat(getComputedStyle(last).marginBottom) || 0;
+        }
+        desired = Math.ceil(desired + EXTRA_BUFFER);
 
-    card.classList.remove(MEASURE_CLASS);
+        card.classList.remove(MEASURE_CLASS);
 
-    const h = clampH(desired, MIN, MAX);
+        const h = clampH(desired, MIN, MAX);
 
-    // Дебаг (тільки якщо увімкнено)
-    if (w.__CARD_DEBUG) {
-      if (h < desired) card.dataset.clamped = '1';
-      else card.removeAttribute('data-clamped');
-    }
+        // Дебаг
+        if (w.__CARD_DEBUG) {
+          console.log(`[MEASURE] Card ${cardId}: desired=${desired}, clamped=${h}`);
+          if (h < desired) card.dataset.clamped = '1';
+          else card.removeAttribute('data-clamped');
+        }
 
-    // Зберігаємо в кеш та DOM
-    heightCache.set(cardId, h);
-    card.dataset.hoverH = String(h);
-    card.style.setProperty('--hover-height', h + 'px');
-    cardObserver.set(card, true);
+        // Зберігаємо в кеш та DOM
+        heightCache.set(cardId, h);
+        cardMeasured.set(card, true);
+        card.dataset.hoverH = String(h);
+        
+        // КРИТИЧНО: застосовуємо CSS змінну ОДРАЗУ
+        card.style.setProperty('--hover-height', h + 'px');
+      });
+    });
 
-    return h;
+    return 0; // Поки виміряємо
   }
 
   // ===== ПОКРАЩЕНИЙ ПРЕДВАРИТЕЛЬНИЙ РОЗРАХУНОК
@@ -138,7 +150,7 @@
     let processed = 0;
     
     // Фільтруємо вже оброблені картки
-    const cardsToProcess = allCards.filter(card => !cardObserver.has(card));
+    const cardsToProcess = allCards.filter(card => !cardMeasured.has(card));
     
     if (cardsToProcess.length === 0) {
       isPreloading = false;
@@ -155,21 +167,20 @@
         preloadComplete = true;
         console.log(`[PRELOAD] Complete! Processed ${processed}/${cardsToProcess.length} new cards`);
         
-        // Виклик користувацького callback якщо він є
+        // Виклик користувацького callback
         if (typeof w.onCardPreloadComplete === 'function') {
           w.onCardPreloadComplete();
         }
         return;
       }
       
-      // Batch обробка з requestAnimationFrame для кращої продуктивності
+      // Batch обробка з requestAnimationFrame
       requestAnimationFrame(() => {
         batch.forEach(card => {
           measureCardOptimized(card);
           processed++;
         });
         
-        // Менша затримка для швидшої обробки
         setTimeout(processNextBatch, BATCH_DELAY);
       });
     }
@@ -177,14 +188,14 @@
     // Починаємо обробку
     if (d.readyState === 'loading') {
       d.addEventListener('DOMContentLoaded', () => {
-        setTimeout(processNextBatch, 50);
+        setTimeout(processNextBatch, 100); // Збільшено з 50 до 100мс
       });
     } else {
-      setTimeout(processNextBatch, 50);
+      setTimeout(processNextBatch, 100);
     }
   }
 
-  // ===== МИТТЄВЕ ЗАСТОСУВАННЯ З ПОКРАЩЕННЯМИ
+  // ===== МИТТЄВЕ ЗАСТОСУВАННЯ З КЕШУ
   function applyFromCacheOptimized(card) {
     const cardId = getCardId(card);
     
@@ -200,11 +211,12 @@
       const { MIN, MAX } = readLimits();
       const h = clampH(stored, MIN, MAX);
       heightCache.set(cardId, h);
+      cardMeasured.set(card, true);
       card.style.setProperty('--hover-height', h + 'px');
       return true;
     }
     
-    // Виміряти зараз як fallback
+    // Виміряти зараз
     measureCardOptimized(card);
     return true;
   }
@@ -287,10 +299,8 @@
           elements.favBtn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
         }
 
-        // Перевимірити після зміни варіанта (з затримкою для DOM updates)
-        requestAnimationFrame(() => {
-          api.recomputeOneCard(card);
-        });
+        // Перевимірити після зміни варіанта
+        api.recomputeOneCard(card);
       }
 
       // Додаємо event listeners
@@ -321,10 +331,11 @@
       // Debounce для множинних зображень
       clearTimeout(imageLoadTimeout);
       imageLoadTimeout = setTimeout(() => {
-        if (!preloadComplete) {
+        // Перевимірюємо тільки якщо картка ще не оброблена
+        if (!cardMeasured.has(card)) {
           api.recomputeOneCard(card);
         }
-      }, 100);
+      }, 150);
     }, true);
   }
 
@@ -356,13 +367,13 @@
       
       // Очищаємо кеш для цієї картки
       heightCache.delete(cardId);
-      cardObserver.delete(card);
+      cardMeasured.delete(card);
       delete card.dataset.hoverH;
       
-      // Перевимірюємо з мінімальною затримкою
-      requestAnimationFrame(() => {
+      // Перевимірюємо з затримкою
+      setTimeout(() => {
         measureCardOptimized(card);
-      });
+      }, 50);
     },
 
     clearCache() {
@@ -372,7 +383,7 @@
       isPreloading = false;
       
       d.querySelectorAll('.prod-card').forEach(card => {
-        cardObserver.delete(card);
+        cardMeasured.delete(card);
         delete card.dataset.hoverH;
         delete card.dataset.cardId;
         card.style.removeProperty('--hover-height');
@@ -388,12 +399,10 @@
       };
     },
 
-    // Покращена функція для миттєвого застосування
     applyInstant(card) {
       return applyFromCacheOptimized(card);
     },
 
-    // Нова функція для примусового завершення preload
     forceCompletePreload() {
       if (isPreloading) {
         console.log('[FORCE] Completing preload...');
@@ -402,7 +411,6 @@
       }
     },
 
-    // Функція для перевірки стану картки
     getCardInfo(card) {
       if (!card) return null;
       const cardId = getCardId(card);
@@ -410,7 +418,7 @@
         id: cardId,
         cached: heightCache.has(cardId),
         height: heightCache.get(cardId),
-        processed: cardObserver.has(card)
+        measured: cardMeasured.has(card)
       };
     }
   };
@@ -434,7 +442,10 @@
   w.addEventListener('load', () => {
     console.log('[LOAD] Window loaded, ensuring preload completion');
     if (!preloadComplete) {
-      preloadAllCardsOptimized();
+      // Даємо трохи більше часу для завантаження зображень
+      setTimeout(() => {
+        preloadAllCardsOptimized();
+      }, 200);
     }
   }, { once: true });
 
@@ -445,7 +456,7 @@
         if (mutation.type === 'childList') {
           const newCards = [];
           for (const node of mutation.addedNodes) {
-            if (node.nodeType === 1) { // Element node
+            if (node.nodeType === 1) {
               if (node.classList?.contains('prod-card')) {
                 newCards.push(node);
               } else {
