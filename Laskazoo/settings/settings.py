@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.favourites',
     'apps.ts_ftps',
     'apps.manager',
+    'django.contrib.sitemaps',
 ]
 
 TS_SYNC = {
