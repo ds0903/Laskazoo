@@ -266,7 +266,7 @@ def create_products_from_ts(request):
                     sku=ts_good.articul,
                     category=category,
                     brand=brand,
-                    description=ts_good.description or ts_good.new_description or '',
+                    description=ts_good.new_description or '',
                     retail_price=ts_good.equal_sale_price or 0,
                     retail_price_with_discount=ts_good.equal_sale_price or 0,
                     warehouse_quantity=int(ts_good.warehouse_quantity) if ts_good.warehouse_quantity else 0,
