@@ -1,5 +1,45 @@
 {% extends 'manager/base.html' %}
 
+{% block extra_css %}
+{{ block.super }}
+<style>
+  /* Розширений контейнер */
+  .manager-layout {
+    max-width: 100%;
+  }
+  
+  .manager-content {
+    max-width: 100%;
+  }
+
+  /* Кнопка статусу */
+  .status-toggle {
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  
+  .status-toggle:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+  
+  .status-active {
+    background: #28a745;
+    color: white;
+  }
+  
+  .status-inactive {
+    background: #dc3545;
+    color: white;
+  }
+</style>
+{% endblock %}
+
 {% block manager_content %}
 <div class="manager-header">
   <h1>📦 Перегляд товарів</h1>
@@ -128,7 +168,7 @@
 {% if page_obj %}
 <div style="background: white; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
   <div style="overflow-x: auto;">
-    <table style="width: 100%; border-collapse: collapse;">
+    <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
       <thead>
         <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
           <th style="padding: 12px; text-align: left; font-weight: 600;">Фото</th>
@@ -143,21 +183,22 @@
       </thead>
       <tbody>
         {% for product in page_obj %}
-        <tr style="border-bottom: 1px solid #dee2e6; transition: all 0.2s; cursor: pointer;" 
-            onmouseover="this.style.background='#f8f9fa'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" 
-            onmouseout="this.style.background='white'; this.style.boxShadow='none'"
-            onclick="window.open('{{ product.get_absolute_url }}', '_blank')">
+        <tr style="border-bottom: 1px solid #dee2e6; transition: all 0.2s;" 
+            onmouseover="this.style.background='#f8f9fa'" 
+            onmouseout="this.style.background='white'">
           <td style="padding: 12px;">
             {% if product.image %}
               <img src="{{ product.image.url }}" alt="{{ product.name }}" 
-                   style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                   style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer;"
+                   onclick="window.open('{{ product.get_absolute_url }}', '_blank')">
             {% else %}
-              <div style="width: 50px; height: 50px; background: #e9ecef; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 50px; height: 50px; background: #e9ecef; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+                   onclick="window.open('{{ product.get_absolute_url }}', '_blank')">
                 📦
               </div>
             {% endif %}
           </td>
-          <td style="padding: 12px;">
+          <td style="padding: 12px; cursor: pointer;" onclick="window.open('{{ product.get_absolute_url }}', '_blank')">
             <strong>{{ product.name|truncatewords:8 }}</strong>
             {% if product.barcode %}
               <br><small style="color: #6c757d;">{{ product.barcode }}</small>
@@ -191,17 +232,17 @@
             {% endif %}
           </td>
           <td style="padding: 12px; text-align: center;">
-            {% if product.is_active %}
-              <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem;">
+            <button class="status-toggle {% if product.is_active %}status-active{% else %}status-inactive{% endif %}"
+                    data-product-id="{{ product.id }}"
+                    data-is-active="{{ product.is_active|lower }}"
+                    onclick="toggleProductStatus(this)">
+              {% if product.is_active %}
                 ✓ Активний
-              </span>
-            {% else %}
-              <span style="background: #dc3545; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem;">
+              {% else %}
                 ✗ Неактивний
-              </span>
-            {% endif %}
+              {% endif %}
+            </button>
           </td>
-
         </tr>
         {% empty %}
         <tr>
@@ -254,5 +295,102 @@
   <p style="color: #adb5bd; margin: 0;">Спробуйте змінити параметри фільтрації</p>
 </div>
 {% endif %}
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function toggleProductStatus(button) {
+    const productId = button.getAttribute('data-product-id');
+    const currentStatus = button.getAttribute('data-is-active') === 'true';
+    const newStatus = !currentStatus;
+    
+    button.disabled = true;
+    button.style.opacity = '0.5';
+    
+    fetch(`/manager/api/products/${productId}/status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            is_active: newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.setAttribute('data-is-active', newStatus);
+            
+            if (newStatus) {
+                button.classList.remove('status-inactive');
+                button.classList.add('status-active');
+                button.innerHTML = '✓ Активний';
+            } else {
+                button.classList.remove('status-active');
+                button.classList.add('status-inactive');
+                button.innerHTML = '✗ Неактивний';
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 9999; animation: slideIn 0.3s ease-out;';
+            messageDiv.textContent = data.message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 3000);
+        } else {
+            alert('Помилка: ' + (data.error || 'Не вдалося змінити статус'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Помилка при зміні статусу товару');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.style.opacity = '1';
+    });
+}
+</script>
+
+<style>
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+</style>
 
 {% endblock %}

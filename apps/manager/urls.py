@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/create-products/', views.create_products_from_ts, name='create_products'),
     path('api/categories-brands/', views.get_categories_and_brands, name='categories_brands'),
     path('api/sync-ts-goods/', views.sync_ts_goods, name='sync_ts_goods'),
+    path('api/products/<int:product_id>/status/', views.update_product_status, name='update_product_status'),
     path('api/reorder-banners/', views.reorder_banners, name='reorder_banners'),
     path('api/reorder-popular-products/', views.reorder_popular_products, name='reorder_popular_products'),
     path('api/reorder-popular-categories/', views.reorder_popular_categories, name='reorder_popular_categories'),

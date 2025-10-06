@@ -27,7 +27,6 @@ def manager_dashboard(request):
         messages.error(request, 'У вас немає доступу до кабінету менеджера')
         return redirect('home')
     
-    # Статистика для дашборду
     total_users = CustomUser.objects.count()
     total_orders = Order.objects.exclude(status='cart').count()
     pending_orders = Order.objects.filter(status__in=['new', 'in_process']).count()
@@ -50,7 +49,6 @@ def manager_users(request):
         messages.error(request, 'У вас немає доступу до кабінету менеджера')
         return redirect('home')
     
-    # Пошук
     search_query = request.GET.get('search', '')
     users = CustomUser.objects.all().order_by('-date_joined')
     
@@ -63,7 +61,6 @@ def manager_users(request):
             Q(phone_number__icontains=search_query)
         )
     
-    # Пагінація
     paginator = Paginator(users, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -83,7 +80,6 @@ def manager_orders(request):
         messages.error(request, 'У вас немає доступу до кабінету менеджера')
         return redirect('home')
     
-    # Фільтрація за статусом
     status_filter = request.GET.get('status', '')
     search_query = request.GET.get('search', '')
     
@@ -101,7 +97,6 @@ def manager_orders(request):
             Q(email__icontains=search_query)
         )
     
-    # Пагінація
     paginator = Paginator(orders, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -154,27 +149,23 @@ def manager_import_products(request):
 
 @login_required
 def search_ts_goods(request):
-    """AJAX пошук товарів у TSGoods за штрихкодом (тільки ті, що відсутні в products)"""
+    """AJAX пошук товарів у TSGoods за штрихкодом"""
     if not is_manager(request.user):
         return JsonResponse({'error': 'Немає доступу'}, status=403)
     
     search_query = request.GET.get('q', '').strip()
     page = int(request.GET.get('page', 1))
     
-    # Отримуємо ID товарів, які вже є в products_product
     existing_torgsoft_ids = set(
         Product.objects.filter(torgsoft_id__isnull=False)
         .values_list('torgsoft_id', flat=True)
     )
     
-    # Базовий запит: товари які НЕ в products
     goods_query = TSGoods.objects.exclude(good_id__in=existing_torgsoft_ids)
     
-    # Якщо є пошуковий запит - фільтруємо лише за штрихкодом
     if search_query:
         goods_query = goods_query.filter(barcode__icontains=search_query)
     
-    # Пагінація
     paginator = Paginator(goods_query.order_by('-created_at'), 10)
     page_obj = paginator.get_page(page)
     
@@ -185,7 +176,7 @@ def search_ts_goods(request):
             'name': good.good_name or '',
             'articul': good.articul or '',
             'barcode': good.barcode or '',
-            'price': float(good.equal_sale_price) if good.equal_sale_price else 0,
+            'price': float(good.wholesale_price) if good.wholesale_price else 0,
             'quantity': float(good.warehouse_quantity) if good.warehouse_quantity else 0,
         })
     
@@ -202,12 +193,11 @@ def search_ts_goods(request):
 @login_required
 @require_http_methods(["POST"])
 def sync_ts_goods(request):
-    """Синхронізація товарів з сервера (запуск команди import_tsgoods)"""
+    """Синхронізація товарів з сервера"""
     if not is_manager(request.user):
         return JsonResponse({'error': 'Немає доступу'}, status=403)
     
     try:
-        # Запускаємо команду синхронізації
         call_command('import_tsgoods')
         
         return JsonResponse({
@@ -242,7 +232,6 @@ def create_products_from_ts(request):
             good_id = item.get('good_id')
             category_id = item.get('category_id')
             brand_id = item.get('brand_id')
-            image_url = item.get('image_url')
             
             if not good_id or not category_id or not brand_id:
                 errors.append(f"Товар {good_id}: не вказана категорія або бренд")
@@ -253,12 +242,10 @@ def create_products_from_ts(request):
                 category = Category.objects.get(id=category_id)
                 brand = Brand.objects.get(id=brand_id)
                 
-                # Перевіряємо чи вже існує товар з таким torgsoft_id
                 if Product.objects.filter(torgsoft_id=good_id).exists():
                     errors.append(f"Товар {ts_good.good_name} вже існує")
                     continue
                 
-                # Створюємо новий товар
                 product = Product(
                     torgsoft_id=good_id,
                     barcode=ts_good.barcode,
@@ -334,8 +321,6 @@ def get_categories_and_brands(request):
     })
 
 
-# ============== ПЕРЕГЛЯД ТОВАРІВ ==============
-
 @login_required
 def manager_products(request):
     """Перегляд всіх товарів на сайті з фільтрами"""
@@ -343,10 +328,8 @@ def manager_products(request):
         messages.error(request, 'У вас немає доступу до кабінету менеджера')
         return redirect('home')
     
-    # Базовий запит
     products = Product.objects.select_related('category', 'category__main_category', 'brand').all()
     
-    # Фільтри
     search_query = request.GET.get('search', '').strip()
     main_category_id = request.GET.get('main_category', '')
     category_id = request.GET.get('category', '')
@@ -355,7 +338,6 @@ def manager_products(request):
     in_stock = request.GET.get('in_stock', '')
     sort_by = request.GET.get('sort', '-id')
     
-    # Пошук
     if search_query:
         products = products.filter(
             Q(name__icontains=search_query) |
@@ -364,43 +346,34 @@ def manager_products(request):
             Q(torgsoft_id__icontains=search_query)
         )
     
-    # Фільтр за головною категорією
     if main_category_id:
         products = products.filter(category__main_category_id=main_category_id)
     
-    # Фільтр за категорією
     if category_id:
         products = products.filter(category_id=category_id)
     
-    # Фільтр за брендом
     if brand_id:
         products = products.filter(brand_id=brand_id)
     
-    # Фільтр за активністю
     if is_active:
         products = products.filter(is_active=is_active == 'true')
     
-    # Фільтр за наявністю
     if in_stock == 'yes':
         products = products.filter(warehouse_quantity__gt=0)
     elif in_stock == 'no':
         products = products.filter(warehouse_quantity=0)
     
-    # Сортування
     if sort_by:
         products = products.order_by(sort_by)
     
-    # Статистика
     total_products = products.count()
     active_products = products.filter(is_active=True).count()
     in_stock_products = products.filter(warehouse_quantity__gt=0).count()
     
-    # Пагінація
     paginator = Paginator(products, 25)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Дані для фільтрів
     main_categories = Main_Categories.objects.filter(is_active=True).order_by('name')
     categories = Category.objects.filter(is_active=True).select_related('main_category').order_by('name')
     brands = Brand.objects.filter(is_active=True).order_by('name')
@@ -425,7 +398,36 @@ def manager_products(request):
     return render(request, 'manager/products.html', context)
 
 
-# ============== БАНЕРИ ==============
+@login_required
+@require_http_methods(["POST"])
+def update_product_status(request, product_id):
+    """Зміна статусу товару"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        data = json.loads(request.body)
+        new_status = data.get('is_active')
+        
+        if new_status is not None:
+            product.is_active = new_status
+            product.save()
+            
+            status_text = 'Активний' if new_status else 'Неактивний'
+            return JsonResponse({
+                'success': True,
+                'message': f'Статус товару змінено на "{status_text}"',
+                'is_active': product.is_active
+            })
+        else:
+            return JsonResponse({'error': 'Не вказано статус'}, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Невірний формат даних'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 @login_required
 def manager_banners(request):
@@ -521,8 +523,6 @@ def banner_delete(request, banner_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-# ============== ТОП ТОВАРИ ==============
-
 @login_required
 def manager_popular_products(request):
     """Керування популярними товарами"""
@@ -609,8 +609,6 @@ def popular_product_delete(request, popular_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
-# ============== ТОП КАТЕГОРІЇ ==============
 
 @login_required
 def manager_popular_categories(request):
@@ -700,8 +698,6 @@ def popular_category_delete(request, popular_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
-# ============== API ДЛЯ ЗМІНИ ПОРЯДКУ ==============
 
 @login_required
 @require_http_methods(["POST"])
