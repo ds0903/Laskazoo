@@ -16,6 +16,10 @@ class OrderCheckoutForm(forms.ModelForm):
         required=True
     )
     
+    # Приховані поля для Ref-ів Нової Пошти
+    city_ref = forms.CharField(required=False, widget=forms.HiddenInput())
+    warehouse_ref = forms.CharField(required=False, widget=forms.HiddenInput())
+    
     # Спосіб оплати
     PAYMENT_CHOICES = [
         ('cash', 'Готівка при отриманні'),

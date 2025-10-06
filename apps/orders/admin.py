@@ -20,9 +20,9 @@ class PaymentTransactionInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('order_number', 'user', 'full_name', 'phone', 'status', 
+    list_display = ('order_number', 'user', 'full_name', 'phone', 'city', 'status', 
                     'payment_method_display', 'payment_status_display', 
-                    'total_amount', 'created_at', 'exported')
+                    'novaposhta_ttn_display', 'total_amount', 'created_at', 'exported')
     list_filter = ('status', 'payment_method', 'payment_status', 'exported', 
                    'sale_type', 'delivery_condition', 'created_at')
     search_fields = ('order_number', 'full_name', 'phone', 'email', 'user__username')
@@ -37,7 +37,8 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('full_name', 'phone', 'email')
         }),
         ('Доставка', {
-            'fields': ('sale_type', 'delivery_condition', 'delivery_address', 'comment')
+            'fields': ('sale_type', 'delivery_condition', 'city', 'delivery_address', 
+                      'city_ref', 'warehouse_ref', 'novaposhta_ttn', 'comment')
         }),
         ('Оплата', {
             'fields': ('payment_method', 'payment_status', 'payment_id'),
@@ -54,7 +55,7 @@ class OrderAdmin(admin.ModelAdmin):
     )
     
     actions = ['mark_as_processing', 'mark_as_shipped', 'mark_as_completed', 
-               'mark_payment_as_paid', 'export_selected']
+               'mark_payment_as_paid', 'create_novaposhta_shipments', 'export_selected']
     
     def payment_method_display(self, obj):
         icons = {
@@ -80,6 +81,15 @@ class OrderAdmin(admin.ModelAdmin):
         return f"{icon} {status_text}"
     payment_status_display.short_description = 'Статус оплати'
     
+    def novaposhta_ttn_display(self, obj):
+        if obj.novaposhta_ttn:
+            return f'📦 {obj.novaposhta_ttn}'
+        elif obj.delivery_condition == 'nova_poshta':
+            return '❌ Не створено'
+        else:
+            return '-'
+    novaposhta_ttn_display.short_description = 'ТТН'
+    
     def mark_as_processing(self, request, queryset):
         updated = queryset.update(status=Order.STATUS_PROCESSING)
         self.message_user(request, f'{updated} замовлень позначено як "Обробляється"')
@@ -99,6 +109,88 @@ class OrderAdmin(admin.ModelAdmin):
         updated = queryset.filter(payment_method='card_online').update(payment_status='paid')
         self.message_user(request, f'{updated} оплат позначено як "Оплачено"')
     mark_payment_as_paid.short_description = '💳 Позначити оплату як успішну'
+    
+    def create_novaposhta_shipments(self, request, queryset):
+        from .novaposhta_service import nova_poshta_api
+        from datetime import datetime, timedelta
+        from django.conf import settings
+        
+        # Перевіряємо налаштування
+        if not all([
+            settings.NOVA_POSHTA_SENDER_REF,
+            settings.NOVA_POSHTA_SENDER_CONTACT_REF,
+            settings.NOVA_POSHTA_SENDER_ADDRESS_REF,
+            settings.NOVA_POSHTA_SENDER_CITY_REF
+        ]):
+            self.message_user(request, '❌ Не налаштовані дані відправника. Запустіть: python manage.py setup_novaposhta', 'ERROR')
+            return
+        
+        created_count = 0
+        skipped_count = 0
+        error_count = 0
+        
+        for order in queryset:
+            # Пропускаємо якщо не Нова Пошта
+            if order.delivery_condition != 'nova_poshta':
+                skipped_count += 1
+                continue
+            
+            # Пропускаємо якщо ТТН вже створено
+            if order.novaposhta_ttn:
+                skipped_count += 1
+                continue
+            
+            # Перевіряємо наявність даних
+            if not order.city_ref or not order.warehouse_ref:
+                error_count += 1
+                continue
+            
+            # Створюємо накладну
+            try:
+                total_amount = order.total_amount
+                payment_method_api = 'NonCash' if order.payment_method == 'card_online' else 'Cash'
+                backward_delivery = float(total_amount) if order.payment_method == 'cash' else None
+                send_date = (datetime.now() + timedelta(days=1)).strftime('%d.%m.%Y')
+                
+                order_data = {
+                    'sender_ref': settings.NOVA_POSHTA_SENDER_REF,
+                    'sender_contact_ref': settings.NOVA_POSHTA_SENDER_CONTACT_REF,
+                    'sender_address_ref': settings.NOVA_POSHTA_SENDER_ADDRESS_REF,
+                    'sender_city_ref': settings.NOVA_POSHTA_SENDER_CITY_REF,
+                    'sender_phone': settings.NOVA_POSHTA_SENDER_PHONE,
+                    
+                    'recipient_name': order.full_name,
+                    'recipient_phone': order.phone,
+                    'recipient_city_ref': order.city_ref,
+                    'recipient_warehouse_ref': order.warehouse_ref,
+                    
+                    'cost': float(total_amount),
+                    'weight': '1',
+                    'seats_amount': '1',
+                    'description': f'Замовлення #{order.order_number or order.id}',
+                    'payment_method': payment_method_api,
+                    'backward_delivery_money': backward_delivery,
+                    'date': send_date
+                }
+                
+                result = nova_poshta_api.create_internet_document(order_data)
+                
+                if result:
+                    order.novaposhta_ttn = result.get('int_doc_number', '')
+                    order.save(update_fields=['novaposhta_ttn'])
+                    created_count += 1
+                else:
+                    error_count += 1
+            except Exception as e:
+                error_count += 1
+                print(f'Помилка створення ТТН для замовлення #{order.order_number}: {e}')
+        
+        message = f'📦 Створено: {created_count} | Пропущено: {skipped_count} | Помилки: {error_count}'
+        if error_count > 0:
+            self.message_user(request, message, 'WARNING')
+        else:
+            self.message_user(request, message, 'SUCCESS')
+    create_novaposhta_shipments.short_description = '📦 Створити ТТН Нової Пошти'
     
     def export_selected(self, request, queryset):
         from django.core.management import call_command

@@ -61,6 +61,12 @@ class Order(models.Model):
     comment = models.TextField(blank=True, null=True)
     order_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
     
+    # Нова Пошта дані
+    city = models.CharField(max_length=100, blank=True, default='')  # Назва міста
+    city_ref = models.CharField(max_length=100, blank=True, default='')  # Ref міста Нової Пошти
+    warehouse_ref = models.CharField(max_length=100, blank=True, default='')  # Ref відділення Нової Пошти
+    novaposhta_ttn = models.CharField(max_length=100, blank=True, default='')  # ТТН (номер накладної)
+    
     # Оплата
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash')
     payment_status = models.CharField(max_length=20, default='pending')  # pending, paid, failed
@@ -69,12 +75,6 @@ class Order(models.Model):
     # Для експорту
     exported = models.BooleanField(default=False)
     exported_at = models.DateTimeField(null=True, blank=True)
-    
-    # Старі поля для сумісності (видалимо пізніше)
-    first_name = models.CharField(max_length=100, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-
-
 
     @property
     def total_amount(self):

@@ -29,4 +29,9 @@ urlpatterns = [
     path('payment/<int:order_id>/failure/', payment_views.payment_failure, name='payment_failure'),
     path('payment/callback/', payment_views.payment_callback, name='payment_callback'),
     path('payment/<int:order_id>/google-pay/', payment_views.google_pay_init, name='google_pay_init'),
+    
+    # Нова Пошта API
+    path('api/cities/', views.api_search_cities, name='api_search_cities'),
+    path('api/warehouses/', views.api_get_warehouses, name='api_get_warehouses'),
+    path('<int:order_id>/create-shipment/', views.create_novaposhta_shipment, name='create_shipment'),
 ]

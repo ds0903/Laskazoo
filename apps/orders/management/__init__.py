@@ -1,1 +1,1 @@
-# Пусто
+# Management commands package

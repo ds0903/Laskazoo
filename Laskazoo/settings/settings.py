@@ -255,3 +255,13 @@ LOGGING = {
         },
     },
 }
+
+# Налаштування Нової Пошти
+NOVA_POSHTA_API_KEY = os.getenv('NOVA_POSHTA_API_KEY', '')
+
+# Налаштування відправника для Нової Пошти (налаштуй через адмін-панель або додай в .env)
+NOVA_POSHTA_SENDER_REF = os.getenv('NOVA_POSHTA_SENDER_REF', '')  # Ref відправника
+NOVA_POSHTA_SENDER_CONTACT_REF = os.getenv('NOVA_POSHTA_SENDER_CONTACT_REF', '')  # Ref контакту
+NOVA_POSHTA_SENDER_ADDRESS_REF = os.getenv('NOVA_POSHTA_SENDER_ADDRESS_REF', '')  # Ref адреси відправника
+NOVA_POSHTA_SENDER_CITY_REF = os.getenv('NOVA_POSHTA_SENDER_CITY_REF', '')  # Ref міста відправника
+NOVA_POSHTA_SENDER_PHONE = os.getenv('NOVA_POSHTA_SENDER_PHONE', '')  # Телефон відправника

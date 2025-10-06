@@ -13,10 +13,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import F, Sum, DecimalField, ExpressionWrapper
 from django.conf import settings
+from datetime import datetime, timedelta
 
 from .models import Order, OrderItem
 from .forms import OrderCheckoutForm
 from apps.products.models import Product, Product_Variant
+from .novaposhta_service import nova_poshta_api
 
 from .session_cart import summary as sess_summary, add_item as sess_add, CART_KEY
 
@@ -433,14 +435,17 @@ def checkout(request):
             order.full_name = form.cleaned_data['full_name']
             order.phone = form.cleaned_data['phone']
             order.email = form.cleaned_data['email']
-            order.city = form.cleaned_data['city']  # ДОДАНО ПОЛЕ МІСТА
+            order.city = form.cleaned_data['city']
             order.delivery_address = form.cleaned_data['delivery_address']
             order.comment = form.cleaned_data.get('comment', '')
             
-            # Визначаємо delivery_condition на основі delivery_type
+            # Дані Нової Пошти (якщо вибрано Нова Пошта)
             delivery_type = form.cleaned_data['delivery_type']
             if delivery_type == 'nova_poshta':
                 order.delivery_condition = 'nova_poshta'
+                # city_ref та warehouse_ref будуть заповнені через JavaScript
+                order.city_ref = request.POST.get('city_ref', '')
+                order.warehouse_ref = request.POST.get('warehouse_ref', '')
             else:
                 order.delivery_condition = 'ukrposhta'
             
@@ -450,11 +455,11 @@ def checkout(request):
             
             # Якщо оплата карткою - saletype = '2', інакше '1'
             if payment_method == 'card_online':
-                order.sale_type = '2'  # Оплата карткою
+                order.sale_type = '2'
             else:
-                order.sale_type = '1'  # Готівка
+                order.sale_type = '1'
             
-            # Встановлюємо статус "в обробці" (in_process) - буде експортовано в JSON
+            # Встановлюємо статус "в обробці"
             order.status = Order.STATUS_IN_PROCESS
             order.save()
             
@@ -462,31 +467,82 @@ def checkout(request):
             order_number = order.order_number or order.id
             print(f"DEBUG: Оформлено замовлення #{order_number}, новий статус: {order.status}")
             
+            # АВТОМАТИЧНЕ СТВОРЕННЯ ТТН ДЛЯ НОВОЇ ПОШТИ
+            if delivery_type == 'nova_poshta' and order.city_ref and order.warehouse_ref:
+                print(f"📦 Автоматичне створення ТТН для замовлення #{order_number}")
+                
+                # Перевіряємо налаштування відправника
+                if all([
+                    settings.NOVA_POSHTA_SENDER_REF,
+                    settings.NOVA_POSHTA_SENDER_CONTACT_REF,
+                    settings.NOVA_POSHTA_SENDER_ADDRESS_REF,
+                    settings.NOVA_POSHTA_SENDER_CITY_REF
+                ]):
+                    try:
+                        total_amount = order.total_amount
+                        payment_method_api = 'NonCash' if payment_method == 'card_online' else 'Cash'
+                        backward_delivery = float(total_amount) if payment_method == 'cash' else None
+                        send_date = (datetime.now() + timedelta(days=1)).strftime('%d.%m.%Y')
+                        
+                        order_data = {
+                            'sender_ref': settings.NOVA_POSHTA_SENDER_REF,
+                            'sender_contact_ref': settings.NOVA_POSHTA_SENDER_CONTACT_REF,
+                            'sender_address_ref': settings.NOVA_POSHTA_SENDER_ADDRESS_REF,
+                            'sender_city_ref': settings.NOVA_POSHTA_SENDER_CITY_REF,
+                            'sender_phone': settings.NOVA_POSHTA_SENDER_PHONE,
+                            
+                            'recipient_name': order.full_name,
+                            'recipient_phone': order.phone,
+                            'recipient_city_ref': order.city_ref,
+                            'recipient_warehouse_ref': order.warehouse_ref,
+                            
+                            'cost': float(total_amount),
+                            'weight': '1',
+                            'seats_amount': '1',
+                            'description': f'Замовлення #{order_number}',
+                            'payment_method': payment_method_api,
+                            'backward_delivery_money': backward_delivery,
+                            'date': send_date
+                        }
+                        
+                        result = nova_poshta_api.create_internet_document(order_data)
+                        
+                        if result:
+                            order.novaposhta_ttn = result.get('int_doc_number', '')
+                            order.save(update_fields=['novaposhta_ttn'])
+                            print(f"✅ ТТН створено: {order.novaposhta_ttn}")
+                            messages.success(request, f'ТТН Нової Пошти створено: {order.novaposhta_ttn}')
+                        else:
+                            print(f"❌ Не вдалося створити ТТН")
+                            messages.warning(request, 'Замовлення оформлено, але ТТН не створено. Зверніться до менеджера.')
+                    except Exception as e:
+                        print(f"❌ Помилка створення ТТН: {e}")
+                        messages.warning(request, 'Замовлення оформлено, але виникла помилка при створенні ТТН.')
+                else:
+                    print("⚠️ Дані відправника не налаштовані")
+                    messages.info(request, 'Замовлення оформлено. ТТН буде створено менеджером.')
+            
             # Якщо оплата карткою - перенаправляємо на оплату
             if payment_method == 'card_online':
                 return redirect('orders:payment', order_id=order.id)
             
             # Готівка - одразу в список замовлень
-            # messages.success(request, f'Замовлення №{order_number} успішно оформлено!')
             return redirect('orders:list')
     else:
         # Просто показуємо порожню форму - НЕ ЗБЕРІГАЄМО НІЧОГО
-        # ТІЛЬКИ якщо це нове замовлення, показуємо дані користувача
         if is_new_order:
             initial = {
                 'full_name': request.user.get_full_name() or request.user.username,
                 'email': request.user.email,
-                'delivery_type': 'nova_poshta'  # За замовчуванням Нова Пошта
+                'delivery_type': 'nova_poshta'
             }
         else:
-            # Якщо вже є дані - показуємо їх (наприклад послі помилки валідації)
-            # Визначаємо delivery_type на основі поточного delivery_condition
             if order.delivery_condition == 'nova_poshta':
                 current_delivery_type = 'nova_poshta'
             elif order.delivery_condition == 'ukrposhta':
                 current_delivery_type = 'ukrposhta'
             else:
-                current_delivery_type = 'nova_poshta'  # За замовчуванням
+                current_delivery_type = 'nova_poshta'
                 
             initial = {
                 'full_name': order.full_name or request.user.get_full_name() or request.user.username,
@@ -625,31 +681,157 @@ def cart_item_remove(request, item_id: int):
 def cart_clear(request):
     try:
         if request.user.is_authenticated and not request.GET.get('guest'):
-            # Додатковий захист - намагаємося отримати користувача безпечно
             try:
                 user = request.user
                 if user.is_authenticated:
                     order = Order.objects.filter(user=user, status=Order.STATUS_CART).first()
                     if order:
-                        # ВИПРАВЛЕННЯ: видаляємо все замовлення повністю, а не тільки товари
                         print(f"Очищаємо кошик: видаляємо замовлення #{order.id}")
-                        order.delete()  # Видаляємо все замовлення!
+                        order.delete()
                     else:
                         print("Кошик вже порожній")
                 else:
                     print("Користувач не авторизований")
             except Exception as db_error:
                 print(f"Помилка бази даних при очищенні кошика: {db_error}")
-                # Якщо помилка з базою даних - очищаємо сесію
                 _sess_save_items(request, [])
         else:
             _sess_save_items(request, [])
     except Exception as e:
         print(f"Критична помилка при очищенні кошика: {e}")
-        # У випадку будь-якої помилки - намагаємося очистити сесію
         try:
             _sess_save_items(request, [])
         except:
             pass
     
     return cart_modal(request) if _is_ajax(request) else redirect('orders:cart')
+
+
+# ========================================
+# API для Нової Пошти
+# ========================================
+
+def api_search_cities(request):
+    """
+    API для пошуку міст Нової Пошти
+    GET /orders/api/cities/?query=київ
+    """
+    query = request.GET.get('query', '').strip()
+    
+    # DEBUG: Логуємо запит
+    print(f"🔍 DEBUG: Пошук міст, query='{query}'")
+    print(f"🔑 DEBUG: API key = {settings.NOVA_POSHTA_API_KEY[:20]}...")
+    
+    if len(query) < 2:
+        print("❌ DEBUG: Запит занадто короткий")
+        return JsonResponse({'cities': []}, safe=False)
+    
+    cities = nova_poshta_api.search_cities(query)
+    
+    print(f"🏛️ DEBUG: Знайдено міст: {len(cities) if cities else 0}")
+    
+    if cities is None:
+        print("❌ DEBUG: Помилка API")
+        return JsonResponse({'error': 'Помилка підключення до API Нової Пошти'}, status=500)
+    
+    return JsonResponse({'cities': cities}, safe=False)
+
+
+def api_get_warehouses(request):
+    """
+    API для отримання відділень Нової Пошти
+    GET /orders/api/warehouses/?city_ref=XXX
+    """
+    city_ref = request.GET.get('city_ref', '').strip()
+    
+    if not city_ref:
+        return JsonResponse({'error': 'Не вказано Ref міста'}, status=400)
+    
+    warehouses = nova_poshta_api.get_warehouses(city_ref)
+    
+    if warehouses is None:
+        return JsonResponse({'error': 'Помилка підключення до API Нової Пошти'}, status=500)
+    
+    return JsonResponse({'warehouses': warehouses}, safe=False)
+
+
+@login_required
+def create_novaposhta_shipment(request, order_id):
+    """
+    Створення відправлення в Новій Пошті для замовлення
+    """
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    
+    # Перевіряємо що замовлення оформлене і доставка через Нову Пошту
+    if order.status == Order.STATUS_CART:
+        return JsonResponse({'error': 'Замовлення не оформлене'}, status=400)
+    
+    if order.delivery_condition != 'nova_poshta':
+        return JsonResponse({'error': 'Доставка не через Нову Пошту'}, status=400)
+    
+    # Перевіряємо чи вже створено ТТН
+    if order.novaposhta_ttn:
+        return JsonResponse({'ttn': order.novaposhta_ttn, 'message': 'ТТН вже створено'})
+    
+    # Перевіряємо налаштування відправника
+    if not all([
+        settings.NOVA_POSHTA_SENDER_REF,
+        settings.NOVA_POSHTA_SENDER_CONTACT_REF,
+        settings.NOVA_POSHTA_SENDER_ADDRESS_REF,
+        settings.NOVA_POSHTA_SENDER_CITY_REF
+    ]):
+        return JsonResponse({
+            'error': 'Не налаштовані дані відправника. Зверніться до адміністратора.'
+        }, status=500)
+    
+    # Підготовка даних для створення накладної
+    total_amount = order.total_amount
+    
+    # Визначаємо спосіб оплати для API Нової Пошти
+    payment_method_api = 'NonCash' if order.payment_method == 'card_online' else 'Cash'
+    backward_delivery = None
+    
+    if order.payment_method == 'cash':
+        backward_delivery = float(total_amount)  # Накладений платіж
+    
+    # Дата відправки - завтра
+    send_date = (datetime.now() + timedelta(days=1)).strftime('%d.%m.%Y')
+    
+    order_data = {
+        'sender_ref': settings.NOVA_POSHTA_SENDER_REF,
+        'sender_contact_ref': settings.NOVA_POSHTA_SENDER_CONTACT_REF,
+        'sender_address_ref': settings.NOVA_POSHTA_SENDER_ADDRESS_REF,
+        'sender_city_ref': settings.NOVA_POSHTA_SENDER_CITY_REF,
+        'sender_phone': settings.NOVA_POSHTA_SENDER_PHONE,
+        
+        'recipient_name': order.full_name,
+        'recipient_phone': order.phone,
+        'recipient_city_ref': order.city_ref,
+        'recipient_warehouse_ref': order.warehouse_ref,
+        
+        'cost': float(total_amount),
+        'weight': '1',  # Вага за замовчуванням 1 кг
+        'seats_amount': '1',  # Кількість місць
+        'description': f'Замовлення #{order.order_number or order.id}',
+        'payment_method': payment_method_api,
+        'backward_delivery_money': backward_delivery,
+        'date': send_date
+    }
+    
+    # Створюємо накладну
+    result = nova_poshta_api.create_internet_document(order_data)
+    
+    if result:
+        # Зберігаємо ТТН в замовлення
+        order.novaposhta_ttn = result.get('int_doc_number', '')
+        order.save(update_fields=['novaposhta_ttn'])
+        
+        return JsonResponse({
+            'success': True,
+            'ttn': result.get('int_doc_number'),
+            'message': f'ТТН створено: {result.get("int_doc_number")}'
+        })
+    else:
+        return JsonResponse({
+            'error': 'Не вдалося створити накладну. Перевірте налаштування API.'
+        }, status=500)

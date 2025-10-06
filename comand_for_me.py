@@ -34,3 +34,4 @@
 #     SELECT torgsoft_id FROM products_product_variant
 # );
 
+# python manage.py setup_novaposhta

@@ -7,13 +7,13 @@
   <link rel="stylesheet" href="{% static 'zoosvit/css/styles.css' %}">
   <link rel="stylesheet" href="{% static 'zoosvit/css/orders/checkout.css' %}">
   <style>
-    /* Широкий лейаут без сайдбару */
+    /* ... CSS залишається без змін ... */
     .checkout-container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
       display: grid;
-      grid-template-columns: 1fr 1.2fr; /* Товари трохи вужче, форма ширша */
+      grid-template-columns: 1fr 1.2fr;
       gap: 40px;
       align-items: start;
     }
@@ -26,7 +26,6 @@
       font-weight: 600;
     }
     
-    /* Блок товарів */
     .order-summary {
       background: #f8f9fa;
       border-radius: 12px;
@@ -42,7 +41,6 @@
       font-weight: 600;
     }
     
-    /* Блок форми - ширший */
     .checkout-form-container {
       background: white;
       border-radius: 12px;
@@ -57,7 +55,6 @@
       font-weight: 600;
     }
     
-    /* Стилі для полів */
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -102,7 +99,6 @@
       font-size: 0.95rem;
     }
     
-    /* Автокомплет міст */
     .city-autocomplete-container {
       position: relative;
     }
@@ -136,7 +132,6 @@
       border-bottom: none;
     }
 
-    /* ПОКРАЩЕНІ СТИЛІ ДЛЯ СПИСКУ ВІДДІЛЕНЬ - ВИПАДАЮТЬ ЗНИЗУ */
     .branches-container {
       position: relative;
     }
@@ -193,7 +188,6 @@
       transform: rotate(180deg);
     }
 
-    /* DROPDOWN СТИЛІ - ВАЖЛИВО: ВИПРАВЛЕНО ВІДОБРАЖЕННЯ */
     .branches-dropdown {
       position: absolute;
       top: 100%;
@@ -206,16 +200,14 @@
       max-height: 200px;
       overflow-y: auto;
       z-index: 1000;
-      display: none; /* Початково прихований */
+      display: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    /* ВИПРАВЛЕННЯ: Коли dropdown відкрито */
     .branches-dropdown.show {
-      display: block !important; /* !important щоб переписати display: none */
+      display: block !important;
     }
 
-    /* СПРОЩЕНІ ОПЦІЇ ВІДДІЛЕНЬ - ТІЛЬКИ НОМЕР І АДРЕСА */
     .branch-option {
       padding: 12px 16px;
       cursor: pointer;
@@ -247,7 +239,6 @@
       flex: 1;
     }
 
-    /* ВИПРАВЛЕННЯ СТИЛІВ ДЛЯ RADIO КНОПОК */
     .delivery-type-options,
     .payment-type-options {
       display: flex;
@@ -291,13 +282,6 @@
       flex-shrink: 0;
     }
     
-    /* ДОДАТКОВЕ ВИПРАВЛЕННЯ КВАДРАТИКА */
-    .delivery-type-option input[type="radio"]:checked,
-    .payment-type-option input[type="radio"]:checked {
-      background-color: #0f6b38;
-      border: 2px solid #0f6b38;
-    }
-    
     .delivery-type-option label,
     .payment-type-option label {
       flex: 1;
@@ -309,7 +293,6 @@
       display: block;
     }
     
-    /* Секції форми */
     .form-section {
       margin-bottom: 30px;
       padding-bottom: 20px;
@@ -327,13 +310,11 @@
       font-weight: 600;
     }
     
-    /* Поля доставки */
     .delivery-section.disabled {
       opacity: 0.5;
       pointer-events: none;
     }
     
-    /* Помилки */
     .form-errors {
       margin-top: 5px;
     }
@@ -350,7 +331,6 @@
       margin-top: 4px;
     }
     
-    /* Кнопка подання */
     .form-actions {
       text-align: center;
       margin-top: 30px;
@@ -384,7 +364,6 @@
       transform: none;
     }
     
-    /* Loading спиннер */
     .loading-spinner {
       display: inline-block;
       width: 16px;
@@ -399,7 +378,6 @@
       to { transform: rotate(360deg); }
     }
     
-    /* Адаптивність */
     @media (max-width: 768px) {
       .checkout-container {
         grid-template-columns: 1fr;
@@ -420,12 +398,6 @@
         gap: 12px;
       }
     }
-
-    /* Додаткові CSS правила для debug */
-    .debug-dropdown {
-      background: yellow !important;
-      border: 3px solid red !important;
-    }
   </style>
 {% endblock %}
 
@@ -441,7 +413,6 @@
 {% endif %}
 
 <div class="checkout-container">
-  <!-- Ліва колонка: Товари в замовленні -->
   <div class="order-summary">
     <h2>Ваше замовлення</h2>
     
@@ -496,19 +467,16 @@
     {% endif %}
   </div>
 
-  <!-- Права колонка: Форма оформлення (ширша) -->
   <div class="checkout-form-container">
     <h2>Контактні дані</h2>
     
     <form method="post" class="checkout-form" id="checkout-form">
       {% csrf_token %}
       
-      <!-- Особисті дані -->
       <div class="form-section">
         <h3>Особисті дані</h3>
         
         <div class="form-row">
-          <!-- ПІБ -->
           <div class="form-group">
             {{ form.full_name.label_tag }}
             {{ form.full_name }}
@@ -521,7 +489,6 @@
             {% endif %}
           </div>
 
-          <!-- Телефон -->
           <div class="form-group">
             {{ form.phone.label_tag }}
             {{ form.phone }}
@@ -537,7 +504,6 @@
         </div>
 
         <div class="form-row">
-          <!-- Email -->
           <div class="form-group">
             {{ form.email.label_tag }}
             {{ form.email }}
@@ -550,7 +516,6 @@
             {% endif %}
           </div>
 
-          <!-- Місто з автокомплетом -->
           <div class="form-group">
             <div class="city-autocomplete-container">
               {{ form.city.label_tag }}
@@ -560,372 +525,210 @@
                 <div class="form-errors">
                   {% for error in form.city.errors %}
                     <span class="error">{{ error }}</span>
-                {% endfor %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <small class="form-help">Почніть вводити назву міста</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section delivery-section" id="delivery-section">
+        <h3>Спосіб доставки</h3>
+        
+        <div class="form-group">
+          <div class="delivery-type-options">
+            {% for radio in form.delivery_type %}
+              <div class="delivery-type-option" data-value="{{ radio.choice_value }}">
+                {{ radio.tag }}
+                <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
               </div>
-            {% endif %}
-            <small class="form-help">Почніть вводити назву міста</small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Доставка (деактивована поки не вибрано місто) -->
-    <div class="form-section delivery-section" id="delivery-section">
-      <h3>Спосіб доставки</h3>
-      
-      <div class="form-group">
-        <div class="delivery-type-options">
-          {% for radio in form.delivery_type %}
-            <div class="delivery-type-option" data-value="{{ radio.choice_value }}">
-              {{ radio.tag }}
-              <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-            </div>
-          {% endfor %}
-        </div>
-        {% if form.delivery_type.errors %}
-          <div class="form-errors">
-            {% for error in form.delivery_type.errors %}
-              <span class="error">{{ error }}</span>
             {% endfor %}
           </div>
-        {% endif %}
-      </div>
-
-      <!-- ПОКРАЩЕНЕ ПОЛЕ ВІДДІЛЕННЯ - КАСТОМНИЙ СЕЛЕКТ -->
-      <div class="form-group full-width">
-        <label for="branches-current">Відділення доставки *</label>
-        <div class="branches-container" id="branches-container">
-          
-          <!-- Прихований input для відправки форми -->
-          <input type="hidden" name="delivery_address" id="delivery_address_input" required>
-          
-          <!-- Кастомний селект -->
-          <div class="branches-select-custom">
-            <div class="branches-current" id="branches-current" disabled>
-              <span class="branches-text">Спочатку виберіть місто та тип доставки</span>
-              <span class="branches-arrow">▼</span>
+          {% if form.delivery_type.errors %}
+            <div class="form-errors">
+              {% for error in form.delivery_type.errors %}
+                <span class="error">{{ error }}</span>
+              {% endfor %}
             </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group full-width">
+          <label for="branches-current">Відділення доставки *</label>
+          <div class="branches-container" id="branches-container">
+            <input type="hidden" name="delivery_address" id="delivery_address_input" required>
+            {{ form.city_ref }}
+            {{ form.warehouse_ref }}
             
-            <div class="branches-dropdown" id="branches-dropdown">
-              <!-- Опції додаються динамічно JavaScript -->
+            <div class="branches-select-custom">
+              <div class="branches-current" id="branches-current" disabled>
+                <span class="branches-text">Спочатку виберіть місто та тип доставки</span>
+                <span class="branches-arrow">▼</span>
+              </div>
+              
+              <div class="branches-dropdown" id="branches-dropdown"></div>
             </div>
           </div>
+          {% if form.delivery_address.errors %}
+            <div class="form-errors">
+              {% for error in form.delivery_address.errors %}
+                <span class="error">{{ error }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="form-help" id="delivery-address-help">Спочатку виберіть місто</small>
         </div>
-        {% if form.delivery_address.errors %}
-          <div class="form-errors">
-            {% for error in form.delivery_address.errors %}
-              <span class="error">{{ error }}</span>
+      </div>
+
+      <div class="form-section">
+        <h3>Спосіб оплати</h3>
+        
+        <div class="form-group">
+          <div class="payment-type-options">
+            {% for radio in form.payment_method %}
+              <div class="payment-type-option" data-value="{{ radio.choice_value }}">
+                {{ radio.tag }}
+                <label for="{{ radio.id_for_label }}">
+                  {% if radio.choice_value == 'cash' %}
+                    💵 {{ radio.choice_label }}
+                  {% else %}
+                    💳 {{ radio.choice_label }}
+                  {% endif %}
+                </label>
+              </div>
             {% endfor %}
           </div>
-        {% endif %}
-        <small class="form-help" id="delivery-address-help">Спочатку виберіть місто</small>
-      </div>
-    </div>
-
-    <!-- Спосіб оплати -->
-    <div class="form-section">
-      <h3>Спосіб оплати</h3>
-      
-      <div class="form-group">
-        <div class="payment-type-options">
-          {% for radio in form.payment_method %}
-            <div class="payment-type-option" data-value="{{ radio.choice_value }}">
-              {{ radio.tag }}
-              <label for="{{ radio.id_for_label }}">
-                {% if radio.choice_value == 'cash' %}
-                  💵 {{ radio.choice_label }}
-                {% else %}
-                  💳 {{ radio.choice_label }}
-                {% endif %}
-              </label>
+          {% if form.payment_method.errors %}
+            <div class="form-errors">
+              {% for error in form.payment_method.errors %}
+                <span class="error">{{ error }}</span>
+              {% endfor %}
             </div>
+          {% endif %}
+          <small class="form-help" id="payment-help">Оплата карткою проходить через захищений сервіс Portmone</small>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Коментар</h3>
+        
+        <div class="form-group full-width">
+          {{ form.comment.label_tag }}
+          {{ form.comment }}
+          <small class="form-help">За бажанням</small>
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="form-errors">
+          {% for error in form.non_field_errors %}
+            <span class="error">{{ error }}</span>
           {% endfor %}
         </div>
-        {% if form.payment_method.errors %}
-          <div class="form-errors">
-            {% for error in form.payment_method.errors %}
-              <span class="error">{{ error }}</span>
-            {% endfor %}
-          </div>
-        {% endif %}
-        <small class="form-help" id="payment-help">Оплата карткою проходить через захищений сервіс Portmone</small>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="submit-btn">
+          <span>📦</span>
+          <span id="submit-text">Підтвердити замовлення</span>
+        </button>
       </div>
+    </form>
+
+    <div class="checkout-info">
+      <h3>Інформація про доставку</h3>
+      <p>📞 <strong>Зв'язок з вами</strong> — наш менеджер зателефонує протягом 30 хвилин для підтвердження замовлення</p>
     </div>
-
-    <!-- Коментар -->
-    <div class="form-section">
-      <h3>Коментар</h3>
-      
-      <div class="form-group full-width">
-        {{ form.comment.label_tag }}
-        {{ form.comment }}
-        <small class="form-help">За бажанням</small>
-      </div>
-    </div>
-
-    {% if form.non_field_errors %}
-      <div class="form-errors">
-        {% for error in form.non_field_errors %}
-          <span class="error">{{ error }}</span>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-    <div class="form-actions">
-      <button type="submit" class="btn-primary" id="submit-btn">
-        <span>📦</span>
-        <span id="submit-text">Підтвердити замовлення</span>
-      </button>
-    </div>
-  </form>
-
-  <div class="checkout-info">
-    <h3>Інформація про доставку</h3>
-    <p>📞 <strong>Зв'язок з вами</strong> — наш менеджер зателефонує протягом 30 хвилин для підтвердження замовлення</p>
   </div>
-</div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// *** СПИСОК УКРАЇНСЬКИХ МІСТ (оптимізований для швидкої роботи) ***
-const UKRAINIAN_CITIES = [
-  // Обласні центри
-  'Київ', 'Харків', 'Дніпро', 'Одеса', 'Запоріжжя', 'Львів', 'Кривий Ріг',
-  'Миколаїв', 'Вінниця', 'Полтава', 'Чернігів', 'Черкаси', 'Житомир', 
-  'Суми', 'Хмельницький', 'Чернівці', 'Рівне', 'Тернопіль', 'Івано-Франківськ',
-  'Кропивницький', 'Луцьк', 'Ужгород', 'Херсон',
-
-  // Київська область
-  'Біла Церква', 'Бровари', 'Ірпінь', 'Фастів', 'Бориспіль', 'Боярка', 
-  'Васильків', 'Обухів', 'Українка', 'Кагарлик', 'Сквира', 'Богуслав', 
-  'Яготин', 'П\'ятихатки', 'Згурівка', 'Тараща', 'Володарка', 'Ставище', 
-  'Рокитне', 'Миронівка', 'Тетіїв', 'Узин', 'Макарів', 'Вишневе', 
-  'Гостомель', 'Коцюбинське', 'Буча', 'Ворзель', 'Переяслав', 'Ржищів',
-  'Глеваха', 'Вишгород', 'Княжичі', 'Пуща-Водиця', 'Козин', 'Борщагівка',
-
-  // Львівська область
-  'Дрогобич', 'Стрий', 'Червоноград', 'Самбір', 'Калуш', 'Трускавець',
-  'Борислав', 'Моршин', 'Новий Розділ', 'Жовква', 'Городок', 'Пустомити',
-  'Винники', 'Яворів', 'Броди', 'Золочів', 'Сколе', 'Турка',
-
-  // Харківська область
-  'Ізюм', 'Лозова', 'Люботин', 'Мерефа', 'Чугуїв', 'Балаклея', 'Красноград',
-  'Куп\'янськ', 'Первомайський', 'Вовчанськ', 'Дергачі', 'Зміїв',
-
-  // Дніпропетровська область
-  'Кам\'янське', 'Нікополь', 'Новомосковськ', 'Кременчук', 'Павлоград', 
-  'Першотравенськ', 'Синельникове', 'Жовті Води', 'Марганець', 'Покров',
-
-  // Одеська область
-  'Ізмаїл', 'Чорноморськ', 'Білгород-Дністровський', 'Подільськ', 'Южне',
-  'Балта', 'Котовськ', 'Роздільна', 'Арциз', 'Болград', 'Березівка',
-
-  // Запорізька область
-  'Мелітополь', 'Бердянськ', 'Енергодар', 'Токмак', 'Василівка',
-  'Дніпрорудне', 'Молочанськ', 'Пологи', 'Приморськ', 'Вільнянськ',
-
-  // Вінницька область
-  'Хмільник', 'Жмеринка', 'Могилів-Подільський', 'Козятин', 'Гайсин',
-  'Тульчин', 'Калинівка', 'Літин', 'Немирів', 'Шаргород', 'Бар',
-
-  // Полтавська область
-  'Миргород', 'Лубни', 'Горішні Плавні', 'Гадяч', 'Зіньків', 'Карлівка',
-  'Кобеляки', 'Лохвиця', 'Пирятин', 'Решетилівка', 'Глобине',
-
-  // Черкаська область
-  'Сміла', 'Золотоноша', 'Канів', 'Христинівка', 'Ватутіне', 'Городище',
-  'Драбів', 'Жашків', 'Звенигородка', 'Корсунь-Шевченківський', 'Тальне',
-  'Шпола', 'Чигирин', 'Чорнобай', 'Умань',
-
-  // Чернігівська область
-  'Ніжин', 'Прилуки', 'Новгород-Сіверський', 'Бахмач', 'Бобровиця',
-  'Борзна', 'Городня', 'Козелець', 'Корюківка', 'Мена', 'Остер',
-
-  // Житомирська область
-  'Бердичів', 'Новоград-Волинський', 'Коростишів', 'Малин', 'Радомишль',
-  'Андрушівка', 'Баранівка', 'Брусилів', 'Коростень', 'Овруч',
-
-  // Сумська область
-  'Шостка', 'Охтирка', 'Ромни', 'Глухів', 'Лебедин', 'Білопілля',
-  'Конотоп', 'Тростянець', 'Путивль',
-
-  // Хмельницька область
-  'Шепетівка', 'Нетішин', 'Славута', 'Старокостянтинів', 'Волочиськ',
-  'Деражня', 'Дунаївці', 'Ізяслав', 'Красилів', 'Летичів',
-  'Кам\'янець-Подільський', 'Полонне',
-
-  // Чернівецька область
-  'Новодністровськ', 'Сторожинець', 'Хотин', 'Вашківці', 'Заставна',
-  'Кельменці', 'Кіцмань', 'Новоселиця', 'Вижниця',
-
-  // Рівненська область
-  'Дубно', 'Вараш', 'Березне', 'Костопіль', 'Острог', 'Сарни', 'Здолбунів',
-  'Радивилів', 'Рокитне',
-
-  // Тернопільська область
-  'Чортків', 'Теребовля', 'Збараж', 'Борщів', 'Бучач', 'Кременець',
-  'Лановці', 'Підгайці', 'Скалат',
-
-  // Івано-Франківська область
-  'Коломия', 'Калуш', 'Бурштин', 'Болехів', 'Галич', 'Долина',
-  'Косів', 'Надвірна', 'Рогатин', 'Снятин', 'Тисмениця',
-  'Тлумач', 'Яремче', 'Верховина',
-
-  // Волинська область
-  'Нововолинськ', 'Ківерці', 'Камінь-Каширський', 'Горохів',
-  'Володимир-Волинський', 'Любомль',
-
-  // Закарпатська область
-  'Мукачево', 'Берегове', 'Виноградів', 'Хуст', 'Рахів', 'Тячів',
-  'Іршава', 'Перечин', 'Свалява', 'Чоп',
-
-  // Миколаївська область
-  'Первомайськ', 'Южноукраїнськ', 'Вознесенськ', 'Очаків', 'Новий Буг',
-  'Баштанка', 'Снігурівка',
-
-  // Кіровоградська область
-  'Олександрія', 'Світловодськ', 'Знам\'янка', 'Мала Виска', 'Новомиргород',
-  'Бобринець', 'Гайворон', 'Долинська', 'Новоукраїнка'
-];
-
-// API ENDPOINTS ДЛЯ ОТРИМАННЯ СПРАВЖНІХ ВІДДІЛЕНЬ
-const DELIVERY_API = {
-  nova_poshta: {
-    url: 'https://api.novaposhta.ua/v2.0/json/',
-    method: 'POST'
-  },
-  ukrposhta: {
-    url: 'https://www.ukrposhta.ua/api/postoffice_ca/',
-    method: 'GET'
-  }
-};
-
-// КЕШ ДЛЯ ВІДДІЛЕНЬ (щоб не робити повторні запити)
+// ІНТЕГРАЦІЯ З НОВОЮ ПОШТОЮ
 const branchesCache = new Map();
+let selectedCityRef = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 ВИПРАВЛЕНА версія checkout form ініціалізована');
-    console.log(`📊 Завантажено ${UKRAINIAN_CITIES.length} українських міст`);
-    
-    // ЗАБОРОНА КОШИКА НА СТОРІНЦІ CHECKOUT
-    const cartBtn = document.getElementById('cart-btn');
-    if (cartBtn) {
-        cartBtn.style.pointerEvents = 'none';
-        cartBtn.style.opacity = '0.5';
-        cartBtn.setAttribute('title', 'На сторінці оформлення кошик недоступний');
-    }
+    console.log('🚀 Nova Poshta Integration initialized');
     
     const cityInput = document.querySelector('input[name="city"]');
     const citySuggestions = document.getElementById('city-suggestions');
     const deliverySection = document.getElementById('delivery-section');
     const deliveryTypeInputs = document.querySelectorAll('input[name="delivery_type"]');
     
-    // Елементи кастомного селекту відділень
     const branchesContainer = document.getElementById('branches-container');
     const branchesCurrent = document.getElementById('branches-current');
     const branchesDropdown = document.getElementById('branches-dropdown');
     const deliveryAddressInput = document.getElementById('delivery_address_input');
+    const cityRefInput = document.querySelector('input[name="city_ref"]');
+    const warehouseRefInput = document.querySelector('input[name="warehouse_ref"]');
     
-    // DEBUG: Перевіряємо чи елементи знайдені
-    console.log('🔍 Елементи dropdown:', {
-        branchesCurrent: !!branchesCurrent,
-        branchesDropdown: !!branchesDropdown,
-        deliveryAddressInput: !!deliveryAddressInput
-    });
-    
-    // Початково деактивуємо секцію доставки
     deliverySection.classList.add('disabled');
     
-    // *** АВТОКОМПЛЕТ МІСТ ***
+    // АВТОКОМПЛЕТ МІСТ ЧЕРЕЗ API
+    let searchTimeout;
     if (cityInput) {
         cityInput.addEventListener('input', function(e) {
-            const value = e.target.value.toLowerCase().trim();
+            clearTimeout(searchTimeout);
+            const value = e.target.value.trim();
             
-            if (value.length < 1) {
+            if (value.length < 2) {
                 citySuggestions.style.display = 'none';
                 disableDeliverySection();
                 return;
             }
             
-            // Знаходимо збіги: спочатку ті що починаються з введеного тексту, потім ті що містять
-            const startsWithMatches = UKRAINIAN_CITIES.filter(city => 
-                city.toLowerCase().startsWith(value)
-            );
-            
-            const containsMatches = UKRAINIAN_CITIES.filter(city => 
-                city.toLowerCase().includes(value) && !startsWithMatches.includes(city)
-            );
-            
-            const matches = [...startsWithMatches, ...containsMatches].slice(0, 10); // Показуємо до 10 варіантів
-            
-            if (matches.length > 0) {
-                // Підсвітка збігів
-                citySuggestions.innerHTML = matches.map(city => {
-                    const regex = new RegExp(`(${value})`, 'gi');
-                    const highlightedCity = city.replace(regex, '<strong>$1</strong>');
-                    return `<div class="city-suggestion" data-city="${city}">${highlightedCity}</div>`;
-                }).join('');
-                citySuggestions.style.display = 'block';
-            } else {
-                // Якщо точних збігів немає, показуємо повідомлення
-                citySuggestions.innerHTML = `<div class="city-suggestion" style="opacity: 0.7; pointer-events: none;">Населений пункт "${e.target.value}" не знайдено</div>`;
-                citySuggestions.style.display = 'block';
-            }
+            searchTimeout = setTimeout(() => searchCities(value), 300);
         });
         
-        // Вибір міста зі списку
         citySuggestions.addEventListener('click', function(e) {
-            if (e.target.classList.contains('city-suggestion') && e.target.dataset.city) {
+            if (e.target.classList.contains('city-suggestion') && e.target.dataset.cityRef) {
                 const selectedCity = e.target.dataset.city;
+                const cityRef = e.target.dataset.cityRef;
+                
                 cityInput.value = selectedCity;
+                selectedCityRef = cityRef;
+                cityRefInput.value = cityRef;
                 citySuggestions.style.display = 'none';
                 
-                // Активуємо поля доставки
                 enableDeliverySection(selectedCity);
             }
         });
         
-        // Приховуємо список при втраті фокусу
         document.addEventListener('click', function(e) {
             if (!cityInput.contains(e.target) && !citySuggestions.contains(e.target)) {
                 citySuggestions.style.display = 'none';
             }
         });
-        
-        // Перевірка при втраті фокусу поля міста
-        cityInput.addEventListener('blur', function() {
-            setTimeout(() => {
-                const cityValue = cityInput.value.trim();
-                if (cityValue && UKRAINIAN_CITIES.includes(cityValue)) {
-                    enableDeliverySection(cityValue);
-                } else if (cityValue) {
-                    // Якщо місто введено, але не знайдено в списку, все одно активуємо
-                    console.log('✅ Активуємо доставку для нестандартного міста:', cityValue);
-                    enableDeliverySection(cityValue);
-                } else {
-                    disableDeliverySection();
-                }
-            }, 200);
-        });
-        
-        // ENTER для вибору першого варіанту
-        cityInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && citySuggestions.style.display === 'block') {
-                const firstSuggestion = citySuggestions.querySelector('.city-suggestion[data-city]');
-                if (firstSuggestion) {
-                    e.preventDefault();
-                    const selectedCity = firstSuggestion.dataset.city;
-                    cityInput.value = selectedCity;
-                    citySuggestions.style.display = 'none';
-                    enableDeliverySection(selectedCity);
-                }
-            }
-        });
     }
     
-    // *** ФУНКЦІЇ АКТИВАЦІЇ/ДЕАКТИВАЦІЇ ДОСТАВКИ ***
+    // ПОШУК МІСТ ЧЕРЕЗ API
+    async function searchCities(query) {
+        try {
+            const response = await fetch(`/orders/api/cities/?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            if (data.cities && data.cities.length > 0) {
+                citySuggestions.innerHTML = data.cities.slice(0, 10).map(city => {
+                    return `<div class="city-suggestion" data-city="${city.present}" data-city-ref="${city.ref}">
+                        ${city.present}
+                    </div>`;
+                }).join('');
+                citySuggestions.style.display = 'block';
+            } else {
+                citySuggestions.innerHTML = `<div class="city-suggestion" style="opacity: 0.7; pointer-events: none;">Населений пункт "${query}" не знайдено</div>`;
+                citySuggestions.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Помилка пошуку міст:', error);
+            citySuggestions.innerHTML = `<div class="city-suggestion" style="opacity: 0.7; pointer-events: none;">Помилка підключення до API</div>`;
+            citySuggestions.style.display = 'block';
+        }
+    }
+    
     function enableDeliverySection(cityName) {
         console.log('✅ Активуємо доставку для міста:', cityName);
         deliverySection.classList.remove('disabled');
@@ -935,29 +738,21 @@ document.addEventListener('DOMContentLoaded', function() {
             helpText.textContent = 'Виберіть спосіб доставки для завантаження відділень';
         }
         
-        // Якщо вже вибрано тип доставки - завантажуємо відділення
         const selectedDeliveryType = document.querySelector('input[name="delivery_type"]:checked');
-        if (selectedDeliveryType) {
-            loadBranches(cityName, selectedDeliveryType.value);
+        if (selectedDeliveryType && selectedCityRef) {
+            loadWarehouses(selectedCityRef, selectedDeliveryType.value);
         }
     }
     
     function disableDeliverySection() {
         console.log('❌ Деактивуємо доставку');
         deliverySection.classList.add('disabled');
-        
-        // Скидаємо кастомний селект
         resetBranchesSelect();
-        
-        const helpText = document.getElementById('delivery-address-help');
-        if (helpText) {
-            helpText.textContent = 'Спочатку виберіть місто';
-        }
+        selectedCityRef = null;
+        cityRefInput.value = '';
     }
     
-    // *** ФУНКЦІЇ ДЛЯ КАСТОМНОГО СЕЛЕКТУ ВІДДІЛЕНЬ ***
     function resetBranchesSelect() {
-        console.log('🔄 Скидаємо селект відділень');
         if (branchesCurrent) {
             branchesCurrent.setAttribute('disabled', 'true');
             branchesCurrent.querySelector('.branches-text').textContent = 'Спочатку виберіть місто та тип доставки';
@@ -965,131 +760,117 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (branchesDropdown) {
             branchesDropdown.style.display = 'none';
-            branchesDropdown.classList.remove('show'); // Також прибираємо клас
+            branchesDropdown.classList.remove('show');
             branchesDropdown.innerHTML = '';
         }
         if (deliveryAddressInput) {
             deliveryAddressInput.value = '';
         }
+        if (warehouseRefInput) {
+            warehouseRefInput.value = '';
+        }
     }
     
-    function setupBranchesSelect(branches, deliveryType) {
-        console.log('🏗️ Налаштовуємо селект відділень:', branches.length, 'елементів');
+    // ЗАВАНТАЖЕННЯ ВІДДІЛЕНЬ ЧЕРЕЗ API
+    async function loadWarehouses(cityRef, deliveryType) {
+        console.log('📦 Завантажуємо відділення:', cityRef, deliveryType);
         
-        if (!branchesCurrent || !branchesDropdown) {
-            console.error('❌ Елементи селекту не знайдені!');
+        if (deliveryType !== 'nova_poshta') {
+            branchesCurrent.removeAttribute('disabled');
+            branchesCurrent.querySelector('.branches-text').textContent = 'Укрпошта - введіть адресу вручну';
             return;
         }
         
-        const providerName = deliveryType === 'nova_poshta' ? 'Нової Пошти' : 'Укрпошти';
-        
-        if (branches.length === 0) {
-            branchesCurrent.setAttribute('disabled', 'true');
-            branchesCurrent.querySelector('.branches-text').textContent = `❌ Відділення ${providerName} не знайдено`;
-            branchesDropdown.innerHTML = '';
+        const cacheKey = `${cityRef}_${deliveryType}`;
+        if (branchesCache.has(cacheKey)) {
+            console.log('💾 Використовуємо кеш');
+            setupBranchesSelect(branchesCache.get(cacheKey));
             return;
         }
         
-        // Активуємо селект
         branchesCurrent.removeAttribute('disabled');
-        branchesCurrent.querySelector('.branches-text').textContent = `📍 Оберіть відділення ${providerName} (${branches.length})`;
+        branchesCurrent.querySelector('.branches-text').textContent = '🔄 Завантажуємо відділення...';
         
-        // Заповнюємо опції (СПРОЩЕНИЙ ФОРМАТ - ТІЛЬКИ НОМЕР І АДРЕСА)
-        branchesDropdown.innerHTML = branches.map(branch => {
-            // Витягуємо номер відділення з назви
-            const numberMatch = branch.name.match(/#?(\d+)/);
-            const branchNumber = numberMatch ? numberMatch[1] : '—';
+        try {
+            const response = await fetch(`/orders/api/warehouses/?city_ref=${encodeURIComponent(cityRef)}`);
+            const data = await response.json();
             
-            // Скорочуємо адресу, прибираючи зайву інформацію
-            let shortAddress = branch.address || branch.name;
-            shortAddress = shortAddress.replace(/відділення|відділення №\d+/gi, '').replace(/\s+/g, ' ').trim();
-            
+            if (data.warehouses && data.warehouses.length > 0) {
+                branchesCache.set(cacheKey, data.warehouses);
+                setupBranchesSelect(data.warehouses);
+            } else {
+                branchesCurrent.querySelector('.branches-text').textContent = '❌ Відділення не знайдено';
+            }
+        } catch (error) {
+            console.error('Помилка завантаження відділень:', error);
+            branchesCurrent.querySelector('.branches-text').textContent = '❌ Помилка завантаження';
+        }
+    }
+    
+    function setupBranchesSelect(warehouses) {
+        console.log('🏗️ Налаштовуємо селект відділень:', warehouses.length);
+        
+        if (warehouses.length === 0) {
+            branchesCurrent.setAttribute('disabled', 'true');
+            branchesCurrent.querySelector('.branches-text').textContent = '❌ Відділення не знайдено';
+            return;
+        }
+        
+        branchesCurrent.removeAttribute('disabled');
+        branchesCurrent.querySelector('.branches-text').textContent = `📍 Оберіть відділення (${warehouses.length})`;
+        
+        branchesDropdown.innerHTML = warehouses.map(wh => {
             return `
-                <div class="branch-option" data-value="${branch.name}" data-id="${branch.id}">
-                    <span class="branch-number">#${branchNumber}</span>
-                    <span class="branch-address">${shortAddress}</span>
+                <div class="branch-option" data-value="${wh.description}" data-ref="${wh.ref}">
+                    <span class="branch-number">#${wh.number || '—'}</span>
+                    <span class="branch-address">${wh.short_address || wh.description}</span>
                 </div>
             `;
         }).join('');
-        
-        console.log('✅ Селект налаштований, HTML додано:', branchesDropdown.innerHTML.length, 'символів');
-        
-        // Оновлюємо допоміжний текст
-        const helpText = document.getElementById('delivery-address-help');
-        if (helpText) {
-            helpText.textContent = `Знайдено ${branches.length} відділень ${providerName}`;
-        }
     }
     
-    // ВИПРАВЛЕНИЙ ОБРОБНИК ПОДІЙ ДЛЯ КАСТОМНОГО СЕЛЕКТУ
+    // ОБРОБНИКИ ПОДІЙ
     if (branchesCurrent) {
         branchesCurrent.addEventListener('click', function(e) {
-            console.log('🖱️ Клік по селекту відділень');
-            
-            if (this.hasAttribute('disabled')) {
-                console.log('❌ Селект відключений');
-                return;
-            }
+            if (this.hasAttribute('disabled')) return;
             
             e.preventDefault();
             e.stopPropagation();
             
             const isOpen = this.classList.contains('open');
-            console.log('📂 Стан селекту (до):', isOpen ? 'відкритий' : 'закритий');
             
             if (isOpen) {
-                // Закриваємо
                 this.classList.remove('open');
                 branchesDropdown.style.display = 'none';
                 branchesDropdown.classList.remove('show');
-                console.log('📐 Закриваємо dropdown');
             } else {
-                // Відкриваємо
                 this.classList.add('open');
                 branchesDropdown.style.display = 'block';
                 branchesDropdown.classList.add('show');
-                console.log('📂 Відкриваємо dropdown');
-                
-                // Додатковий DEBUG
-                console.log('🔍 Стилі dropdown після відкриття:', {
-                    display: branchesDropdown.style.display,
-                    hasShowClass: branchesDropdown.classList.contains('show'),
-                    offsetHeight: branchesDropdown.offsetHeight,
-                    innerHTML: branchesDropdown.innerHTML.slice(0, 100) + '...'
-                });
             }
         });
     }
     
-    // Клік на опцію відділення
     if (branchesDropdown) {
         branchesDropdown.addEventListener('click', function(e) {
-            console.log('🖱️ Клік по опції відділення');
             const option = e.target.closest('.branch-option');
             if (option) {
                 const value = option.getAttribute('data-value');
+                const ref = option.getAttribute('data-ref');
                 const number = option.querySelector('.branch-number').textContent;
                 const address = option.querySelector('.branch-address').textContent;
                 
-                console.log('✅ Вибрано відділення:', { value, number, address });
-                
-                // Оновлюємо відображення
                 branchesCurrent.querySelector('.branches-text').textContent = `${number} ${address}`;
-                
-                // Зберігаємо значення для форми
                 deliveryAddressInput.value = value;
+                warehouseRefInput.value = ref;
                 
-                // Закриваємо dropdown
                 branchesCurrent.classList.remove('open');
                 branchesDropdown.style.display = 'none';
                 branchesDropdown.classList.remove('show');
-                
-                console.log('✅ Вибрано відділення:', value);
             }
         });
     }
     
-    // Закриваємо dropdown при кліку поза ним
     document.addEventListener('click', function(e) {
         if (branchesContainer && !branchesContainer.contains(e.target)) {
             if (branchesCurrent && branchesDropdown) {
@@ -1100,160 +881,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // *** ЗАВАНТАЖЕННЯ ВІДДІЛЕНЬ ***
-    async function loadBranches(cityName, deliveryType) {
-        console.log('📦 Завантажуємо відділення:', cityName, deliveryType);
-        
-        // Перевіряємо кеш
-        const cacheKey = `${cityName}_${deliveryType}`;
-        if (branchesCache.has(cacheKey)) {
-            console.log('💾 Використовуємо кеш для', cacheKey);
-            setupBranchesSelect(branchesCache.get(cacheKey), deliveryType);
-            return;
-        }
-        
-        // Показуємо завантаження
-        if (branchesCurrent) {
-            branchesCurrent.removeAttribute('disabled');
-            branchesCurrent.querySelector('.branches-text').textContent = '🔄 Завантажуємо відділення...';
-        }
-        
-        try {
-            let branches = [];
-            
-            if (deliveryType === 'nova_poshta') {
-                branches = await fetchNovaPoshtaBranches(cityName);
-            } else if (deliveryType === 'ukrposhta') {
-                branches = await fetchUkrPoshtaBranches(cityName);
-            }
-            
-            // Зберігаємо в кеш
-            branchesCache.set(cacheKey, branches);
-            
-            setupBranchesSelect(branches, deliveryType);
-            
-        } catch (error) {
-            console.error('❌ Помилка завантаження відділень:', error);
-            // Fallback до мокових даних
-            const fallbackBranches = getFallbackBranches(cityName, deliveryType);
-            setupBranchesSelect(fallbackBranches, deliveryType);
-        }
-    }
-    
-    // API НОВОЇ ПОШТИ
-    async function fetchNovaPoshtaBranches(cityName) {
-        const requestData = {
-            "modelName": "AddressGeneral",
-            "calledMethod": "getWarehouses",
-            "methodProperties": {
-                "CityName": cityName,
-                "Language": "UA"
-            }
-        };
-        
-        const response = await fetch(DELIVERY_API.nova_poshta.url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestData)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.data && data.data.length > 0) {
-            return data.data.map(item => ({
-                id: item.Ref,
-                name: `Відділення №${item.Number}`,
-                address: item.ShortAddress || item.SiteKey
-            }));
-        }
-        
-        return [];
-    }
-    
-    // API УКРПОШТИ  
-    async function fetchUkrPoshtaBranches(cityName) {
-        // Це приклад - потрібно дослідити реальний API Укрпошти
-        const response = await fetch(`${DELIVERY_API.ukrposhta.url}?city=${encodeURIComponent(cityName)}`);
-        const data = await response.json();
-        
-        if (data && Array.isArray(data)) {
-            return data.map(item => ({
-                id: item.id,
-                name: `Відділення №${item.number || item.id}`,
-                address: item.address
-            }));
-        }
-        
-        return [];
-    }
-    
-    // FALLBACK ДАНІ (якщо API не працює)
-    function getFallbackBranches(cityName, deliveryType) {
-        const fallbackData = {
-            'nova_poshta': {
-                'Київ': [
-                    {id: 1, name: 'Відділення №1', address: 'вул. Хрещатик, 15'},
-                    {id: 2, name: 'Відділення №2', address: 'вул. Саксаганського, 33'},
-                    {id: 5, name: 'Відділення №5', address: 'вул. Оболонська, 1'},
-                    {id: 7, name: 'Відділення №7', address: 'просп. Перемоги, 67'},
-                    {id: 12, name: 'Відділення №12', address: 'вул. Антоновича, 44'}
-                ],
-                'Боярка': [
-                    {id: 101, name: 'Відділення №1', address: 'вул. Шевченка, 45'},
-                    {id: 102, name: 'Відділення №2', address: 'вул. Білогородська, 12'},
-                    {id: 103, name: 'Відділення №3', address: 'вул. Молодіжна, 8'}
-                ],
-                'Харків': [
-                    {id: 201, name: 'Відділення №1', address: 'вул. Сумська, 12'},
-                    {id: 203, name: 'Відділення №3', address: 'просп. Науки, 45'},
-                    {id: 208, name: 'Відділення №8', address: 'вул. Пушкінська, 67'}
-                ]
-            },
-            'ukrposhta': {
-                'Київ': [
-                    {id: 1001, name: 'Відділення №1', address: 'вул. Хрещатик, 22'},
-                    {id: 1004, name: 'Відділення №4', address: 'вул. Володимирська, 8'},
-                    {id: 1033, name: 'Відділення №33', address: 'просп. Перемоги, 15'}
-                ],
-                'Боярка': [
-                    {id: 2001, name: 'Відділення №1', address: 'вул. Шевченка, 50'},
-                    {id: 2002, name: 'Відділення №2', address: 'вул. Білогородська, 25'}
-                ],
-                'Харків': [
-                    {id: 3001, name: 'Відділення №1', address: 'вул. Сумська, 45'},
-                    {id: 3002, name: 'Відділення №2', address: 'просп. Леніна, 12'}
-                ]
-            }
-        };
-        
-        return fallbackData[deliveryType] && fallbackData[deliveryType][cityName] || 
-               generateDefaultBranches(cityName, deliveryType);
-    }
-    
-    function generateDefaultBranches(cityName, deliveryType) {
-        return [
-            {id: 1, name: 'Відділення №1', address: 'Центральна частина міста'},
-            {id: 2, name: 'Відділення №2', address: 'Залізничний вокзал'},
-            {id: 3, name: 'Відділення №3', address: 'Центральний ринок'}
-        ];
-    }
-    
-    // *** ОБРОБНИКИ ПОДІЙ ДЛЯ ТИПУ ДОСТАВКИ ***
     deliveryTypeInputs.forEach(input => {
         input.addEventListener('change', function() {
-            const cityName = cityInput.value.trim();
-            if (cityName && this.checked) {
-                loadBranches(cityName, this.value);
+            if (selectedCityRef && this.checked) {
+                loadWarehouses(selectedCityRef, this.value);
             }
-            
-            // ВІЗУАЛЬНЕ ОНОВЛЕННЯ КНОПОК
             updateDeliveryTypeVisual();
         });
     });
     
-    // Робимо delivery option кнопки клікабельними
     const deliveryOptions = document.querySelectorAll('.delivery-type-option');
     deliveryOptions.forEach(option => {
         option.addEventListener('click', function(e) {
@@ -1267,7 +903,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Робимо payment option кнопки клікабельними
     const paymentOptions = document.querySelectorAll('.payment-type-option');
     paymentOptions.forEach(option => {
         option.addEventListener('click', function(e) {
@@ -1281,7 +916,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // ФУНКЦІЯ ВІЗУАЛЬНОГО ОНОВЛЕННЯ ТИПУ ДОСТАВКИ
     function updateDeliveryTypeVisual() {
         deliveryOptions.forEach(option => {
             const radio = option.querySelector('input[type="radio"]');
@@ -1293,7 +927,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ФУНКЦІЯ ВІЗУАЛЬНОГО ОНОВЛЕННЯ СПОСОБУ ОПЛАТИ
     function updatePaymentTypeVisual() {
         paymentOptions.forEach(option => {
             const radio = option.querySelector('input[type="radio"]');
@@ -1303,38 +936,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.classList.remove('selected');
             }
         });
-        
-        // Оновлюємо текст підказки
-        const paymentHelp = document.getElementById('payment-help');
-        const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
-        if (selectedPayment && paymentHelp) {
-            if (selectedPayment.value === 'card_online') {
-                paymentHelp.textContent = 'Оплата карткою проходить через захищений сервіс Portmone';
-                submitText.textContent = 'Перейти до оплати';
-            } else {
-                paymentHelp.textContent = 'Оплата при отриманні товару';
-                submitText.textContent = 'Підтвердити замовлення';
-            }
-        }
     }
     
-    // Початкове візуальне оновлення
     updateDeliveryTypeVisual();
     updatePaymentTypeVisual();
     
-    // Обробник зміни способу оплати
     const paymentMethodInputs = document.querySelectorAll('input[name="payment_method"]');
     paymentMethodInputs.forEach(input => {
         input.addEventListener('change', updatePaymentTypeVisual);
     });
     
-    // *** МАСКА ДЛЯ ТЕЛЕФОНУ ***
     const phoneInput = document.querySelector('input[name="phone"]');
     if (phoneInput) {
         phoneInput.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             
-            // Автоматичне додавання +380
             if (value.startsWith('380')) {
                 value = '+' + value;
             } else if (value.startsWith('0')) {
@@ -1343,7 +959,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 value = '+380' + value;
             }
             
-            // Обмеження довжини
             if (value.length > 13) {
                 value = value.slice(0, 13);
             }
@@ -1351,18 +966,15 @@ document.addEventListener('DOMContentLoaded', function() {
             e.target.value = value;
         });
         
-        // Placeholder з прикладом
         phoneInput.placeholder = '+380671234567';
     }
     
-    // *** ВАЛІДАЦІЯ ФОРМИ ПРИ НАДСИЛАННІ ***
     const form = document.getElementById('checkout-form');
     const submitBtn = document.getElementById('submit-btn');
     const submitText = document.getElementById('submit-text');
     
     if (form) {
         form.addEventListener('submit', function(e) {
-            // Перевіряємо чи вибрано місто
             const cityValue = cityInput.value.trim();
             if (!cityValue) {
                 alert('⚠️ Будь ласка, виберіть місто');
@@ -1370,7 +982,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Перевіряємо чи вибрано спосіб доставки
             const selectedDelivery = document.querySelector('input[name="delivery_type"]:checked');
             if (!selectedDelivery) {
                 alert('⚠️ Будь ласка, виберіть спосіб доставки');
@@ -1378,23 +989,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Перевіряємо чи вибрано відділення
             const selectedBranch = deliveryAddressInput.value;
-            if (!selectedBranch) {
+            if (!selectedBranch && selectedDelivery.value === 'nova_poshta') {
                 alert('⚠️ Будь ласка, виберіть відділення доставки');
                 e.preventDefault();
                 return;
             }
             
-            // Показуємо анімацію завантаження
             submitBtn.disabled = true;
             submitText.textContent = 'Обробка замовлення...';
             submitBtn.insertAdjacentHTML('afterbegin', '<span class="loading-spinner"></span>');
         });
     }
     
-    console.log('✨ ВИПРАВЛЕНИЙ checkout form готовий до роботи!');
-    console.log(`📊 Боярка включена в список: ${UKRAINIAN_CITIES.includes('Боярка')}`);
+    console.log('✨ Nova Poshta Integration готова!');
 });
 </script>
 {% endblock %}
