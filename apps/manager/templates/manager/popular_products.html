@@ -68,31 +68,38 @@
   </tbody>
 </table>
 
-<!-- Модальне вікно додавання -->
+<!-- Модальне вікно додавання з AJAX пошуком -->
 <div id="add-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
-  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto;">
     <h3 style="margin-top: 0;">Додати товар в ТОП</h3>
+    
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 600;">Пошук товару:</label>
+      <input type="text" id="search-product" 
+             placeholder="Почніть вводити назву, артикул або штрих-код..." 
+             style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+      <div id="search-loader" style="display: none; margin-top: 10px; color: #6c757d; text-align: center;">
+        🔍 Шукаємо товари...
+      </div>
+    </div>
+    
     <form id="add-form">
       {% csrf_token %}
       <div style="margin-bottom: 15px;">
         <label style="display: block; margin-bottom: 5px; font-weight: 600;">Товар:</label>
-        <input type="text" id="search-product" placeholder="Почніть вводити назву або штрих-код..." 
-               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px;">
-        <select name="product_id" id="product-select" required size="10" 
-                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-          <option value="">Оберіть товар...</option>
-          {% for product in all_products %}
-            <option value="{{ product.id }}" data-name="{{ product.name|lower }}" data-barcode="{{ product.barcode|default:'' }}">
-              {{ product.name }} {% if product.barcode %}({{ product.barcode }}){% endif %}
-            </option>
-          {% endfor %}
+        <select name="product_id" id="product-select" required size="12" 
+                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95rem;">
+          <option value="">Почніть пошук...</option>
         </select>
+        <div style="margin-top: 8px; color: #6c757d; font-size: 0.85rem;">
+          💡 Введіть мінімум 2 символи для пошуку
+        </div>
       </div>
       <div style="display: flex; gap: 10px;">
         <button type="submit" style="flex: 1; padding: 10px; background: var(--color-primary); color: white; border: none; border-radius: 4px; cursor: pointer;">
           Додати
         </button>
-        <button type="button" onclick="document.getElementById('add-modal').style.display='none'" 
+        <button type="button" onclick="closeAddModal()" 
                 style="flex: 1; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
           Скасувати
         </button>
@@ -128,25 +135,57 @@
 </div>
 
 <script>
-// Пошук товарів
+let searchTimeout = null;
+
+// AJAX пошук товарів
 document.getElementById('search-product')?.addEventListener('input', (e) => {
-  const query = e.target.value.toLowerCase();
-  const select = document.getElementById('product-select');
-  const options = select.querySelectorAll('option');
+  const query = e.target.value.trim();
   
-  options.forEach(option => {
-    if (option.value === '') return;
-    
-    const name = option.dataset.name || '';
-    const barcode = option.dataset.barcode || '';
-    
-    if (name.includes(query) || barcode.includes(query)) {
-      option.style.display = '';
-    } else {
-      option.style.display = 'none';
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+  
+  if (query.length < 2) {
+    document.getElementById('product-select').innerHTML = '<option value="">Введіть мінімум 2 символи...</option>';
+    return;
+  }
+  
+  document.getElementById('search-loader').style.display = 'block';
+  
+  searchTimeout = setTimeout(async () => {
+    try {
+      const response = await fetch(`/manager/api/search-products/?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      
+      const select = document.getElementById('product-select');
+      
+      if (data.products && data.products.length > 0) {
+        let html = '';
+        data.products.forEach(product => {
+          html += `<option value="${product.id}">`;
+          html += `${product.name}`;
+          if (product.barcode) html += ` (${product.barcode})`;
+          if (product.sku) html += ` [${product.sku}]`;
+          html += `</option>`;
+        });
+        select.innerHTML = html;
+      } else {
+        select.innerHTML = '<option value="">Товари не знайдено</option>';
+      }
+    } catch (error) {
+      console.error('Помилка пошуку:', error);
+      document.getElementById('product-select').innerHTML = '<option value="">Помилка пошуку</option>';
+    } finally {
+      document.getElementById('search-loader').style.display = 'none';
     }
-  });
+  }, 500); // Затримка 500мс для зменшення кількості запитів
 });
+
+function closeAddModal() {
+  document.getElementById('add-modal').style.display='none';
+  document.getElementById('search-product').value = '';
+  document.getElementById('product-select').innerHTML = '<option value="">Почніть пошук...</option>';
+}
 
 // Drag & Drop
 let draggedElement = null;

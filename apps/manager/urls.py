@@ -38,4 +38,6 @@ urlpatterns = [
     path('api/reorder-banners/', views.reorder_banners, name='reorder_banners'),
     path('api/reorder-popular-products/', views.reorder_popular_products, name='reorder_popular_products'),
     path('api/reorder-popular-categories/', views.reorder_popular_categories, name='reorder_popular_categories'),
+    path('api/search-products/', views.search_products_ajax, name='search_products_ajax'),
+    path('api/categories-by-main/', views.get_categories_by_main, name='get_categories_by_main'),
 ]

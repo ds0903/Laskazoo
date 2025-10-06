@@ -10,7 +10,7 @@
   <ol style="margin: 10px 0 0 20px; padding: 0;">
     <li>Знайдіть товар за штрих-кодом</li>
     <li>Виберіть потрібні товари зі списку</li>
-    <li>Заповніть атрибути: категорію, бренд</li>
+    <li>Заповніть атрибути: головну категорію → підкатегорію → бренд</li>
     <li>Натисніть "Опублікувати на сайт"</li>
   </ol>
 </div>
@@ -65,8 +65,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await response.json();
     categoriesData = data.main_categories || [];
     brandsData = data.brands || [];
+    
+    console.log('Завантажено категорій:', categoriesData.length);
+    console.log('Завантажено брендів:', brandsData.length);
   } catch (error) {
     console.error('Помилка завантаження категорій та брендів:', error);
+    alert('Помилка завантаження даних категорій та брендів');
   }
   
   document.getElementById('search-input').addEventListener('keypress', (e) => {
@@ -123,7 +127,6 @@ async function syncTSGoods() {
     
     if (data.success) {
       alert(data.message);
-      // Перезавантажуємо товари після синхронізації
       loadGoods(currentPage);
     } else {
       alert('Помилка: ' + (data.error || 'Невідома помилка'));
@@ -143,7 +146,6 @@ function displaySearchResults() {
   const list = document.getElementById('results-list');
   const pagination = document.getElementById('pagination-controls');
   
-  // Статистика
   stats.innerHTML = `Знайдено <strong>${totalCount}</strong> товар(ів), які ще не додані на сайт. Сторінка ${currentPage} з ${totalPages}`;
   
   if (searchResults.length === 0) {
@@ -183,12 +185,10 @@ function displaySearchResults() {
   if (totalPages > 1) {
     paginationHtml += '<div style="display: flex; gap: 5px; justify-content: center; align-items: center;">';
     
-    // Попередня
     if (currentPage > 1) {
       paginationHtml += `<button onclick="loadGoods(${currentPage - 1})" style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">← Назад</button>`;
     }
     
-    // Сторінки
     for (let i = 1; i <= totalPages; i++) {
       if (i === currentPage) {
         paginationHtml += `<button style="padding: 8px 12px; border: 1px solid var(--color-primary); background: var(--color-primary); color: white; border-radius: 4px; font-weight: 600;">${i}</button>`;
@@ -199,7 +199,6 @@ function displaySearchResults() {
       }
     }
     
-    // Наступна
     if (currentPage < totalPages) {
       paginationHtml += `<button onclick="loadGoods(${currentPage + 1})" style="padding: 8px 12px; border: 1px solid #dee2e6; background: white; border-radius: 4px; cursor: pointer;">Вперед →</button>`;
     }
@@ -245,28 +244,37 @@ function displaySelectedGoods() {
   
   let html = '';
   selectedGoods.forEach((good, index) => {
-    html += `<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid ${good.category_id && good.brand_id ? '#28a745' : '#ffc107'};">`;
+    const isComplete = good.category_id && good.brand_id;
+    const borderColor = isComplete ? '#28a745' : '#ffc107';
+    
+    html += `<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid ${borderColor};">`;
     html += `<div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: start;">`;
+    
+    // Інфо про товар
     html += `<div>`;
     html += `<strong style="display: block; margin-bottom: 5px;">${good.name}</strong>`;
     html += `<small style="color: #6c757d;">Артикул: ${good.articul || '—'} | Штрих-код: ${good.barcode || '—'} | Ціна: ${good.price.toFixed(2)} грн</small>`;
     html += `</div>`;
     
+    // Головна категорія
     html += `<div>`;
     html += `<label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Головна категорія:</label>`;
-    html += `<select onchange="updateMainCategory(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
+    html += `<select id="main-cat-${index}" onchange="updateMainCategory(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
     html += `<option value="">Оберіть...</option>`;
     categoriesData.forEach(mainCat => {
       const selected = good.main_category_id == mainCat.id ? 'selected' : '';
       html += `<option value="${mainCat.id}" ${selected}>${mainCat.name}</option>`;
     });
     html += `</select>`;
-    html += `<div id="subcategory-${index}" style="margin-top: 10px;"></div>`;
+    
+    // Контейнер для підкатегорії
+    html += `<div id="subcat-container-${index}" style="margin-top: 10px;"></div>`;
     html += `</div>`;
     
+    // Бренд
     html += `<div>`;
     html += `<label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Бренд:</label>`;
-    html += `<select onchange="updateBrand(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
+    html += `<select id="brand-${index}" onchange="updateBrand(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
     html += `<option value="">Оберіть...</option>`;
     brandsData.forEach(brand => {
       const selected = good.brand_id == brand.id ? 'selected' : '';
@@ -275,31 +283,43 @@ function displaySelectedGoods() {
     html += `</select>`;
     html += `</div>`;
     
+    // Кнопка видалення
     html += `<div style="display: flex; align-items: center;">`;
     html += `<button onclick="removeGood(${index})" style="padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Видалити</button>`;
     html += `</div>`;
-    html += `</div>`;
-    html += `</div>`;
     
-    if (good.main_category_id) {
-      updateSubcategorySelect(index);
-    }
+    html += `</div>`;
+    html += `</div>`;
   });
   
   list.innerHTML = html;
   container.style.display = 'block';
+  
+  // КРИТИЧНО: Після рендерингу оновлюємо всі підкатегорії
+  selectedGoods.forEach((good, index) => {
+    if (good.main_category_id) {
+      renderSubcategorySelect(index);
+    }
+  });
 }
 
 function updateMainCategory(index, mainCategoryId) {
+  console.log(`Оновлення головної категорії ${index}: ${mainCategoryId}`);
   selectedGoods[index].main_category_id = mainCategoryId;
   selectedGoods[index].category_id = null;
-  updateSubcategorySelect(index);
-  displaySelectedGoods();
+  
+  // Відразу рендеримо підкатегорії
+  renderSubcategorySelect(index);
 }
 
-function updateSubcategorySelect(index) {
+function renderSubcategorySelect(index) {
   const good = selectedGoods[index];
-  const container = document.getElementById(`subcategory-${index}`);
+  const container = document.getElementById(`subcat-container-${index}`);
+  
+  if (!container) {
+    console.error(`Контейнер subcat-container-${index} не знайдено`);
+    return;
+  }
   
   if (!good.main_category_id) {
     container.innerHTML = '';
@@ -307,13 +327,15 @@ function updateSubcategorySelect(index) {
   }
   
   const mainCat = categoriesData.find(c => c.id == good.main_category_id);
+  console.log(`Головна категорія:`, mainCat);
+  
   if (!mainCat || !mainCat.categories || mainCat.categories.length === 0) {
-    container.innerHTML = '<p style="color: #6c757d; font-size: 0.85rem; margin-top: 5px;">Немає підкатегорій</p>';
+    container.innerHTML = '<p style="color: #dc3545; font-size: 0.85rem; margin-top: 5px;">❌ Немає підкатегорій</p>';
     return;
   }
   
   let html = '<label style="display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600;">Підкатегорія:</label>';
-  html += `<select onchange="updateCategory(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
+  html += `<select id="subcat-${index}" onchange="updateCategory(${index}, this.value)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">`;
   html += `<option value="">Оберіть...</option>`;
   mainCat.categories.forEach(cat => {
     const selected = good.category_id == cat.id ? 'selected' : '';
@@ -322,15 +344,22 @@ function updateSubcategorySelect(index) {
   html += `</select>`;
   
   container.innerHTML = html;
+  console.log(`Підкатегорії відрендерені для індексу ${index}`);
 }
 
 function updateCategory(index, categoryId) {
+  console.log(`Оновлення підкатегорії ${index}: ${categoryId}`);
   selectedGoods[index].category_id = categoryId;
+  
+  // Перемальовуємо для оновлення кольору рамки
   displaySelectedGoods();
 }
 
 function updateBrand(index, brandId) {
+  console.log(`Оновлення бренду ${index}: ${brandId}`);
   selectedGoods[index].brand_id = brandId;
+  
+  // Перемальовуємо для оновлення кольору рамки
   displaySelectedGoods();
 }
 
@@ -343,7 +372,7 @@ async function publishProducts() {
   const invalid = selectedGoods.filter(g => !g.category_id || !g.brand_id);
   
   if (invalid.length > 0) {
-    alert(`Заповніть категорію та бренд для всіх товарів! Не заповнено: ${invalid.length}`);
+    alert(`Заповніть підкатегорію та бренд для всіх товарів! Не заповнено: ${invalid.length}`);
     return;
   }
   
@@ -367,7 +396,6 @@ async function publishProducts() {
       alert(`Успішно створено ${data.created} товар(ів)!${data.errors.length > 0 ? '\n\nПомилки:\n' + data.errors.join('\n') : ''}`);
       selectedGoods = [];
       displaySelectedGoods();
-      // Перезавантажуємо список товарів
       loadGoods(currentPage);
     } else {
       alert('Помилка: ' + (data.error || 'Невідома помилка'));

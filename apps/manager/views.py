@@ -531,7 +531,9 @@ def manager_popular_products(request):
         return redirect('home')
     
     popular_products = PopularProduct.objects.select_related('product').order_by('position', '-created_at')
-    all_products = Product.objects.filter(is_active=True).order_by('name')[:100]
+    
+    # ВИПРАВЛЕНО: Показуємо ВСІ активні товари, без обмеження
+    all_products = Product.objects.filter(is_active=True).order_by('name')
     
     context = {
         'popular_products': popular_products,
@@ -539,6 +541,28 @@ def manager_popular_products(request):
     }
     
     return render(request, 'manager/popular_products.html', context)
+
+
+@login_required
+def search_products_ajax(request):
+    """AJAX пошук товарів для додавання в хіти"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'products': []})
+    
+    # Шукаємо по назві, артикулу та штрихкоду
+    products = Product.objects.filter(
+        Q(name__icontains=query) |
+        Q(sku__icontains=query) |
+        Q(barcode__icontains=query),
+        is_active=True
+    ).values('id', 'name', 'barcode', 'sku')[:50]  # Обмежуємо до 50 результатів
+    
+    return JsonResponse({'products': list(products)})
 
 
 @login_required
@@ -766,3 +790,22 @@ def reorder_popular_categories(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def get_categories_by_main(request):
+    """API для отримання категорій по головній категорії (каскадний вибір)"""
+    if not is_manager(request.user):
+        return JsonResponse({'error': 'Немає доступу'}, status=403)
+    
+    main_category_id = request.GET.get('main_category_id')
+    
+    if not main_category_id:
+        return JsonResponse({'categories': []})
+    
+    categories = Category.objects.filter(
+        main_category_id=main_category_id,
+        is_active=True
+    ).values('id', 'name').order_by('name')
+    
+    return JsonResponse({'categories': list(categories)})
