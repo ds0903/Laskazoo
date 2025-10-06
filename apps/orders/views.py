@@ -516,13 +516,13 @@ def checkout(request):
                             order.novaposhta_ttn = result.get('int_doc_number', '')
                             order.save(update_fields=['novaposhta_ttn'])
                             print(f"✅ ТТН створено: {order.novaposhta_ttn}")
-                            messages.success(request, f'ТТН Нової Пошти створено: {order.novaposhta_ttn}')
+                            # messages.success(request, f'ТТН Нової Пошти створено: {order.novaposhta_ttn}')
                         else:
                             print(f"❌ Не вдалося створити ТТН")
-                            messages.warning(request, 'Замовлення оформлено, але ТТН не створено. Зверніться до менеджера.')
+#                             messages.warning(request, 'Замовлення оформлено, але ТТН не створено. Зверніться до менеджера.')
                     except Exception as e:
                         print(f"❌ Помилка створення ТТН: {e}")
-                        messages.warning(request, 'Замовлення оформлено, але виникла помилка при створенні ТТН.')
+#                         messages.warning(request, 'Замовлення оформлено, але виникла помилка при створенні ТТН.')
                 else:
                     print("⚠️ Дані відправника не налаштовані")
                     messages.info(request, 'Замовлення оформлено. ТТН буде створено менеджером.')

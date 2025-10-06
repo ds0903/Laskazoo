@@ -1808,7 +1808,7 @@ a {
 }
 :root{
   --prod-min-height: 430px;
-  --prod-max-height: 600px;
+  --prod-max-height: 500px;
 }
 
 /* базовий стан */

@@ -36,3 +36,4 @@
 
 # python manage.py setup_novaposhta
 # python manage.py find_warehouse --city="Київ" --number="366"
+# python manage.py sync_novaposhta_statuses

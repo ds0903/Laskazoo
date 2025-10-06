@@ -373,6 +373,44 @@ class NovaPoshtaAPI:
             })
         
         return contacts
+    
+    def get_document_tracking(self, ttn_number):
+        """
+        Отримання статусу відстеження ТТН
+        
+        Args:
+            ttn_number (str): Номер ТТН
+        
+        Returns:
+            dict: Інформація про статус або None
+        """
+        data = self._make_request(
+            model_name="TrackingDocument",
+            called_method="getStatusDocuments",
+            method_properties={"Documents": [{"DocumentNumber": ttn_number}]}
+        )
+        
+        if not data or len(data) == 0:
+            return None
+        
+        item = data[0]
+        
+        return {
+            'number': item.get('Number', ''),
+            'status': item.get('Status', ''),
+            'status_code': item.get('StatusCode', ''),
+            'recipient_date_time': item.get('RecipientDateTime', ''),
+            'recipient_full_name': item.get('RecipientFullName', ''),
+            'warehouse_recipient': item.get('WarehouseRecipient', ''),
+            'city_sender': item.get('CitySender', ''),
+            'city_recipient': item.get('CityRecipient', ''),
+            'date_created': item.get('DateCreated', ''),
+            'date_scan': item.get('DateScan', ''),
+            'scheduled_delivery_date': item.get('ScheduledDeliveryDate', ''),
+            'actual_delivery_date': item.get('ActualDeliveryDate', ''),
+            'redelivery_num': item.get('RedeliveryNum', ''),
+            'phone_recipient': item.get('PhoneRecipient', ''),
+        }
 
 
 # Singleton instance

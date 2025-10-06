@@ -10,6 +10,7 @@ class Order(models.Model):
     STATUS_IN_PROCESS = 'in_process'
     STATUS_PROCESSING = 'processing'
     STATUS_SHIPPED = 'shipped'
+    STATUS_DELIVERED = 'delivered'
     STATUS_COMPLETED = 'completed'
     STATUS_CANCELED = 'canceled'
 
@@ -18,7 +19,8 @@ class Order(models.Model):
         (STATUS_NEW, 'Нове'),
         (STATUS_IN_PROCESS, 'В процесі'),
         (STATUS_PROCESSING, 'Обробляється'),
-        (STATUS_SHIPPED, 'В дорозі'),
+        (STATUS_SHIPPED, 'Відправлено'),
+        (STATUS_DELIVERED, 'Доставлено'),
         (STATUS_COMPLETED, 'Виконане'),
         (STATUS_CANCELED, 'Скасоване'),
     ]
