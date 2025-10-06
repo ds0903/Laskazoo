@@ -6,12 +6,12 @@ from django.views.decorators.http import require_http_methods
 
 @require_http_methods(['POST', 'GET'])
 def toggle(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(Product, pk=pk, is_active=True)
 
     variant_id = request.POST.get('variant') or request.GET.get('variant')
     variant = None
     if variant_id:
-        variant = get_object_or_404(Product_Variant, pk=variant_id)
+        variant = get_object_or_404(Product_Variant, pk=variant_id, is_active=True)
         if variant.product_id != product.id:
             return HttpResponseBadRequest('Variant does not belong to product')
 
@@ -68,28 +68,35 @@ def toggle(request, pk):
 
 def favourite_list(request):
     if request.user.is_authenticated:
+        # Показуємо тільки активні товари та варіанти
         favs = (Favourite.objects
-                .filter(user=request.user)
+                .filter(user=request.user, product__is_active=True)
                 .select_related('product', 'variant', 'product__brand', 'product__category'))
-        fav_ids = set(favs.values_list('product_id', flat=True))
+        
+        # Додатково фільтруємо варіанти
+        favs = [f for f in favs if not f.variant or f.variant.is_active]
+        
+        fav_ids = set(f.product_id for f in favs)
         fav_variant_ids = [f.variant_id for f in favs if f.variant_id]
     else:
         fav_var_ids = list(map(int, request.session.get('fav_variant_ids', [])))
         fav_prod_ids = list(map(int, request.session.get('fav_product_ids', [])))
 
         favs = []
-        products = {p.id: p for p in Product.objects.filter(id__in=fav_prod_ids).select_related('brand', 'category')}
+        # Показуємо тільки активні товари
+        products = {p.id: p for p in Product.objects.filter(id__in=fav_prod_ids, is_active=True).select_related('brand', 'category')}
         for pid in fav_prod_ids:
             p = products.get(pid)
             if p:
                 favs.append(type('F', (), {'product': p, 'variant': None, 'id': f'p-{pid}'}))
 
-        variants = list(Product_Variant.objects.filter(id__in=fav_var_ids).select_related('product', 'product__brand', 'product__category'))
+        # Показуємо тільки активні варіанти
+        variants = list(Product_Variant.objects.filter(id__in=fav_var_ids, is_active=True, product__is_active=True).select_related('product', 'product__brand', 'product__category'))
         for v in variants:
             favs.append(type('F', (), {'product': v.product, 'variant': v, 'id': f'v-{v.id}'}))
 
         fav_ids = set(fav_prod_ids) | set(v.product_id for v in variants)
-        fav_variant_ids = fav_var_ids  # просто передаємо
+        fav_variant_ids = fav_var_ids
 
     return render(request, 'zoosvit/favourites/favourites_list.html', {
         'title': 'Моє обране',
@@ -104,7 +111,7 @@ def favourite_list(request):
 def api_count(request):
     """Кількість улюблених для бейджика в шапці."""
     if request.user.is_authenticated:
-        c = Favourite.objects.filter(user=request.user).count()
+        c = Favourite.objects.filter(user=request.user, product__is_active=True).count()
     else:
         c = len(request.session.get('fav_variant_ids', [])) + \
             len(request.session.get('fav_product_ids', []))

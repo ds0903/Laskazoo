@@ -25,7 +25,7 @@ def search_suggest(request):
 
 
     qs = (
-        Product.objects.filter(Q(name__icontains=q))
+        Product.objects.filter(Q(name__icontains=q), is_active=True)
         .annotate(
             score=Case(
                 When(name__iexact=q, then=Value(100)),
@@ -56,7 +56,7 @@ def quick_search(request):
         return redirect(reverse("products:catalog"))
 
 
-    pqs = Product.objects.filter(name__icontains=q).annotate(
+    pqs = Product.objects.filter(name__icontains=q, is_active=True).annotate(
         score=Case(
             When(name__iexact=q, then=Value(100)),
             When(name__istartswith=q, then=Value(80)),
@@ -66,7 +66,7 @@ def quick_search(request):
     ).values("id", "score")
 
 
-    vqs = Product_Variant.objects.filter(name__icontains=q).select_related("product").annotate(
+    vqs = Product_Variant.objects.filter(name__icontains=q, is_active=True).select_related("product").annotate(
         score=Case(
             When(name__iexact=q, then=Value(100)),
             When(name__istartswith=q, then=Value(75)),
@@ -91,7 +91,7 @@ def quick_search(request):
 
     if best_product_id:
         try:
-            prod = Product.objects.get(id=best_product_id)
+            prod = Product.objects.get(id=best_product_id, is_active=True)
             return redirect(prod.get_absolute_url())
         except Product.DoesNotExist:
             pass
@@ -104,12 +104,14 @@ def catalog(request):
 
     variants_qs = (
         Product_Variant.objects
+        .filter(is_active=True)
         .only('id', 'product_id', 'sku', 'retail_price', 'weight', 'size', 'image', 'warehouse_quantity')
         .order_by('retail_price')
     )
 
     base_qs = (
         Product.objects
+        .filter(is_active=True)
         .select_related('brand', 'category')
         .prefetch_related(
             Prefetch('variants', queryset=variants_qs, to_attr='variants_for_card')
@@ -157,7 +159,7 @@ def catalog(request):
     return render(request, 'zoosvit/products/catalog.html', ctx)
 
 def subcategory_list(request, main_slug):
-    main = get_object_or_404(Main_Categories, slug=main_slug)
+    main = get_object_or_404(Main_Categories, slug=main_slug, is_active=True)
     subs = main.categories.filter(is_active=True).order_by('id')
     return render(request, 'zoosvit/products/subcategory_list.html', {
         'main':       main,
@@ -168,13 +170,14 @@ def category_list(request, main_slug, slug):
     category = get_object_or_404(
         Category,
         slug=slug,
-        main_category__slug=main_slug
+        main_category__slug=main_slug,
+        is_active=True
     )
 
 
     base_qs = (
         Product.objects
-        .filter(category=category)
+        .filter(category=category, is_active=True)
         .select_related('brand', 'category')
         .prefetch_related('variants')
     )
@@ -224,16 +227,18 @@ def product_detail(request, main_slug, slug, product_slug):
     category = get_object_or_404(
         Category,
         slug=slug,
-        main_category__slug=main_slug
+        main_category__slug=main_slug,
+        is_active=True
     )
 
     product = get_object_or_404(
         Product,
         slug=product_slug,
-        category=category
+        category=category,
+        is_active=True
     )
 
-    variants = product.variants.all()
+    variants = product.variants.filter(is_active=True).all()
 
     # Додаємо логіку для обраних товарів
     if request.user.is_authenticated:
@@ -275,7 +280,7 @@ def _apply_filters(request, base_qs):
         qs = qs.filter(retail_price__lte=price_max)
     if in_stock:
 
-        qs = qs.filter(variants__warehouse_quantity__gt=0).distinct()
+        qs = qs.filter(variants__warehouse_quantity__gt=0, variants__is_active=True).distinct()
 
 
     brands_agg = (
@@ -305,7 +310,7 @@ def _apply_filters(request, base_qs):
 
 def catalog_by_brand(request, brand_slug):
 
-    cur_brand = get_object_or_404(Brand, brand_slug__iexact=brand_slug)
+    cur_brand = get_object_or_404(Brand, brand_slug__iexact=brand_slug, is_active=True)
 
 
     picked_brands = request.GET.getlist('brand')           # може бути кілька
@@ -339,7 +344,7 @@ def catalog_by_brand(request, brand_slug):
 
     if in_stock:
         products_qs = products_qs.filter(
-            Q(variants__warehouse_quantity__gt=0) |
+            Q(variants__warehouse_quantity__gt=0, variants__is_active=True) |
             Q(warehouse_quantity__gt=0)
         )
 
@@ -375,7 +380,7 @@ def catalog_by_brand(request, brand_slug):
         except Exception: pass
     if in_stock:
         sidebar = sidebar.filter(
-            Q(variants__warehouse_quantity__gt=0) |
+            Q(variants__warehouse_quantity__gt=0, variants__is_active=True) |
             Q(warehouse_quantity__gt=0)
         )
 
@@ -408,9 +413,9 @@ def catalog_by_brand(request, brand_slug):
     })
 
 def catalog_by_country(request, country_slug):
-    country_brands = Brand.objects.filter(country_slug__iexact=country_slug)
+    country_brands = Brand.objects.filter(country_slug__iexact=country_slug, is_active=True)
     products_qs = (Product.objects
-                .filter(brand__in=country_brands)
+                .filter(brand__in=country_brands, is_active=True)
                 .select_related('brand', 'category'))
     
     # Додаємо пагінацію

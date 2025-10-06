@@ -71,6 +71,7 @@ def home(request):
     # Банери для карусел головної сторінки
     banners = Banner.objects.filter(is_active=True).order_by('position', '-created_at')[:4]
     
+    # Популярні товари - показуємо тільки активні
     populars = (
        PopularProduct.objects
        .select_related('product', 'product__brand', 'product__category')
@@ -78,16 +79,18 @@ def home(request):
        .filter(is_active=True, product__is_active=True)
     )[:20]
 
+    # Популярні категорії - показуємо тільки активні
     popular_cats = (
         PopularCategory.objects
-        .filter(is_active=True)
+        .filter(is_active=True, category__is_active=True)
         .select_related('category__main_category')
         .order_by('position', '-created_at')[:18]
     )
 
     product_ids = [pp.product_id for pp in populars]
+    # Варіанти товарів - показуємо тільки активні
     variants = (Product_Variant.objects
-                .filter(product_id__in=product_ids)
+                .filter(product_id__in=product_ids, is_active=True)
                 .only('id', 'product_id', 'sku', 'retail_price', 'weight', 'size', 'image', 'warehouse_quantity')
                 .order_by('retail_price'))
 

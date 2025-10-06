@@ -58,7 +58,8 @@ class Command(BaseCommand):
         "Матч ТІЛЬКИ по torgsoft_id == good_id. Якщо не знайдено — пропускаємо.\n"
         "Після матчу оновлюємо: sku←articul (якщо непорожній), barcode←barcode (якщо непорожній),\n"
         "та грошові поля: prime_cost, retail_price, wholesale_price, retail_price_with_discount (Decimal, 2 знаки),\n"
-        "і warehouse_quantity (Integer)."
+        "і warehouse_quantity (Integer).\n"
+        "ВАЖЛИВО: Якщо warehouse_quantity = 0, автоматично робимо is_active = False."
     )
 
     def add_arguments(self, parser):
@@ -130,33 +131,29 @@ class Command(BaseCommand):
 
 
             if ts_barcode:
-                set_if_has_track('barcode', ts_barcode)  # <-- важливо
+                set_if_has_track('barcode', ts_barcode)
 
             if ts_sku:
-                set_if_has_track('sku', ts_sku)  # <-- важливо
+                set_if_has_track('sku', ts_sku)
 
             if ts_name:
-                set_if_has_track('name', ts_name)  # <-- важливо
-            #
-            # if ts_barcode:
-            #     set_if_has(obj, 'barcode', ts_barcode, changes)
-            # if ts_sku:
-            #     set_if_has(obj, 'sku', ts_sku, changes)
-            # if ts_name:
-            #     set_if_has(obj, 'name', ts_name, changes)
+                set_if_has_track('name', ts_name)
 
             # 2) money поля (Decimal, 2 знаки) + кількість
-            # set_if_has(obj, 'prime_cost',                 money(ts.get('prime_cost')), changes)
             set_if_has(obj, 'retail_price',               money(ts.get('wholesale_price')), changes)
-            # set_if_has(obj, 'wholesale_price',            money(ts.get('wholesale_price')), changes)
-            # set_if_has(obj, 'retail_price_with_discount', money(ts.get('retail_price_with_discount')), changes)
-            set_if_has(obj, 'warehouse_quantity',         as_int(ts.get('warehouse_quantity')), changes)
+            
+            # Кількість на складі
+            warehouse_qty = as_int(ts.get('warehouse_quantity'))
+            set_if_has(obj, 'warehouse_quantity', warehouse_qty, changes)
+            
+            # КРИТИЧНО: Якщо залишок = 0, автоматично робимо товар неактивним
+            if warehouse_qty == 0:
+                set_if_has(obj, 'is_active', False, changes)
 
             # 2.x) визначаємо "На вагу" по producer_collection_full
             ts_prod_coll = (ts.get('good_type_full') or '').strip()
             tokens = [t.strip().lower() for t in ts_prod_coll.split(',') if t.strip()]
             is_weighted = any(t == 'на вагу' for t in tokens) or ('на вагу' in ts_prod_coll.lower())
-            self.stdout.write(f"good_type_full={ts_prod_coll} → tokens={tokens} → is_weighted={is_weighted}")
 
             # якщо вагова -> 0, якщо ні -> None (порожньо)
             target_bag = Decimal('0') if is_weighted else None
