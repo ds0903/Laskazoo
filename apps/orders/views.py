@@ -480,9 +480,14 @@ def checkout(request):
                 ]):
                     try:
                         total_amount = order.total_amount
-                        payment_method_api = 'NonCash' if payment_method == 'card_online' else 'Cash'
-                        backward_delivery = float(total_amount) if payment_method == 'cash' else None
+                        
+                        # ДЛЯ ДЕБАГУ: завжди NonCash (без післяплати)
+                        payment_method_api = 'NonCash'
+                        backward_delivery = None  # Вимикаємо післяплату
+                        
                         send_date = (datetime.now() + timedelta(days=1)).strftime('%d.%m.%Y')
+                        
+                        print(f"🔍 DEBUG ТТН: payment={payment_method}, api_method={payment_method_api}, backward={backward_delivery}")
                         
                         order_data = {
                             'sender_ref': settings.NOVA_POSHTA_SENDER_REF,
@@ -531,9 +536,9 @@ def checkout(request):
     else:
         # Просто показуємо порожню форму - НЕ ЗБЕРІГАЄМО НІЧОГО
         if is_new_order:
+            # НЕ ПІДСТАВЛЯЄМО USERNAME - залишаємо ПІБ порожнім!
             initial = {
-                'full_name': request.user.get_full_name() or request.user.username,
-                'email': request.user.email,
+                'email': request.user.email or '',
                 'delivery_type': 'nova_poshta'
             }
         else:
@@ -545,9 +550,9 @@ def checkout(request):
                 current_delivery_type = 'nova_poshta'
                 
             initial = {
-                'full_name': order.full_name or request.user.get_full_name() or request.user.username,
+                'full_name': order.full_name or '',  # НЕ підставляємо username!
                 'phone': order.phone,
-                'email': order.email or request.user.email,
+                'email': order.email or request.user.email or '',
                 'delivery_type': current_delivery_type,
                 'delivery_address': order.delivery_address,
                 'comment': order.comment,

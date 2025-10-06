@@ -221,12 +221,16 @@ class NovaPoshtaAPI:
             dict: Інформація про створену накладну або None
         """
         # Базові властивості методу
+        # ДЛЯ ДЕБАГУ: симулюємо що товар ВЖЕ ОПЛАЧЕНИЙ
+        print("💡 DEBUG: Товар оплачений, одержувач платить ТІЛЬКИ за доставку")
+        
         method_properties = {
             "NewAddress": "1",  # Новий одержувач
-            "PayerType": "Recipient",  # Платник - одержувач
-            "PaymentMethod": order_data.get('payment_method', 'Cash'),
+            "PayerType": "Recipient",  # Платник - одержувач (тільки за доставку!)
+            "PaymentMethod": "Cash",  # Готівка (за доставку, а не за товар!)
             "CargoType": "Parcel",  # Тип вантажу - посилка
             "ServiceType": "WarehouseWarehouse",  # Склад-склад
+            "OptionsSeat": [{"volumetricVolume": "0.1", "volumetricWidth": "10", "volumetricLength": "10", "volumetricHeight": "10", "weight": "1"}],  # Обов'язково!
             
             # Відправник
             "CitySender": order_data.get('sender_city_ref', ''),

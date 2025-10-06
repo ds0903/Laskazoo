@@ -1,5 +1,6 @@
 from django import forms
 from .models import Order
+import re
 
 class OrderCheckoutForm(forms.ModelForm):
     # Тип доставки
@@ -41,14 +42,15 @@ class OrderCheckoutForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # ПІБ - ОБОВ'ЯЗКОВЕ
+        # ПІБ - ОБОВ'ЯЗКОВЕ (тепер з чіткою підказкою)
         self.fields['full_name'].widget.attrs.update({
-            'placeholder': 'Прізвище Ім\'я По-батькові',
+            'placeholder': 'Іванов Іван Іванович (справжнє ПІБ для Нової Пошти)',
             'required': True,
             'class': 'form-control'
         })
-        self.fields['full_name'].label = 'ПІБ *'
+        self.fields['full_name'].label = 'ПІБ отримувача *'
         self.fields['full_name'].required = True
+        self.fields['full_name'].help_text = 'Вкажіть повне ПІБ кирилицею (мінімум Прізвище та Ім\'я)'
         
         # ТЕЛЕФОН - ОБОВ'ЯЗКОВИЙ
         self.fields['phone'].widget.attrs.update({
@@ -78,7 +80,7 @@ class OrderCheckoutForm(forms.ModelForm):
         self.fields['city'].label = 'Місто *'
         self.fields['city'].required = True
         
-        # АДРЕСА ДОСТАВКИ - ОБОВ'ЯЗКОВА (поки що деактивована)
+        # АДРЕСА ДОСТАВКИ - ОБОВ'ЯЗКОВА
         self.fields['delivery_address'].widget = forms.Textarea(attrs={
             'rows': 2,
             'placeholder': 'Спочатку виберіть місто',
@@ -102,7 +104,19 @@ class OrderCheckoutForm(forms.ModelForm):
         full_name = self.cleaned_data.get('full_name')
         if not full_name or not full_name.strip():
             raise forms.ValidationError('Поле ПІБ є обов\'язковим для заповнення')
-        return full_name.strip()
+        
+        full_name = full_name.strip()
+        
+        # Перевірка на мінімальну кількість слів (має бути хоча б ім'я та прізвище)
+        words = full_name.split()
+        if len(words) < 2:
+            raise forms.ValidationError('Введіть Прізвище та Ім\'я (мінімум 2 слова)')
+        
+        # Перевірка що ПІБ складається тільки з кирилиці, латиниці, пробілів та дефісів
+        if not re.match(r'^[А-ЯҐЄІЇа-яґєії\'\-\sA-Za-z]+$', full_name):
+            raise forms.ValidationError('ПІБ може містити тільки літери, пробіли та дефіси')
+        
+        return full_name
         
     def clean_phone(self):
         phone = self.cleaned_data.get('phone')
