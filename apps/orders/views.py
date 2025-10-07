@@ -176,12 +176,6 @@ def add_variant_to_cart(request, variant_id: int):
     
     variant = get_object_or_404(Product_Variant, pk=variant_id)
 
-    if variant.warehouse_quantity is not None and variant.warehouse_quantity <= 0:
-        if _is_ajax(request):
-            return JsonResponse({'ok': False, 'message': 'Немає в наявності'}, status=400)
-        messages.warning(request, 'Немає в наявності.')
-        return redirect('orders:cart')
-
     if request.user.is_authenticated:
         # КРИТИЧНЕ ВИПРАВЛЕННЯ: спочатку очищаємо проблемні кошики
         ensure_clean_cart(request.user)
@@ -380,6 +374,20 @@ def checkout(request):
         messages.warning(request, 'Кошик порожній')
         return redirect('orders:cart')
     
+    # Перевіряємо, чи є неактивні товари
+    inactive_items = []
+    for item in order.items.select_related('product', 'variant'):
+        if item.variant:
+            if not item.variant.is_active or item.variant.warehouse_quantity <= 0:
+                inactive_items.append(item)
+        else:
+            if not item.product.is_active or item.product.warehouse_quantity <= 0:
+                inactive_items.append(item)
+    
+    if inactive_items:
+        messages.error(request, 'У кошику є товари, яких немає в наявності. Будь ласка, видаліть їх перед оформленням замовлення.')
+        return redirect('orders:cart')
+    
     # РАДИКАЛЬНЕ ВИПРАВЛЕННЯ: очищаємо ВСІ можливі джерела повідомлень
     if request.method == 'GET':
         # Очищаємо Django messages
@@ -429,6 +437,20 @@ def checkout(request):
     print(f"DEBUG CHECKOUT: full_name='{order.full_name}', phone='{order.phone}', email='{order.email}'")
     
     if request.method == 'POST':
+        # Повторна перевірка неактивних товарів перед оформленням
+        inactive_items = []
+        for item in order.items.select_related('product', 'variant'):
+            if item.variant:
+                if not item.variant.is_active or item.variant.warehouse_quantity <= 0:
+                    inactive_items.append(item)
+            else:
+                if not item.product.is_active or item.product.warehouse_quantity <= 0:
+                    inactive_items.append(item)
+        
+        if inactive_items:
+            messages.error(request, 'У кошику є товари, яких немає в наявності. Видаліть їх перед оформленням.')
+            return redirect('orders:cart')
+        
         form = OrderCheckoutForm(request.POST)
         if form.is_valid():
             # ТІЛЬКИ ТЕПЕР оновлюємо існуюче замовлення

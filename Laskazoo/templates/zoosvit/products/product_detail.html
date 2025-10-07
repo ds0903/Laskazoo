@@ -341,6 +341,35 @@
       color: #fff;
     }
     
+    /* Стилі для неактивних товарів */
+    .product-detail.out-of-stock .main-image img {
+      filter: grayscale(100%);
+      opacity: 0.6;
+    }
+    
+    .product-detail.out-of-stock .buy-button {
+      background: #ccc;
+      color: #666;
+      cursor: not-allowed;
+      pointer-events: none;
+      box-shadow: none;
+    }
+    
+    .variant-card.out-of-stock {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    
+    .variant-card.out-of-stock::after {
+      content: 'Немає';
+      display: block;
+      font-size: 0.8rem;
+      color: #e74c3c;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    
     /* Оплата та доставка */
     .payment-delivery {
       font-size: 0.9rem;
@@ -477,7 +506,7 @@
   </div>
 </div>
 
-<section class="product-detail">
+<section class="product-detail {% if not product.is_active or product.warehouse_quantity == 0 %}out-of-stock{% endif %}">
   <div class="detail-wrapper">
     {# --- ЛІВА КОЛОНКА: ФОТО --- #}
     <div class="image-section">
@@ -595,7 +624,7 @@
           <h3 class="variants-title">Фасування:</h3>
           <div class="variants-grid">
             {% for v in variants %}
-              <div class="variant-card" data-variant-id="{{ v.id }}" data-price="{{ v.retail_price }}" data-discount-price="{{ v.retail_price_with_discount }}">
+              <div class="variant-card {% if not v.is_active or v.warehouse_quantity == 0 %}out-of-stock{% endif %}" data-variant-id="{{ v.id }}" data-price="{{ v.retail_price }}" data-discount-price="{{ v.retail_price_with_discount }}">
                 <div class="variant-weight">
                   {% if v.weight %}{{ v.weight }} г{% endif %}
                   {% if v.size %}{{ v.size }}{% endif %}

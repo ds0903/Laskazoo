@@ -9,7 +9,7 @@
 {% if user.is_authenticated and order and order.items.all %}
   <ul class="cm-items">
     {% for item in order.items.all %}
-      <li class="cm-row" data-item="{{ item.id }}">
+      <li class="cm-row {% if item.variant and not item.variant.is_active or item.variant and item.variant.warehouse_quantity == 0 or not item.variant and not item.product.is_active or not item.variant and item.product.warehouse_quantity == 0 %}out-of-stock{% endif %}" data-item="{{ item.id }}">
         <div class="cm-thumb">
           {% if item.variant and item.variant.image %}
             <img src="{{ item.variant.image.url }}" alt="{{ item.product.name }}">
@@ -28,6 +28,9 @@
               {% if item.variant.weight %} · {{ item.variant.weight }} г{% endif %}
               {% if item.variant.size %} · Розмір {{ item.variant.size }}{% endif %}
             </div>
+          {% endif %}
+          {% if item.variant and not item.variant.is_active or item.variant and item.variant.warehouse_quantity == 0 or not item.variant and not item.product.is_active or not item.variant and item.product.warehouse_quantity == 0 %}
+            <div class="out-of-stock-label">Немає в наявності</div>
           {% endif %}
         </div>
 
@@ -158,6 +161,30 @@
   border:1px solid #ccc;
   color:#333 !important;
   background:#fff;
+}
+
+/* Стилі для неактивних товарів в кошику */
+.cm-row.out-of-stock {
+  opacity: 0.6;
+  background: #f5f5f5;
+}
+.cm-row.out-of-stock .cm-thumb img {
+  filter: grayscale(100%);
+}
+.cm-row.out-of-stock .cm-title,
+.cm-row.out-of-stock .cm-meta,
+.cm-row.out-of-stock .cm-sum {
+  color: #999;
+}
+.cm-row.out-of-stock .cm-btn {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.out-of-stock-label {
+  color: #d9534f;
+  font-weight: bold;
+  font-size: 0.85em;
+  margin-top: 4px;
 }
 </style>
 

@@ -25,7 +25,7 @@ def search_suggest(request):
 
 
     qs = (
-        Product.objects.filter(Q(name__icontains=q), is_active=True)
+        Product.objects.filter(Q(name__icontains=q))
         .annotate(
             score=Case(
                 When(name__iexact=q, then=Value(100)),
@@ -66,7 +66,7 @@ def quick_search(request):
     ).values("id", "score")
 
 
-    vqs = Product_Variant.objects.filter(name__icontains=q, is_active=True).select_related("product").annotate(
+    vqs = Product_Variant.objects.filter(name__icontains=q).select_related("product").annotate(
         score=Case(
             When(name__iexact=q, then=Value(100)),
             When(name__istartswith=q, then=Value(75)),
@@ -91,7 +91,7 @@ def quick_search(request):
 
     if best_product_id:
         try:
-            prod = Product.objects.get(id=best_product_id, is_active=True)
+            prod = Product.objects.get(id=best_product_id)
             return redirect(prod.get_absolute_url())
         except Product.DoesNotExist:
             pass
@@ -104,14 +104,12 @@ def catalog(request):
 
     variants_qs = (
         Product_Variant.objects
-        .filter(is_active=True)
-        .only('id', 'product_id', 'sku', 'retail_price', 'weight', 'size', 'image', 'warehouse_quantity')
+        .only('id', 'product_id', 'sku', 'retail_price', 'weight', 'size', 'image', 'warehouse_quantity', 'is_active')
         .order_by('retail_price')
     )
 
     base_qs = (
         Product.objects
-        .filter(is_active=True)
         .select_related('brand', 'category')
         .prefetch_related(
             Prefetch('variants', queryset=variants_qs, to_attr='variants_for_card')
@@ -177,7 +175,7 @@ def category_list(request, main_slug, slug):
 
     base_qs = (
         Product.objects
-        .filter(category=category, is_active=True)
+        .filter(category=category)
         .select_related('brand', 'category')
         .prefetch_related('variants')
     )
@@ -234,11 +232,10 @@ def product_detail(request, main_slug, slug, product_slug):
     product = get_object_or_404(
         Product,
         slug=product_slug,
-        category=category,
-        is_active=True
+        category=category
     )
 
-    variants = product.variants.filter(is_active=True).all()
+    variants = product.variants.all()
 
     # Додаємо логіку для обраних товарів
     if request.user.is_authenticated:
@@ -280,7 +277,7 @@ def _apply_filters(request, base_qs):
         qs = qs.filter(retail_price__lte=price_max)
     if in_stock:
 
-        qs = qs.filter(variants__warehouse_quantity__gt=0, variants__is_active=True).distinct()
+        qs = qs.filter(variants__warehouse_quantity__gt=0).distinct()
 
 
     brands_agg = (
@@ -320,7 +317,7 @@ def catalog_by_brand(request, brand_slug):
 
 
 
-    base = Product.objects.filter(is_active=True)
+    base = Product.objects.all()
     if picked_brands:
         base = base.filter(brand__brand_slug__in=picked_brands)
     else:
@@ -344,7 +341,7 @@ def catalog_by_brand(request, brand_slug):
 
     if in_stock:
         products_qs = products_qs.filter(
-            Q(variants__warehouse_quantity__gt=0, variants__is_active=True) |
+            Q(variants__warehouse_quantity__gt=0) |
             Q(warehouse_quantity__gt=0)
         )
 
@@ -368,7 +365,7 @@ def catalog_by_brand(request, brand_slug):
 
 
 
-    sidebar = (Product.objects.filter(is_active=True)
+    sidebar = (Product.objects.all()
         .annotate(min_var_price=Min('variants__retail_price'))
         .annotate(price_eff=Coalesce('min_var_price', F('retail_price')))
     )
@@ -380,7 +377,7 @@ def catalog_by_brand(request, brand_slug):
         except Exception: pass
     if in_stock:
         sidebar = sidebar.filter(
-            Q(variants__warehouse_quantity__gt=0, variants__is_active=True) |
+            Q(variants__warehouse_quantity__gt=0) |
             Q(warehouse_quantity__gt=0)
         )
 
@@ -415,7 +412,7 @@ def catalog_by_brand(request, brand_slug):
 def catalog_by_country(request, country_slug):
     country_brands = Brand.objects.filter(country_slug__iexact=country_slug, is_active=True)
     products_qs = (Product.objects
-                .filter(brand__in=country_brands, is_active=True)
+                .filter(brand__in=country_brands)
                 .select_related('brand', 'category'))
     
     # Додаємо пагінацію

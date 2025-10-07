@@ -141,11 +141,11 @@ class Command(BaseCommand):
 
             # 2) money поля (Decimal, 2 знаки) + кількість
             set_if_has(obj, 'retail_price',               money(ts.get('wholesale_price')), changes)
-            
+
             # Кількість на складі
             warehouse_qty = as_int(ts.get('warehouse_quantity'))
             set_if_has(obj, 'warehouse_quantity', warehouse_qty, changes)
-            
+
             # КРИТИЧНО: Якщо залишок = 0, автоматично робимо товар неактивним
             if warehouse_qty == 0:
                 set_if_has(obj, 'is_active', False, changes)
