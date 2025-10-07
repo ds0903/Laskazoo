@@ -276,8 +276,10 @@ def _apply_filters(request, base_qs):
     if price_max:
         qs = qs.filter(retail_price__lte=price_max)
     if in_stock:
-
-        qs = qs.filter(variants__warehouse_quantity__gt=0).distinct()
+        qs = qs.filter(
+            Q(is_active=True, warehouse_quantity__gt=0) |
+            Q(variants__is_active=True, variants__warehouse_quantity__gt=0)
+        ).distinct()
 
 
     brands_agg = (
@@ -341,8 +343,8 @@ def catalog_by_brand(request, brand_slug):
 
     if in_stock:
         products_qs = products_qs.filter(
-            Q(variants__warehouse_quantity__gt=0) |
-            Q(warehouse_quantity__gt=0)
+            Q(is_active=True, warehouse_quantity__gt=0) |
+            Q(variants__is_active=True, variants__warehouse_quantity__gt=0)
         )
 
     products_qs = products_qs.distinct()
@@ -377,8 +379,8 @@ def catalog_by_brand(request, brand_slug):
         except Exception: pass
     if in_stock:
         sidebar = sidebar.filter(
-            Q(variants__warehouse_quantity__gt=0) |
-            Q(warehouse_quantity__gt=0)
+            Q(is_active=True, warehouse_quantity__gt=0) |
+            Q(variants__is_active=True, variants__warehouse_quantity__gt=0)
         )
 
 

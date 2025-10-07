@@ -60,6 +60,7 @@
       overflow: hidden;
       margin-bottom: 16px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      position: relative;
     }
     
     .main-image img {
@@ -368,6 +369,26 @@
       color: #e74c3c;
       font-weight: 600;
       margin-top: 4px;
+    }
+    
+    /* Напис "Очікується поставка" на фото */
+    .product-detail.out-of-stock .main-image::after {
+      content: 'Очікується \A поставка';
+      white-space: pre;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: #666;
+      padding: 16px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-align: center;
+      z-index: 10;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      pointer-events: none;
     }
     
     /* Оплата та доставка */

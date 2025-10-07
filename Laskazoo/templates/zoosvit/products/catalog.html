@@ -118,6 +118,26 @@
       opacity: 0.6;
       pointer-events: none;
     }
+    
+    /* Напис "Очікується поставка" */
+    .prod-card.out-of-stock::after {
+      content: 'Очікується \A поставка';
+      white-space: pre;
+      position: absolute;
+      top: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: #666;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-align: center;
+      z-index: 15;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      pointer-events: none;
+    }
 
   </style>
 {% endblock %}
