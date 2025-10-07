@@ -1,6 +1,6 @@
 // zoosvit/js/cart-modal.js
 (() => {
-  console.log('[cart-modal] v5 loaded - ВИПРАВЛЕННЯ ПОДВІЙНОГО ДОДАВАННЯ');
+  console.log('[cart-modal] v6 loaded - ВИПРАВЛЕННЯ БАГІВ З ВИДАЛЕННЯМ ТА НАВІГАЦІЄЮ');
 
   const qs = (s, r=document) => r.querySelector(s);
   const overlay = qs('#cart-modal');
@@ -182,6 +182,9 @@
     if (e.target === overlay || e.target.closest('.cm-close')) closeModal();
   });
 
+  // ✅ ПРИБРАНО: НЕ закриваємо модалку при кліку на checkout
+  // Вона закриється автоматично при завантаженні нової сторінки
+
   // ----- plus/minus/remove/clear inside modal -----
   let lastClickTime = {}; // захист від подвійних кліків
   
@@ -201,10 +204,43 @@
     
     try {
       const r = await fetch(link.href, { credentials:'include', headers:{'X-Requested-With':'XMLHttpRequest'} });
-      if (r.redirected) { location = r.url; return; }
-      body.innerHTML = await r.text();
+      
+      // ✅ ВИПРАВЛЕННЯ: Перевіряємо тип відповіді
+      const contentType = r.headers.get('content-type');
+      
+      if (r.redirected) { 
+        location = r.url; 
+        return; 
+      }
+      
+      if (!r.ok) {
+        console.error('[cart-modal] Помилка сервера:', r.status);
+        // Перезавантажуємо модалку при помилці
+        await loadModal();
+        await refreshBadge();
+        return;
+      }
+      
+      // Якщо це JSON (помилка) - логуємо і перезавантажуємо
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await r.json();
+        console.error('[cart-modal] Отримано JSON замість HTML:', errorData);
+        // Перезавантажуємо модалку
+        await loadModal();
+        await refreshBadge();
+        return;
+      }
+      
+      // Якщо це HTML - оновлюємо модалку
+      const html = await r.text();
+      body.innerHTML = html;
       await refreshBadge();
-    } catch(err){ console.error('[cart-modal] op fail → fallback', err); location = link.href; }
+      
+    } catch(err){ 
+      console.error('[cart-modal] op fail → перезавантажуємо модалку', err); 
+      await loadModal();
+      await refreshBadge();
+    }
   });
 
   // ====== editable quantity (input) ======
@@ -264,4 +300,18 @@
 
   // первинне оновлення бейджа
   document.addEventListener('DOMContentLoaded', refreshBadge);
+  
+  // ✅ ВИПРАВЛЕННЯ: Закриваємо модалку при поверненні назад у браузері
+  window.addEventListener('popstate', () => {
+    console.log('[cart-modal] Спрацював popstate - закриваємо модалку');
+    closeModal();
+  });
+  
+  window.addEventListener('pageshow', (event) => {
+    // Закриваємо модалку при поверненні на сторінку через кнопку "Назад"
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+      console.log('[cart-modal] Повернення на сторінку - закриваємо модалку');
+      closeModal();
+    }
+  });
 })();

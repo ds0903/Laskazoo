@@ -1,7 +1,9 @@
+import os
 from apps.products.models import PopularProduct, Product_Variant, PopularCategory
 from apps.favourites.models import Favourite
 from apps.manager.models import Banner
 from django.shortcuts import render, redirect
+from django.conf import settings
 
 def stores_map(request):
     stores = [
@@ -124,90 +126,76 @@ def home(request):
     })
 
 
+# Читаємо текст договору оферти з окремого файлу
+PUBLIC_OFFER_CONTENT = ""
+try:
+    offer_file_path = os.path.join(settings.BASE_DIR, 'public_offer_content.txt')
+    with open(offer_file_path, 'r', encoding='utf-8') as f:
+        PUBLIC_OFFER_CONTENT = f.read()
+except Exception as e:
+    PUBLIC_OFFER_CONTENT = "<p>Договір публічної оферти тимчасово недоступний. Будь ласка, зверніться до служби підтримки.</p>"
+
+# Читаємо текст політики конфіденційності з окремого файлу
+PRIVACY_CONTENT = ""
+try:
+    privacy_file_path = os.path.join(settings.BASE_DIR, 'privacy.txt')
+    with open(privacy_file_path, 'r', encoding='utf-8') as f:
+        PRIVACY_CONTENT = f.read()
+except Exception as e:
+    PRIVACY_CONTENT = "<p>Договір політики конфідеціальності тимчасово недоступний. Будь ласка, зверніться до служби підтримки.</p>"
+
+# Читаємо текст оплати та доставки з окремого файлу
+PAYMENT_DELIVERY_CONTENT = ""
+try:
+    payment_file_path = os.path.join(settings.BASE_DIR, 'payment_delivery_content.txt')
+    with open(payment_file_path, 'r', encoding='utf-8') as f:
+        PAYMENT_DELIVERY_CONTENT = f.read()
+except Exception as e:
+    PAYMENT_DELIVERY_CONTENT = "<p>Інформація про оплату та доставку тимчасово недоступна. Будь ласка, зверніться до служби підтримки.</p>"
+
+# Читаємо текст обміну та повернення з окремого файлу
+RETURNS_CONTENT = ""
+try:
+    returns_file_path = os.path.join(settings.BASE_DIR, 'returns_content.txt')
+    with open(returns_file_path, 'r', encoding='utf-8') as f:
+        RETURNS_CONTENT = f.read()
+except Exception as e:
+    RETURNS_CONTENT = "<p>Інформація про обмін та повернення тимчасово недоступна. Будь ласка, зверніться до служби підтримки.</p>"
+
+# Читаємо текст контактів з окремого файлу
+CONTACTS_CONTENT = ""
+try:
+    contacts_file_path = os.path.join(settings.BASE_DIR, 'contacts_content.txt')
+    with open(contacts_file_path, 'r', encoding='utf-8') as f:
+        CONTACTS_CONTENT = f.read()
+except Exception as e:
+    CONTACTS_CONTENT = "<p>Контактна інформація тимчасово недоступна. Будь ласка, спробуйте пізніше.</p>"
+
 PAGES = {
     "public-offer": {
         "title": "Договір публічної оферти",
-        "date":  "10.03.2025",
-        "body": """
-<h3>ПУБЛІЧНА ОФЕРТА</h3>
-<p>Цей договір є офіційною та публічною пропозицією Продавця укласти договір купівлі-продажу товару дистанційно...</p>
-
-<h4>Терміни</h4>
-<ol>
-  <li><strong>Акцепт</strong> — повне прийняття та виконання умов Договору.</li>
-  <li><strong>Продавець</strong> — ТОВ «Зоосвіт» ...</li>
-  <li><strong>Покупець</strong> — фізична/юридична особа, що оформляє Замовлення...</li>
-</ol>
-
-<h4>Порядок оформлення замовлення</h4>
-<p>Покупець оформлює замовлення на сайті, після чого отримує підтвердження на e-mail або у кабінеті...</p>
-
-<h4>Оплата та доставка</h4>
-<p>Оплата здійснюється готівкою при отриманні або безготівково; доставка виконується службами доставки...</p>
-""",
+        "date":  "07.10.2025",
+        "body": PUBLIC_OFFER_CONTENT,
     },
     "payment-delivery": {
         "title": "Оплата та доставка",
-        "date":  "10.03.2025",
-        "body": """
-<h3>Оплата</h3>
-<ul>
-  <li>Готівкою при отриманні</li>
-  <li>Банківською картою онлайн</li>
-  <li>Безготівковий розрахунок для юр. осіб</li>
-</ul>
-<h3>Доставка</h3>
-<p>Курʼєром по Києву, Новою поштою по Україні, самовивіз з магазинів Зоосвіт.</p>
-""",
+        "date":  "07.10.2025",
+        "body": PAYMENT_DELIVERY_CONTENT,
     },
     "returns": {
         "title": "Обмін та повернення",
-        "date":  "10.03.2025",
-        "body": """
-<p>Повернення/обмін можливий протягом 14 днів згідно Закону України «Про захист прав споживачів», за умови
-збереження товарного вигляду, пломб і чеку. Витрати на пересилання — за рахунок Покупця, якщо інше не передбачено законом.</p>
-""",
+        "date":  "07.10.2025",
+        "body": RETURNS_CONTENT,
     },
     "privacy": {
         "title": "Політика конфіденційності",
-        "date":  "10.03.2025",
-        "body": """
-<p>Ми обробляємо персональні дані з метою надання послуг, виконання замовлень та маркетингових розсилок за згодою користувача.
-Дані зберігаються належним чином і не передаються третім особам, окрім випадків, передбачених законом.</p>
-""",
+        "date":  "07.10.2025",
+        "body": PRIVACY_CONTENT,
     },
     "contacts": {
         "title": "Контакти",
-        "date":  "10.03.2025",
-        "body": """
-<div class="contacts-info">
-  <div class="contact-section">
-    <h3>📞 Контактна інформація</h3>
-    <div class="contact-item">
-      <strong>Телефон:</strong> <a href="tel:+380932384730">+38 093 238 47 30</a>
-    </div>
-    <div class="contact-item">
-      <strong>E-mail:</strong> <a href="mailto:zoosvitoffice15@gmail.com">zoosvitoffice15@gmail.com</a>
-    </div>
-    <div class="contact-item">
-      <strong>Telegram:</strong> <a href="https://t.me/ds0903" target="_blank">@ds0903</a>
-    </div>
-    <div class="contact-item">
-      <strong>Графік роботи:</strong> Пн–Нд, 9:00 – 20:00
-    </div>
-  </div>
-</div>
-
-<style>
-.contacts-info { max-width: 600px; margin: 0 auto; }
-.contact-section { background: #f8f9fa; padding: 2rem; border-radius: 10px; }
-.contact-section h3 { color: var(--color-primary); margin-bottom: 1.5rem; font-size: 1.5rem; text-align: center; }
-.contact-item { margin-bottom: 1rem; padding: 0.75rem; background: #fff; border-radius: 6px; text-align: center; }
-.contact-item strong { color: #333; display: block; margin-bottom: 0.25rem; }
-.contact-item a { color: var(--color-primary); text-decoration: none; font-size: 1.1rem; }
-.contact-item a:hover { text-decoration: underline; }
-</style>
-""",
+        "date":  "07.10.2025",
+        "body": CONTACTS_CONTENT,
     },
 }
 

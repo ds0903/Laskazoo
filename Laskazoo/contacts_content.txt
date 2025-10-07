@@ -1,0 +1,346 @@
+<style>
+.contacts-page { line-height: 1.8; }
+.contacts-page h2 { color: #0a5e56; margin-top: 2.5rem; margin-bottom: 1.5rem; font-size: 1.8rem; text-align: center; }
+.contacts-page h3 { color: #0a5e56; margin-top: 2rem; margin-bottom: 1rem; font-size: 1.4rem; text-align: center; }
+
+/* Hero Section */
+.contacts-hero {
+    background: linear-gradient(135deg, #0a5e56 0%, #1a8b7e 100%);
+    color: white;
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 3rem;
+    box-shadow: 0 10px 30px rgba(10, 94, 86, 0.3);
+}
+
+.contacts-hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.contacts-hero p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Contact Cards Grid */
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.contact-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid #f0f0f0;
+}
+
+.contact-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(10, 94, 86, 0.15);
+    border-color: #0a5e56;
+}
+
+.contact-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #0a5e56 0%, #1a8b7e 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+}
+
+.contact-card h4 {
+    color: #0a5e56;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.contact-card a {
+    color: #333;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.contact-card a:hover {
+    color: #0a5e56;
+}
+
+.contact-card .detail {
+    color: #666;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+
+/* Working Hours Section */
+.working-hours {
+    background: linear-gradient(135deg, #fff8e6 0%, #ffe4b5 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+    border-left: 5px solid #ffc107;
+}
+
+.working-hours h3 {
+    color: #ff9800;
+    margin-top: 0;
+}
+
+.hours-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.hours-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.hours-item .day {
+    font-weight: 600;
+    color: #0a5e56;
+    font-size: 1.1rem;
+}
+
+.hours-item .time {
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+/* Stores Section */
+.stores-section {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 3rem 0;
+}
+
+.store-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid #0a5e56;
+    transition: transform 0.3s ease;
+}
+
+.store-card:hover {
+    transform: translateX(5px);
+}
+
+.store-card h4 {
+    color: #0a5e56;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.store-card .store-address {
+    color: #666;
+    margin: 0.5rem 0;
+    padding-left: 2rem;
+}
+
+.store-card .store-phone {
+    color: #0a5e56;
+    font-weight: 500;
+    padding-left: 2rem;
+}
+
+.store-card .store-hours {
+    color: #999;
+    font-size: 0.9rem;
+    padding-left: 2rem;
+    margin-top: 0.3rem;
+}
+
+/* Social Media Section */
+.social-section {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    text-decoration: none;
+    color: #0a5e56;
+    font-weight: 600;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(10, 94, 86, 0.2);
+}
+
+.social-icon {
+    font-size: 1.5rem;
+}
+
+/* CTA Section */
+.cta-section {
+    background: linear-gradient(135deg, #0a5e56 0%, #1a8b7e 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 3rem 2rem;
+    margin: 3rem 0;
+    text-align: center;
+}
+
+.cta-section h3 {
+    color: white;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.cta-section p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+}
+
+.cta-button {
+    display: inline-block;
+    background: white;
+    color: #0a5e56;
+    padding: 1rem 3rem;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.cta-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Map Hint */
+.map-hint {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin: 2rem 0;
+}
+
+.map-hint h4 {
+    color: #1976d2;
+    margin-top: 0;
+}
+
+.map-hint a {
+    color: #1976d2;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .contacts-hero h1 { font-size: 2rem; }
+    .contact-grid { grid-template-columns: 1fr; }
+    .hours-grid { grid-template-columns: 1fr; }
+    .social-links { flex-direction: column; align-items: center; }
+}
+</style>
+
+<div class="contacts-page">
+
+<!-- CTA Section -->
+<div class="cta-section">
+    <h3>💬 Потрібна консультація?</h3>
+    <p>Наші фахівці завжди готові допомогти вам обрати найкращі товари для ваших улюбленців!</p>
+    <a href="tel:+380932384730" class="cta-button">Зателефонувати зараз</a>
+</div>
+
+<!-- Social Media -->
+<div class="social-section">
+    <h2>🌐 Ми в соціальних мережах</h2>
+    <p>Слідкуйте за нами, щоб не пропустити акції та новинки!</p>
+    
+    <div class="social-links">
+        <a href="https://t.me/ds0903" target="_blank" class="social-link">
+            <span class="social-icon">✈️</span>
+            <span>Telegram</span>
+        </a>
+        <a href="mailto:zoosvitoffice15@gmail.com" class="social-link">
+            <span class="social-icon">📧</span>
+            <span>Email</span>
+        </a>
+    </div>
+</div>
+
+
+<!-- Working Hours -->
+<div class="working-hours">
+    <h3>🕐 Графік роботи служби підтримки</h3>
+    <div class="hours-grid">
+        <div class="hours-item">
+            <div class="day">Понеділок – Неділя</div>
+            <div class="time">8:00 – 20:00</div>
+        </div>
+    </div>
+</div>
+
+<!-- Company Info -->
+<div style="background: #f8f9fa; border-radius: 15px; padding: 2rem; margin-top: 3rem; text-align: center;">
+    <h3 style="color: #0a5e56; margin-top: 0;">🏢 Юридична інформація</h3>
+    <p><strong>Назва:</strong> Laska</p>
+    <p><strong>Організаційно-правова форма:</strong> Фізична особа-підприємець (ФОП)</p>
+    <p><strong>ПІБ:</strong> Федоренко Дмитро Сергійович</p>
+    <p><strong>Код ЄДРПОУ/ІПН:</strong> 3535213415</p>
+    <p><strong>Юридична адреса:</strong> Київська область, Києво-Святошинський район, с. Тарасівка, провулок Зелений, буд. 6а</p>
+</div>
+
+<!-- Footer Message -->
+<div style="text-align: center; margin: 3rem 0; padding: 2rem; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 15px;">
+    <p style="font-size: 1.3rem; color: #0a5e56; font-weight: 600; margin-bottom: 1rem;">
+        ❤️ Дякуємо, що обираєте Laskazoo! ❤️
+    </p>
+    <p style="color: #666; font-size: 1rem;">
+        Ми завжди раді бачити вас та ваших пухнастих друзів! 🐾
+    </p>
+</div>
+
+</div>
