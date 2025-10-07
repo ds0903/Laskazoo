@@ -149,6 +149,9 @@ class Command(BaseCommand):
             # КРИТИЧНО: Якщо залишок = 0, автоматично робимо товар неактивним
             if warehouse_qty == 0:
                 set_if_has(obj, 'is_active', False, changes)
+            else:
+                # Якщо товар з'явився на складі - автоматично активуємо
+                set_if_has(obj, 'is_active', True, changes)
 
             # 2.x) визначаємо "На вагу" по producer_collection_full
             ts_prod_coll = (ts.get('good_type_full') or '').strip()

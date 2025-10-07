@@ -2778,7 +2778,7 @@ html, body{ overflow-x: hidden; }
 :root{
   --prod-min-height: 430px;
   /* збільши MAX, бо довгі назви легко перевищують 600px */
-  --prod-max-height: 720px;  /* було 600 — цього часто не вистачає */
+  --prod-max-height: 500px;  /* було 600 — цього часто не вистачає */
 }
 
 /* базовий стан */
@@ -3397,6 +3397,7 @@ input[aria-invalid="true"] {
 }
 
 .btn-cart--empty:hover img {
-  filter: brightness(0) invert(1);
+  filter: brightness(0) invert(1);]
 }
+
 
