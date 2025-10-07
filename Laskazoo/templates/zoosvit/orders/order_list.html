@@ -241,8 +241,7 @@
         {% endfor %}
       {% else %}
         <div class="empty-orders">
-          <img src="{% static 'zoosvit/img/empty-cart.png' %}" alt="Немає замовлень">
-          <h3>У вас ще немає замовлень</h3>
+          <h3>У вас ще немає замовлень :(</h3>
           <p>Час це виправити!</p>
           <a href="{% url 'products:catalog' %}">Перейти до каталогу</a>
         </div>

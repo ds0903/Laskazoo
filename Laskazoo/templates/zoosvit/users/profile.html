@@ -39,33 +39,112 @@
 
     <div class="profile-card">
       <p class="profile-note">
-        Для внесення змін до персональних даних дисконтної програми: ПІБ, телефону чи email, будь ласка, зверніться до нас в Telegram або Viber.
+        Якщо у вас є запитання будь ласка, зверніться до нас в Telegram або Viber.
         Детальніше про умови дисконтної програми за <a href="#">посиланням</a>.
       </p>
 
-      <form class="profile-form">
+      <form method="post" class="profile-form" id="profile-form">
+        {% csrf_token %}
+        
         <div class="form-group">
-          <label>ПІБ</label>
-          <input type="text"
-                 value="{{ user.get_full_name|default:user.username }}"
-                 disabled>
+          <label for="{{ form.username.id_for_label }}">ПІБ</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <div class="error-message">
+              {% for error in form.username.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
 
         <div class="form-group">
           <label>Email</label>
-          <input type="email"
-                 value="{{ user.email }}"
-                 disabled>
+          <input type="email" 
+                 value="{{ user.email }}" 
+                 readonly 
+                 class="profile-input readonly-input"
+                 title="Email не можна змінювати">
+          <small class="field-hint">Email не можна змінювати</small>
         </div>
 
         <div class="form-group">
-          <label>Телефон</label>
-          <input type="text"
-                 value="{{ user.phone_number|default:'–' }}"
-                 disabled>
+          <label for="{{ form.phone_number.id_for_label }}">Телефон</label>
+          {{ form.phone_number }}
+          {% if form.phone_number.errors %}
+            <div class="error-message">
+              {% for error in form.phone_number.errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="field-hint">Введіть номер у форматі +380XXXXXXXXX</small>
         </div>
+
+        <button type="submit" class="btn-save">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+          </svg>
+          Зберегти зміни
+        </button>
       </form>
     </div>
   </section>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const phoneInput = document.querySelector('.phone-input');
+  
+  if (phoneInput) {
+    // Автоматична підстановка +38 при фокусі на порожнє поле
+    phoneInput.addEventListener('focus', function() {
+      if (!this.value || this.value.trim() === '') {
+        this.value = '+38';
+      }
+    });
+    
+    // Форматування номера при введенні
+    phoneInput.addEventListener('input', function(e) {
+      let value = this.value;
+      
+      // Дозволяємо тільки цифри після +38
+      if (value.startsWith('+38')) {
+        let numbers = value.substring(3).replace(/\D/g, '');
+        this.value = '+38' + numbers;
+      } else if (value.startsWith('+')) {
+        // Якщо користувач видалив 38, додаємо назад
+        this.value = '+38';
+      } else {
+        // Якщо немає +, додаємо +38
+        let numbers = value.replace(/\D/g, '');
+        this.value = '+38' + numbers;
+      }
+      
+      // Обмежуємо довжину до 13 символів (+380XXXXXXXXX)
+      if (this.value.length > 13) {
+        this.value = this.value.substring(0, 13);
+      }
+    });
+    
+    // Не дозволяємо видалити +38
+    phoneInput.addEventListener('keydown', function(e) {
+      if (this.value === '+38' && (e.key === 'Backspace' || e.key === 'Delete')) {
+        e.preventDefault();
+      }
+    });
+  }
+  
+  // Анімація для кнопки збереження
+  const form = document.getElementById('profile-form');
+  const submitBtn = form?.querySelector('.btn-save');
+  
+  if (form && submitBtn) {
+    form.addEventListener('submit', function() {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Збереження...';
+    });
+  }
+});
+</script>
 {% endblock %}

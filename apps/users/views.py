@@ -115,21 +115,24 @@ def register(request):
 
 @login_required(login_url='/users/login/')
 def profile_view(request):
-    try:
-        form = ProfileForm(request.POST or None, instance=request.user)
-        if form.is_valid():
-            with transaction.atomic():
-                form.save()
-                messages.success(request, _('Дані оновлено ✔️'))
-                return redirect('users:profile')
-    except IntegrityError as e:
-        logger.error(f'Помилка оновлення профілю: {str(e)}')
-        if 'email' in str(e):
-            form.add_error('email', _('Користувач з таким email вже існує.'))
-        else:
-            messages.error(request, _('Помилка збереження даних.'))
-    except Exception as e:
-        logger.error(f'Неочікувана помилка профілю: {str(e)}')
-        messages.error(request, _('Технічна помилка. Спробуйте пізніше.'))
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=request.user)
         
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    form.save()
+                    messages.success(request, _('Дані успішно оновлено! ✔️'))
+                    logger.info(f'Користувач {request.user.email} оновив профіль')
+                    return redirect('users:profile')
+            except Exception as e:
+                logger.error(f'Помилка при збереженні профілю: {str(e)}')
+                messages.error(request, _('Виникла помилка при збереженні. Спробуйте ще раз.'))
+        else:
+            # Якщо форма не валідна, помилки автоматично відобразяться в шаблоні
+            logger.warning(f'Невалідна форма профілю для {request.user.email}: {form.errors}')
+            messages.error(request, _('Будь ласка, виправте помилки у формі.'))
+    else:
+        form = ProfileForm(instance=request.user)
+    
     return render(request, 'zoosvit/users/profile.html', {'form': form})

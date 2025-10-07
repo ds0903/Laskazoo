@@ -645,7 +645,8 @@ def orders_list(request):
 
 @login_required
 def order_list(request):
-    orders = request.user.orders.all()
+    # Показуємо всі замовлення КРІМ тих що в статусі "У кошику"
+    orders = request.user.orders.exclude(status=Order.STATUS_CART).order_by('-created_at')
     return render(request, 'zoosvit/orders/order_list.html', {'orders': orders})
 
 @login_required
