@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!modal) return;
 
+  // Флаг для запобігання подвійній відправці
+  let isSubmitting = false;
+
   // Функція для очищення форми
   function clearForm(formElement) {
     if (!formElement) return;
@@ -20,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const inputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
       inputs.forEach(input => {
         input.value = '';
-        input.classList.remove('error'); // видаляємо класи помилок якщо є
+        input.classList.remove('error');
       });
       
       // Видаляємо повідомлення про помилки
@@ -41,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function clearAllForms() {
     clearForm(loginBox);
     clearForm(registerBox);
+    isSubmitting = false;
   }
 
   // Функція для показу потрібної вкладки
@@ -57,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Функція для закриття модалки
   function closeModal() {
     modal.classList.remove('show');
-    // Скидаємо стан всіх форм при закритті
     clearAllForms();
   }
 
@@ -65,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
   tabs.forEach(tab => {
     tab.addEventListener('click', e => {
       e.preventDefault();
-      // Очищуємо форми при переключенні вкладок
       clearAllForms();
       showTab(tab.dataset.tab);
     });
@@ -118,9 +120,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     e.preventDefault();
     
+    // Запобігаємо подвійній відправці
+    if (isSubmitting) {
+      console.log('Форма вже відправляється, зачекайте...');
+      return;
+    }
+    
+    isSubmitting = true;
+    
     // Показуємо індикатор завантаження
     const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn?.textContent;
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Обробка...';
@@ -138,40 +147,42 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (response.ok) {
-        // При успішному логіні/реєстрації - редірект
         const json = await response.json();
         if (json.redirect_url) {
           window.location.href = json.redirect_url;
+          return;
         } else {
-          // Якщо немає redirect_url, закриваємо модалку
           closeModal();
-          window.location.reload(); // або оновлюємо сторінку
+          window.location.reload();
+          return;
         }
       } else {
-        // При помилці - вкидаємо назад HTML фрагмент форми
+        // При помилці - оновлюємо HTML форми (новий HTML вже має правильну кнопку)
         const html = await response.text();
         const targetBox = form.id === 'login-form-ajax' ? loginBox : registerBox;
         
         if (targetBox) {
           targetBox.innerHTML = html;
-          // Після заміни вмісту показуємо поточну вкладку
-          showTab(form.id === 'login-form-ajax' ? 'login' : 'register');
         }
+        
+        // Скидаємо флаг, щоб дозволити нову спробу
+        isSubmitting = false;
       }
     } catch (error) {
       console.error('Помилка при відправці форми:', error);
       
-      // Показуємо загальну помилку користувачу
       const errorDiv = document.createElement('div');
       errorDiv.className = 'error-message';
       errorDiv.textContent = 'Виникла помилка. Спробуйте ще раз.';
       form.insertBefore(errorDiv, form.firstChild);
       
-    } finally {
+      // Дозволяємо спробувати ще раз
+      isSubmitting = false;
+      
       // Відновлюємо кнопку submit
-      if (submitBtn && originalText) {
+      if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitBtn.textContent = 'Зареєструватись';
       }
     }
   });

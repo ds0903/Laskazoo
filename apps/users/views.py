@@ -12,12 +12,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
 class UserLoginView(View):
     form_class = LoginForm
     template_name = 'zoosvit/users/login.html'
 
     def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('/')
         return render(request, self.template_name, {'login_form': self.form_class()})
 
     def post(self, request):
@@ -26,20 +27,19 @@ class UserLoginView(View):
         if form.is_valid():
             user = authenticate(
                 request,
-                username=form.cleaned_data['username'],
+                username=form.cleaned_data['email'],
                 password=form.cleaned_data['password']
             )
             if user:
-                login(request, user)
-                request.session.save()  # Явне збереження сесії
+                login(request, user, backend='apps.users.backends.EmailBackend')
+                request.session.save()
 
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     return JsonResponse({'redirect_url': '/'})
                 return redirect('/')
-            error = _('Невірний логін або пароль')
+            error = _('Невірний email або пароль')
         else:
             error = _('Будь ласка, виправте помилки у формі')
-
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return render(
@@ -49,102 +49,71 @@ class UserLoginView(View):
                 status=400
             )
 
-
         return render(request, self.template_name, {
             'login_form': form,
             'error': error
         })
+
 
 class UserLogoutView(View):
     def get(self, request):
         logout(request)
         return redirect('/')
 
+
 def register(request):
+    if request.user.is_authenticated:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'redirect_url': '/'})
+        return redirect('/')
+    
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    # Подвійна перевірка унікальності безпосередньо перед створенням
-                    from .models import CustomUser
-                    from django.db import connection
-                    
-                    username = form.cleaned_data['username']
-                    email = form.cleaned_data['email']
-                    
-                    # Використовуємо пряме SQL для точної перевірки
-                    with connection.cursor() as cursor:
-                        cursor.execute(
-                            "SELECT COUNT(*) FROM users_customuser WHERE username = %s",
-                            [username]
-                        )
-                        username_count = cursor.fetchone()[0]
-                        
-                        cursor.execute(
-                            "SELECT COUNT(*) FROM users_customuser WHERE email = %s",
-                            [email]
-                        )
-                        email_count = cursor.fetchone()[0]
-                    
-                    # Якщо знайдено дублікати - зупиняємо
-                    if username_count > 0:
-                        logger.warning(f'Username {username} вже існує (SQL count: {username_count})')
-                        form.add_error('username', _('Користувач з таким логіном вже існує.'))
-                        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                            return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=400)
-                        return render(request, 'zoosvit/users/register.html', {'form': form})
-                    
-                    if email_count > 0:
-                        logger.warning(f'Email {email} вже існує (SQL count: {email_count})')
-                        form.add_error('email', _('Користувач з таким email вже існує.'))
-                        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                            return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=400)
-                        return render(request, 'zoosvit/users/register.html', {'form': form})
-                    
-                    # Якщо все ОК - створюємо користувача
-                    user = form.save()
-                    login(request, user)
-                    request.session.save()  # Явне збереження сесії
-                    logger.info(f'Успішна реєстрація користувача: {user.username}')
-                    
-                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                        return JsonResponse({'success': True, 'redirect_url': '/'})
-                    return redirect('home')
-            
-            except IntegrityError as e:
-                logger.error(f'Помилка реєстрації (повторна): {str(e)}')
-                # Якщо все ж помилка на рівні БД - обробляємо
-                if 'username' in str(e):
-                    form.add_error('username', _('Користувач з таким логіном вже існує.'))
-                elif 'email' in str(e):
-                    form.add_error('email', _('Користувач з таким email вже існує.'))
-                else:
-                    form.add_error(None, _('Виникла помилка під час реєстрації.'))
-                
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=400)
-                return render(request, 'zoosvit/users/register.html', {'form': form})
-            
-            except Exception as e:
-                logger.error(f'Неочікувана помилка реєстрації: {str(e)}')
-                form.add_error(None, _('Виникла технічна помилка. Спробуйте пізніше.'))
-                
-                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=500)
-                return render(request, 'zoosvit/users/register.html', {'form': form})
-        else:
+        
+        # Перевіряємо валідність форми
+        if not form.is_valid():
             logger.warning(f'Невалідна форма реєстрації: {form.errors}')
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=400)
             return render(request, 'zoosvit/users/register.html', {'form': form})
-
+        
+        # Форма валідна - створюємо користувача
+        try:
+            with transaction.atomic():
+                user = form.save()
+                logger.info(f'Успішна реєстрація користувача: {user.username} ({user.email})')
+                
+                # Логінимо користувача
+                login(request, user, backend='apps.users.backends.EmailBackend')
+                request.session.save()
+                
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': True, 'redirect_url': '/'})
+                return redirect('home')
+        
+        except IntegrityError as e:
+            logger.error(f'IntegrityError при реєстрації: {str(e)}')
+            form.add_error('email', _('Користувач з таким email вже існує.'))
+            
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=400)
+            return render(request, 'zoosvit/users/register.html', {'form': form})
+        
+        except Exception as e:
+            logger.error(f'Неочікувана помилка при реєстрації: {str(e)}')
+            form.add_error(None, _('Виникла технічна помилка. Спробуйте пізніше.'))
+            
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=500)
+            return render(request, 'zoosvit/users/register.html', {'form': form})
+    
     else:
         form = CustomUserCreationForm()
 
     return render(request, 'zoosvit/users/register.html', {'form': form})
 
-@login_required
+
+@login_required(login_url='/users/login/')
 def profile_view(request):
     try:
         form = ProfileForm(request.POST or None, instance=request.user)
@@ -155,8 +124,8 @@ def profile_view(request):
                 return redirect('users:profile')
     except IntegrityError as e:
         logger.error(f'Помилка оновлення профілю: {str(e)}')
-        if 'username' in str(e):
-            form.add_error('username', _('Користувач з таким логіном вже існує.'))
+        if 'email' in str(e):
+            form.add_error('email', _('Користувач з таким email вже існує.'))
         else:
             messages.error(request, _('Помилка збереження даних.'))
     except Exception as e:

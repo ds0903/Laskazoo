@@ -83,6 +83,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.users.middleware.SessionExpiredMiddleware',
 ]
 
 ROOT_URLCONF = 'Laskazoo.urls'
@@ -91,6 +92,11 @@ AUTH_USER_MODEL = 'users.CustomUser'
 LOGIN_REDIRECT_URL  = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 LOGIN_URL = '/users/login/'  # Виправляє проблему з редиректом на accounts/login
+
+AUTHENTICATION_BACKENDS = [
+    'apps.users.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 TEMPLATES = [
     {

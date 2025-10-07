@@ -1,14 +1,23 @@
 <form id="login-form-ajax" method="post" action="{% url 'users:login' %}">
   {% csrf_token %}
+  
   {% if error %}
     <div class="error-message red-error">{{ error }}</div>
   {% endif %}
 
+  {% if login_form.non_field_errors %}
+    <div class="error-message red-error">
+      {% for err in login_form.non_field_errors %}
+        {{ err }}
+      {% endfor %}
+    </div>
+  {% endif %}
+
   <div class="form-group">
-    {{ login_form.username.label_tag }}
-    {{ login_form.username }}
-    {% for err in login_form.username.errors %}
-      <div class="error-message">{{ err }}</div>
+    {{ login_form.email.label_tag }}
+    {{ login_form.email }}
+    {% for err in login_form.email.errors %}
+      <div class="error-message red-error">{{ err }}</div>
     {% endfor %}
   </div>
 
@@ -16,7 +25,7 @@
     {{ login_form.password.label_tag }}
     {{ login_form.password }}
     {% for err in login_form.password.errors %}
-      <div class="error-message">{{ err }}</div>
+      <div class="error-message red-error">{{ err }}</div>
     {% endfor %}
   </div>
 

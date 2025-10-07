@@ -1,0 +1,12 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Реєстрація{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 50px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+  <h2 style="text-align: center; margin-bottom: 30px;">Реєстрація</h2>
+  
+  {% include 'zoosvit/users/register_form.html' %}
+</div>
+{% endblock %}
