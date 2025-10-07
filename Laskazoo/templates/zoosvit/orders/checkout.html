@@ -416,50 +416,74 @@
   <div class="order-summary">
     <h2>Ваше замовлення</h2>
     
+    {% if not has_active_items %}
+      <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #856404; font-weight: 600;">⚠️ У кошику немає доступних товарів</p>
+        <p style="margin: 5px 0 0 0; color: #856404; font-size: 0.9rem;">Видаліть недоступні товари з <a href="{% url 'orders:cart' %}" style="color: #856404; text-decoration: underline;">кошика</a> або додайте нові з <a href="{% url 'products:catalog' %}" style="color: #856404; text-decoration: underline;">каталогу</a></p>
+      </div>
+    {% endif %}
+    
     {% if order.items.all %}
       <div class="order-items">
         {% for item in order.items.all %}
-          <div class="order-item">
-            <div class="item-image">
-              {% if item.variant and item.variant.image %}
-                <img src="{{ item.variant.image.url }}" alt="{{ item.product.name }}">
-              {% elif item.product.image %}
-                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
-              {% else %}
-                <img src="{% static 'zoosvit/img/placeholder.jpg' %}" alt="{{ item.product.name }}">
-              {% endif %}
-            </div>
-            
-            <div class="item-details">
-              <h3>{{ item.product.name }}</h3>
-              {% if item.variant %}
-                <div class="item-variant">
-                  {% if item.variant.sku %}Артикул: {{ item.variant.sku }}{% endif %}
-                  {% if item.variant.weight %} · {{ item.variant.weight }} кг{% endif %}
-                  {% if item.variant.size %} · {{ item.variant.size }}{% endif %}
+          {# Показуємо ТІЛЬКИ активні товари #}
+          {% if item.variant %}
+            {% if item.variant.is_active and item.variant.warehouse_quantity > 0 %}
+              <div class="order-item">
+                <div class="item-image">
+                  {% if item.variant.image %}
+                    <img src="{{ item.variant.image.url }}" alt="{{ item.product.name }}">
+                  {% elif item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                  {% else %}
+                    <img src="{% static 'zoosvit/img/placeholder.jpg' %}" alt="{{ item.product.name }}">
+                  {% endif %}
                 </div>
-              {% endif %}
-              <div class="item-price">{{ item.retail_price }} грн × {{ item.quantity }} шт</div>
-            </div>
-            
-            <div class="item-total">
-              <strong>{{ item.line_total }} грн</strong>
-            </div>
-          </div>
+                
+                <div class="item-details">
+                  <h3>{{ item.product.name }}</h3>
+                  <div class="item-variant">
+                    {% if item.variant.sku %}Артикул: {{ item.variant.sku }}{% endif %}
+                    {% if item.variant.weight %} · {{ item.variant.weight }} кг{% endif %}
+                    {% if item.variant.size %} · {{ item.variant.size }}{% endif %}
+                  </div>
+                  <div class="item-price">{{ item.retail_price }} грн × {{ item.quantity }} шт</div>
+                </div>
+                
+                <div class="item-total">
+                  <strong>{{ item.line_total }} грн</strong>
+                </div>
+              </div>
+            {% endif %}
+          {% else %}
+            {% if item.product.is_active and item.product.warehouse_quantity > 0 %}
+              <div class="order-item">
+                <div class="item-image">
+                  {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                  {% else %}
+                    <img src="{% static 'zoosvit/img/placeholder.jpg' %}" alt="{{ item.product.name }}">
+                  {% endif %}
+                </div>
+                
+                <div class="item-details">
+                  <h3>{{ item.product.name }}</h3>
+                  <div class="item-price">{{ item.retail_price }} грн × {{ item.quantity }} шт</div>
+                </div>
+                
+                <div class="item-total">
+                  <strong>{{ item.line_total }} грн</strong>
+                </div>
+              </div>
+            {% endif %}
+          {% endif %}
         {% endfor %}
       </div>
       
       <div class="order-total">
         <div class="total-row">
           <span>Загальна сума:</span>
-          <strong>
-            {% if order.total_amount %}
-              {{ order.total_amount }} грн
-            {% else %}
-              {% load custom_tags %}
-              {{ order|calculate_total }} грн
-            {% endif %}
-          </strong>
+          <strong>{{ active_total|floatformat:2 }} грн</strong>
         </div>
       </div>
     {% else %}
@@ -630,10 +654,17 @@
       {% endif %}
 
       <div class="form-actions">
-        <button type="submit" class="btn-primary" id="submit-btn">
-          <span>📦</span>
-          <span id="submit-text">Підтвердити замовлення</span>
-        </button>
+        {% if has_active_items %}
+          <button type="submit" class="btn-primary" id="submit-btn">
+            <span>📦</span>
+            <span id="submit-text">Підтвердити замовлення</span>
+          </button>
+        {% else %}
+          <button type="button" class="btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; background: #ccc;" id="submit-btn-disabled">
+            <span>🚫</span>
+            <span>У кошику немає доступних товарів</span>
+          </button>
+        {% endif %}
       </div>
     </form>
 

@@ -175,6 +175,13 @@ def add_variant_to_cart(request, variant_id: int):
     request.session.modified = True
     
     variant = get_object_or_404(Product_Variant, pk=variant_id)
+    
+    # Перевіряємо, чи варіант доступний
+    if not variant.is_active or variant.warehouse_quantity <= 0:
+        if _is_ajax(request):
+            return JsonResponse({'ok': False, 'message': 'Цей товар недоступний'}, status=400)
+        messages.warning(request, 'Цей товар недоступний')
+        return redirect('orders:cart')
 
     if request.user.is_authenticated:
         # КРИТИЧНЕ ВИПРАВЛЕННЯ: спочатку очищаємо проблемні кошики
@@ -274,6 +281,13 @@ def add_to_cart(request, product_id: int):
          or Product_Variant.objects.filter(product=product).order_by('retail_price').first())
     if v:
         return add_variant_to_cart(request, v.id)
+    
+    # Перевіряємо, чи продукт доступний
+    if not product.is_active or product.warehouse_quantity <= 0:
+        if _is_ajax(request):
+            return JsonResponse({'ok': False, 'message': 'Цей товар недоступний'}, status=400)
+        messages.warning(request, 'Цей товар недоступний')
+        return redirect('orders:cart')
 
     if request.user.is_authenticated:
         # КРИТИЧНЕ ВИПРАВЛЕННЯ: спочатку очищаємо проблемні кошики
@@ -362,7 +376,25 @@ def cart_detail(request):
         return redirect('orders:checkout')
     
     order, total = _cart_tuple(request.user)
-    return render(request, 'zoosvit/orders/cart.html', {'order': order, 'total': total})
+    
+    # Підраховуємо активні товари
+    has_active_items = False
+    if order:
+        for item in order.items.select_related('product', 'variant'):
+            if item.variant:
+                if item.variant.is_active and item.variant.warehouse_quantity > 0:
+                    has_active_items = True
+                    break
+            else:
+                if item.product.is_active and item.product.warehouse_quantity > 0:
+                    has_active_items = True
+                    break
+    
+    return render(request, 'zoosvit/orders/cart.html', {
+        'order': order, 
+        'total': total,
+        'has_active_items': has_active_items
+    })
 
 @login_required
 def checkout(request):
@@ -374,19 +406,28 @@ def checkout(request):
         messages.warning(request, 'Кошик порожній')
         return redirect('orders:cart')
     
-    # Перевіряємо, чи є неактивні товари
+    # Перевіряємо, чи є ХОЧА Б ОДИН активний товар (для блокування кнопки)
+    active_items = []
     inactive_items = []
     for item in order.items.select_related('product', 'variant'):
         if item.variant:
-            if not item.variant.is_active or item.variant.warehouse_quantity <= 0:
+            if item.variant.is_active and item.variant.warehouse_quantity > 0:
+                active_items.append(item)
+            else:
                 inactive_items.append(item)
         else:
-            if not item.product.is_active or item.product.warehouse_quantity <= 0:
+            if item.product.is_active and item.product.warehouse_quantity > 0:
+                active_items.append(item)
+            else:
                 inactive_items.append(item)
     
-    if inactive_items:
-        messages.error(request, 'У кошику є товари, яких немає в наявності. Будь ласка, видаліть їх перед оформленням замовлення.')
-        return redirect('orders:cart')
+    # НЕ РОБИМО РЕДІРЕКТ - просто передаємо інформацію в шаблон
+    has_active_items = len(active_items) > 0
+    
+    # Підраховуємо суму ТІЛЬКИ активних товарів
+    active_total = Decimal('0')
+    for item in active_items:
+        active_total += item.quantity * item.retail_price
     
     # РАДИКАЛЬНЕ ВИПРАВЛЕННЯ: очищаємо ВСІ можливі джерела повідомлень
     if request.method == 'GET':
@@ -437,19 +478,27 @@ def checkout(request):
     print(f"DEBUG CHECKOUT: full_name='{order.full_name}', phone='{order.phone}', email='{order.email}'")
     
     if request.method == 'POST':
-        # Повторна перевірка неактивних товарів перед оформленням
-        inactive_items = []
+        # Повторна перевірка - чи є хоча б один активний товар
+        active_items_post = []
         for item in order.items.select_related('product', 'variant'):
             if item.variant:
-                if not item.variant.is_active or item.variant.warehouse_quantity <= 0:
-                    inactive_items.append(item)
+                if item.variant.is_active and item.variant.warehouse_quantity > 0:
+                    active_items_post.append(item)
             else:
-                if not item.product.is_active or item.product.warehouse_quantity <= 0:
-                    inactive_items.append(item)
+                if item.product.is_active and item.product.warehouse_quantity > 0:
+                    active_items_post.append(item)
         
-        if inactive_items:
-            messages.error(request, 'У кошику є товари, яких немає в наявності. Видаліть їх перед оформленням.')
-            return redirect('orders:cart')
+        # Якщо немає активних - забороняємо оформлення
+        if not active_items_post:
+            messages.error(request, 'У кошику немає доступних товарів для оформлення.')
+            # Повертаємось назад на checkout з формою
+            form = OrderCheckoutForm(request.POST)
+            return render(request, 'zoosvit/orders/checkout.html', {
+                'order': order, 
+                'form': form,
+                'has_active_items': False,
+                'active_total': Decimal('0')
+            })
         
         form = OrderCheckoutForm(request.POST)
         if form.is_valid():
@@ -582,7 +631,12 @@ def checkout(request):
         
         form = OrderCheckoutForm(initial=initial)
     
-    return render(request, 'zoosvit/orders/checkout.html', {'order': order, 'form': form})
+    return render(request, 'zoosvit/orders/checkout.html', {
+        'order': order, 
+        'form': form,
+        'has_active_items': has_active_items,
+        'active_total': active_total  # Сума тільки активних товарів
+    })
 
 @login_required
 def orders_list(request):
@@ -692,11 +746,26 @@ def cart_item_dec(request, item_id: int):
 
 def cart_item_remove(request, item_id: int):
     if request.user.is_authenticated and not request.GET.get('guest'):
-        item = get_object_or_404(
-            OrderItem, id=item_id,
-            order__user=request.user, order__status=Order.STATUS_CART
-        )
-        item.delete()
+        try:
+            item = OrderItem.objects.get(
+                id=item_id,
+                order__user=request.user,
+                order__status=Order.STATUS_CART
+            )
+            item.delete()
+        except OrderItem.DoesNotExist:
+            # Товар вже видалено або не належить поточному кошику
+            if _is_ajax(request):
+                return JsonResponse({'ok': False, 'message': 'Товар не знайдено'}, status=404)
+            messages.warning(request, 'Товар не знайдено в кошику')
+            return redirect('orders:cart')
+        except Exception as e:
+            # Загальна помилка
+            print(f"Помилка при видаленні товару: {e}")
+            if _is_ajax(request):
+                return JsonResponse({'ok': False, 'message': 'Помилка видалення'}, status=500)
+            messages.error(request, 'Помилка при видаленні')
+            return redirect('orders:cart')
     else:
         sid = int(item_id)
         items = _sess_get_items(request)

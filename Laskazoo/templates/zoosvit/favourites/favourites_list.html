@@ -63,7 +63,67 @@
       z-index: 1;
       backface-visibility: hidden;
     }
+
+    /* Стилі для недоступних товарів */
+    .favourites-page .prod-card.out-of-stock {
+      opacity: 0.7;
+    }
+
+    .favourites-page .prod-card.out-of-stock::before {
+      background: #f5f5f5;
+    }
+
+    .favourites-page .prod-card.out-of-stock .card-front img,
+    .favourites-page .prod-card.out-of-stock .card-back img {
+      filter: grayscale(100%);
+      opacity: 0.6;
+    }
+
+    .favourites-page .prod-card.out-of-stock .card-title,
+    .favourites-page .prod-card.out-of-stock .card-price,
+    .favourites-page .prod-card.out-of-stock .card-article {
+      color: #999;
+    }
+
+    /* Бейдж "Очікується поставка" */
+    .favourites-page .prod-card.out-of-stock .card-front::after,
+    .favourites-page .prod-card.out-of-stock .card-back::after {
+      content: 'Очікується \A поставка';
+      white-space: pre;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: #666;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-align: center;
+      z-index: 10;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      pointer-events: none;
+    }
+
+    /* Блокуємо кнопку "В кошик" для недоступних товарів */
+    .favourites-page .prod-card.out-of-stock .add-to-cart {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+      background: #ccc;
+    }
   </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <a href="{% url 'home' %}">Головна</a>
+    <span class="separator">›</span>
+    <span class="current">Обране</span>
+  </div>
+</nav>
 {% endblock %}
 
 {% block content %}
@@ -90,7 +150,22 @@
       <div class="product-grid">
   {% for f in favs %}
     {% with product=f.product v=f.variant %}
-    <div class="prod-card" data-product-id="{{ product.id }}">
+    {# Перевірка чи товар недоступний #}
+    {% if v %}
+      {% if not v.is_active or v.warehouse_quantity == 0 %}
+        {% with is_unavailable=True %}{% endwith %}
+      {% else %}
+        {% with is_unavailable=False %}{% endwith %}
+      {% endif %}
+    {% else %}
+      {% if not product.is_active or product.warehouse_quantity == 0 %}
+        {% with is_unavailable=True %}{% endwith %}
+      {% else %}
+        {% with is_unavailable=False %}{% endwith %}
+      {% endif %}
+    {% endif %}
+    
+    <div class="prod-card {% if v and not v.is_active or v and v.warehouse_quantity == 0 or not v and not product.is_active or not v and product.warehouse_quantity == 0 %}out-of-stock{% endif %}" data-product-id="{{ product.id }}">
       <!-- FRONT -->
       <div class="card-front">
         <a href="{{ product.get_absolute_url|default:'#' }}">

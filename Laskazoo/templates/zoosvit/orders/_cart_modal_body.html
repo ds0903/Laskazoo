@@ -57,10 +57,39 @@
   <div class="cm-footer">
     <div class="cm-total">Всього: <b>{{ total }} грн</b></div>
     <div class="cm-actions">
-      <a href="{% url 'orders:checkout' %}" class="btn-green cm-checkout">Оформити замовлення</a>
+      <a href="{% url 'orders:checkout' %}" class="btn-green cm-checkout" id="checkout-btn">Оформити замовлення</a>
       <a href="{% url 'orders:clear' %}?ajax=1" class="btn-outline js-cart">Очистити кошик</a>
     </div>
   </div>
+  
+  <script>
+  // Перевіряємо наявність ХОЧА Б ОДНОГО активного товару
+  (function() {
+    const checkoutBtn = document.getElementById('checkout-btn');
+    if (!checkoutBtn) return;
+    
+    // Підраховуємо активні та неактивні товари
+    const allItems = document.querySelectorAll('.cm-row');
+    const inactiveItems = document.querySelectorAll('.cm-row.out-of-stock');
+    const activeItemsCount = allItems.length - inactiveItems.length;
+    
+    console.log('Всього товарів:', allItems.length, ', Неактивних:', inactiveItems.length, ', Активних:', activeItemsCount);
+    
+    // Блокуємо кнопку ТІЛЬКИ якщо НЕМАЄ ЖОДНОГО активного товару
+    if (activeItemsCount === 0) {
+      checkoutBtn.style.opacity = '0.5';
+      checkoutBtn.style.cursor = 'not-allowed';
+      checkoutBtn.style.pointerEvents = 'none';
+      checkoutBtn.style.background = '#ccc';
+      
+      // Додаємо повідомлення при спробі кліку
+      checkoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        alert('У кошику немає доступних товарів для оформлення замовлення');
+      });
+    }
+  })();
+  </script>
 
 {# 2) Авторизований користувач з порожнім кошиком #}
 {% elif user.is_authenticated %}

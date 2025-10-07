@@ -1,3 +1,9 @@
+{% extends 'zoosvit/core/base.html' %}
+{% load static %}
+
+{% block title %}Кошик{% endblock %}
+
+{% block extra_css %}
 <style>
 .cart-item.out-of-stock {
   opacity: 0.6;
@@ -5,64 +11,98 @@
 }
 .cart-item.out-of-stock td {
   color: #999;
-  text-decoration: line-through;
+}
+.cart-item.out-of-stock img {
+  filter: grayscale(100%);
 }
 .out-of-stock-label {
   color: #d9534f;
   font-weight: bold;
   font-size: 0.9em;
+  display: inline-block;
+  margin-top: 5px;
+}
+.cart-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+.btn-checkout {
+  padding: 12px 24px;
+  background: #28a745;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.btn-checkout.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #ccc;
+}
+.btn-clear {
+  padding: 12px 24px;
+  background: #fff;
+  color: #333;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  border: 2px solid #ccc;
+  cursor: pointer;
 }
 </style>
+{% endblock %}
 
-<h1>Кошик</h1>
+{% block content %}
+<div class="container">
+  <h1>Кошик</h1>
 
-{% if messages %}
-  <ul class="messages">
-    {% for m in messages %}<li>{{ m }}</li>{% endfor %}
-  </ul>
-{% endif %}
+  {% if messages %}
+    <ul class="messages">
+      {% for m in messages %}<li>{{ m }}</li>{% endfor %}
+    </ul>
+  {% endif %}
 
-{% if order and order.items.count %}
-  <table>
-    <thead>
-      <tr><th>Товар</th><th>Ціна</th><th>К-сть</th><th>Сума</th><th></th></tr>
-    </thead>
-    <tbody>
-      {% for item in order.items.all %}
-        {% with is_inactive=False %}
-          {% if item.variant %}
-            {% if not item.variant.is_active or item.variant.warehouse_quantity == 0 %}
-              {% with is_inactive=True %}{% endwith %}
-            {% endif %}
-          {% elif not item.product.is_active or item.product.warehouse_quantity == 0 %}
-            {% with is_inactive=True %}{% endwith %}
-          {% endif %}
-        {% endwith %}
-        
-        <tr class="cart-item {% if item.variant and not item.variant.is_active or item.variant and item.variant.warehouse_quantity == 0 or not item.variant and not item.product.is_active or not item.variant and item.product.warehouse_quantity == 0 %}out-of-stock{% endif %}">
-          <td>
-            {{ item.product.name }}
-            {% if item.variant %}<br><small>SKU: {{ item.variant.sku }}</small>{% endif %}
-            {% if item.variant and not item.variant.is_active or item.variant and item.variant.warehouse_quantity == 0 or not item.variant and not item.product.is_active or not item.variant and item.product.warehouse_quantity == 0 %}
-              <br><span class="out-of-stock-label">Немає в наявності</span>
-            {% endif %}
-          </td>
-          <td>{{ item.retail_price }} грн</td>
-          <td>{{ item.quantity }}</td>
-          <td>{% widthratio item.quantity 1 item.retail_price %} грн</td>
-          <td><a href="{% url 'orders:item_remove' item.id %}">Видалити</a></td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  {% if order and order.items.count %}
+    <table>
+      <thead>
+        <tr><th>Товар</th><th>Ціна</th><th>К-сть</th><th>Сума</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for item in order.items.all %}
+          <tr class="cart-item {% if item.variant and not item.variant.is_active or item.variant and item.variant.warehouse_quantity == 0 or not item.variant and not item.product.is_active or not item.variant and item.product.warehouse_quantity == 0 %}out-of-stock{% endif %}">
+            <td>
+              {{ item.product.name }}
+              {% if item.variant %}<br><small>SKU: {{ item.variant.sku }}</small>{% endif %}
+              {% if item.variant and not item.variant.is_active or item.variant and item.variant.warehouse_quantity == 0 or not item.variant and not item.product.is_active or not item.variant and item.product.warehouse_quantity == 0 %}
+                <br><span class="out-of-stock-label">Немає в наявності</span>
+              {% endif %}
+            </td>
+            <td>{{ item.retail_price }} грн</td>
+            <td>{{ item.quantity }}</td>
+            <td>{% widthratio item.quantity 1 item.retail_price %} грн</td>
+            <td><a href="{% url 'orders:item_remove' item.id %}">Видалити</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-  <p><b>Всього:</b> {{ total }} грн</p>
-  <p>
-    <a href="{% url 'orders:checkout' %}">Оформити замовлення</a>
-    {% comment %} Переконайся, що шлях orders:clear існує у urls.py {% endcomment %}
-    <a href="{% url 'orders:clear' %}">Очистити кошик</a>
-  </p>
-{% else %}
-  <p>Кошик порожній</p>
-{% endif %}
-
+    <p><b>Всього:</b> {{ total }} грн</p>
+    
+    <div class="cart-actions">
+      {% if has_active_items %}
+        <a href="{% url 'orders:checkout' %}" class="btn-checkout" id="checkout-btn">Оформити замовлення</a>
+      {% else %}
+        <a href="#" class="btn-checkout disabled" id="checkout-btn" onclick="alert('У кошику немає доступних товарів для оформлення'); return false;">Оформити замовлення</a>
+      {% endif %}
+      <a href="{% url 'orders:clear' %}" class="btn-clear">Очистити кошик</a>
+    </div>
+  {% else %}
+    <p>Кошик порожній</p>
+  {% endif %}
+</div>
+{% endblock %}
