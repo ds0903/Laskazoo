@@ -19,7 +19,10 @@ class UserLoginView(View):
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('/')
-        return render(request, self.template_name, {'login_form': self.form_class()})
+        return render(request, self.template_name, {
+            'login_form': self.form_class(),
+            'register_form': CustomUserCreationForm()
+        })
 
     def post(self, request):
         form = self.form_class(request.POST)
@@ -51,6 +54,7 @@ class UserLoginView(View):
 
         return render(request, self.template_name, {
             'login_form': form,
+            'register_form': CustomUserCreationForm(),
             'error': error
         })
 
