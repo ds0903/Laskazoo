@@ -2,7 +2,7 @@
 # TODO: команда аби забекапить базу python manage.py dumpdata --natural-foreign --natural-primary --indent 2 --output data.json
 # TODO: команда аби перекинуть файл scp C:\ftp\torgsoft\incoming\data.json danil@laskazoo.com.ua:/home/torgsoft/incoming/
 # TODO: команда аби імпортувати файл python manage.py loaddata /home/torgsoft/incoming/data.json --settings=Laskazoo.settings.prod
-# TODO: підкчлючення до сервера ssh danil@178.158.244.87 cd/srv/Laskazoo source .venv/bin/activate source venv/bin/activate
+# TODO: підкчлючення до сервера ssh danil@178.158.244.87 cd /srv/Laskazoo source .venv/bin/activate source venv/bin/activate
 # TODO: перезавантаженян сервера !!!
 # 7) Перезапуск gunicorn
 # sudo systemctl daemon-reload
@@ -42,3 +42,4 @@
 # rm apps/manager/migrations/0*.py
 # python manage.py makemigrations manager
 # python manage.py migrate
+# <!--        <li><a href="{% url 'stores_map' %}">Магазини Ласка</a></li>-->
