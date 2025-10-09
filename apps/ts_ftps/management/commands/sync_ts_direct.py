@@ -128,6 +128,7 @@ class Command(BaseCommand):
             ts_barcode = (ts.get('barcode') or '').strip()
             ts_sku     = (ts.get('articul') or '').strip()
             ts_name = (ts.get('description') or '').strip()
+            ts_desc = (ts.get('new_description') or '').strip()  # ✅ беремо опис з new_description
 
 
             if ts_barcode:
@@ -138,6 +139,10 @@ class Command(BaseCommand):
 
             if ts_name:
                 set_if_has_track('name', ts_name)
+            
+            # ✅ Оновлюємо опис, якщо він є
+            if ts_desc:
+                set_if_has_track('description', ts_desc)
 
             # 2) money поля (Decimal, 2 знаки) + кількість
             set_if_has(obj, 'retail_price',               money(ts.get('wholesale_price')), changes)

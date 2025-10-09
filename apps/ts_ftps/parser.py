@@ -3,57 +3,29 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 
 # мапа CSV-заголовок -> ім'я поля моделі
+# ✅ ТІЛЬКИ ТІ ПОЛЯ, ЩО Є В МОДЕЛІ TSGoods
 HEADER_MAP = {
     "GoodID": "good_id",
     "GoodName": "good_name",
     "Description": "description",
-    "Country": "country",
+    "new_description": "new_description",
     "Articul": "articul",
-    "RetailPrice": "retail_price",
-    "WholesalePrice": "wholesale_price",
-    "RetailPriceWithDiscount": "retail_price_with_discount",
-    "MinQuantityForOrder": "min_quantity_for_order",
-    "Height": "height",
-    "Width": "width",
-    "Category": "category",
-    "WarehouseQuantity": "warehouse_quantity",
-    "Display": "display",
-    "TheSize": "the_size",
-    "Color": "color",
-    "Material": "material",
-    "FashionName": "fashion_name",
-    "Sex": "sex",
-    "ShortName": "short_name",
     "GoodTypeFull": "good_type_full",
-    "ProducerCollectionFull": "producer_collection_full",
-    "Season": "season",
     "Barcode": "barcode",
-    "Pack": "pack",
-    "PackSize": "pack_size",
-    "PowerSupply": "power_supply",
-    "CountUnitsPerBox": "count_units_per_box",
-    "Age": "age",
-    "Measure": "measure",
-    "MeasureUnit": "measure_unit",
+    "WholesalePrice": "wholesale_price",
+    "WarehouseQuantity": "warehouse_quantity",
     "Closeout": "closeout",
-    "RetailPricePerUnit": "retail_price_per_unit",
-    "WholesalePricePerUnit": "wholesale_price_per_unit",
     "EqualSalePrice": "equal_sale_price",
     "EqualWholesalePrice": "equal_wholesale_price",
-    "EqualCurrencyName": "equal_currency_name",
-    "PrimeCost": "prime_cost",
-    "SupplierCode": "supplier_code",
-    "Analogs": "analogs",
-    "new_description" :"new_description",
 }
 
 NUMERIC_FIELDS = {
-    "retail_price","wholesale_price","retail_price_with_discount",
-    "min_quantity_for_order","height","width","warehouse_quantity",
-    "retail_price_per_unit","wholesale_price_per_unit",
-    "equal_sale_price","equal_wholesale_price","prime_cost",
+    "wholesale_price",
+    "warehouse_quantity",
+    "equal_sale_price",
+    "equal_wholesale_price",
 }
-INT_FIELDS = {"count_units_per_box"}
+INT_FIELDS = set()  # немає int полів
 BOOL_FIELDS = {"closeout"}
 
 def _to_decimal(x, default="0"):

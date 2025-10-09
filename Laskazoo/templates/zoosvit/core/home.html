@@ -16,10 +16,19 @@
   
   <style>
     /* Оптимізовані стилі для карток товарів на головній сторінці */
+    
+    /* ✅ ПРИБИРАЄМО ГОРИЗОНТАЛЬНУ ПРОКРУТКУ */
+    body, html {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100vw;
+    }
+    
     .products .grid-slider { 
       overflow: visible; 
       position: relative;
-      contain: layout; 
+      contain: layout;
+      max-width: 100%;        /* ✅ Не виходити за межі */
     }
     
     .products .prod-card { 

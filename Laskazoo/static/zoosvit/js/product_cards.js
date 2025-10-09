@@ -177,13 +177,25 @@
       setTimeout(processNextBatch, BATCH_DELAY);
     }
     
-    // Починаємо обробку одразу після DOM готовності
+    // ✅ ВИПРАВЛЕНО: На головній - одразу без затримки, на інших - як було
+    const isHomePage = d.querySelector('.hero-carousel, .products.container .product-slider');
+    
     if (d.readyState === 'loading') {
       d.addEventListener('DOMContentLoaded', () => {
-        setTimeout(processNextBatch, 50);
+        if (isHomePage) {
+          // На головній - без затримки
+          processNextBatch();
+        } else {
+          setTimeout(processNextBatch, 50);
+        }
       });
     } else {
-      setTimeout(processNextBatch, 50);
+      if (isHomePage) {
+        // На головній - без затримки
+        processNextBatch();
+      } else {
+        setTimeout(processNextBatch, 50);
+      }
     }
   }
 
@@ -419,6 +431,19 @@
   // ===== ОПТИМІЗОВАНА ІНІЦІАЛІЗАЦІЯ
   const boot = () => {
     console.log('[BOOT] ProductCards optimized version...');
+    
+    // ✅ На головній - вимірюємо одразу, на інших - як було
+    const isHomePage = d.querySelector('.hero-carousel, .products.container .product-slider');
+    
+    if (isHomePage) {
+      console.log('[BOOT] Home page detected - immediate card measurement');
+      // Миттєво вимірюємо всі картки на головній
+      const cards = d.querySelectorAll('.prod-card');
+      cards.forEach(card => {
+        measureCardOptimized(card);
+      });
+    }
+    
     api.init();
   };
 

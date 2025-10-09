@@ -104,6 +104,10 @@ def import_ts_goods(mode: str = 'upsert'):
     created = updated = skipped = 0
 
     # 3) режими
+    # ✅ Отримуємо список дозволених полів з моделі
+    allowed_fields = {f.name for f in TSGoods._meta.get_fields() if not f.many_to_many and not f.one_to_many}
+    allowed_fields.discard('id')  # прибираємо id з дозволених
+    
     if mode == 'replace':
         # повна заміна
         TSGoods.objects.all().delete()
@@ -111,7 +115,9 @@ def import_ts_goods(mode: str = 'upsert'):
         for rec in items:
             rec = dict(rec)
             good_id = str(rec.pop("good_id"))
-            objs.append(TSGoods(good_id=good_id, **rec))
+            # ✅ Фільтруємо тільки існуючі поля
+            filtered_rec = {k: v for k, v in rec.items() if k in allowed_fields}
+            objs.append(TSGoods(good_id=good_id, **filtered_rec))
         if objs:
             TSGoods.objects.bulk_create(objs, batch_size=1000)
         created = len(objs)
@@ -122,7 +128,9 @@ def import_ts_goods(mode: str = 'upsert'):
         for rec in items:
             rec = dict(rec)
             good_id = str(rec.pop("good_id"))
-            obj, was_created = TSGoods.objects.get_or_create(good_id=good_id, defaults=rec)
+            # ✅ Фільтруємо тільки існуючі поля
+            filtered_rec = {k: v for k, v in rec.items() if k in allowed_fields}
+            obj, was_created = TSGoods.objects.get_or_create(good_id=good_id, defaults=filtered_rec)
             if was_created:
                 created += 1
             else:
@@ -130,6 +138,9 @@ def import_ts_goods(mode: str = 'upsert'):
         return {"total": total, "created": created, "updated": 0, "skipped": skipped}
 
     # upsert (оновити або створити)
+    # ✅ Отримуємо список дозволених полів з моделі
+    allowed_fields = {f.name for f in TSGoods._meta.get_fields() if not f.many_to_many and not f.one_to_many}
+    
     for rec in items:
         rec = dict(rec)
 
@@ -139,7 +150,11 @@ def import_ts_goods(mode: str = 'upsert'):
             continue
 
         # ВАЖЛИВО: не даємо Django вставити чужий PK
-        safe_defaults = {k: v for k, v in rec.items() if k not in ("id", "pk")}
+        # ✅ Фільтруємо тільки існуючі поля моделі
+        safe_defaults = {
+            k: v for k, v in rec.items() 
+            if k not in ("id", "pk") and k in allowed_fields
+        }
 
         obj, was_created = TSGoods.objects.update_or_create(
             good_id=good_id,

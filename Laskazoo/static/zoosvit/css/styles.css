@@ -492,12 +492,22 @@ h2 { font-size:2rem; margin:40px 0 20px; text-align:center; color:#095e56; }
 .cat-card { background:#fff; border-radius:8px; padding:24px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.05); }
 .cat-card img { width:80px; height:auto; margin-bottom:12px; }
 .cat-card p { font-size:1.125rem; }
+/* ✅ ФІКС ГОРИЗОНТАЛЬНОЇ ПРОКРУТКИ */
+#products,
+.products.container {
+  overflow: hidden;           /* приховує все, що виходить за межі */
+  width: 100%;                /* не розтягується */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .product-slider {
   position: relative;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px 0;
+  overflow: hidden;          /* ще один рівень захисту */
 }
 
 .slider-window {
@@ -928,8 +938,8 @@ background-color: #1c7f73;
   transform: translateY(-50%) scale(1.1);
 }
 .product-slider .slider-window {
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow-x: hidden;              /* ✅ Прихована прокрутка */
+  overflow-y: visible;              /* дозволяє карткам рости вниз */
   position: relative;
   width: calc(
     var(--prod-card-width) * var(--prod-per-page)
@@ -941,6 +951,8 @@ background-color: #1c7f73;
   display: flex;
   gap: var(--prod-gap);
   transition: transform 0.5s ease-in-out;
+  width: fit-content;
+  max-width: 100%;                  /* ✅ Не виходити за межі */
 }
 .prod-card {
   z-index: 1;
@@ -2752,7 +2764,11 @@ html, body{ overflow-x: hidden; }
 @media (max-width: 768px){
 
   /* секція з товарами вище за сусідів і з запасом знизу */
-  #products{ position: relative; z-index: 10; }
+  #products{ 
+    position: relative; 
+    z-index: 10; 
+    overflow: hidden;         /* ✅ Прибирає прокрутку */
+  }
   .product-slider{
     position: relative;
     z-index: 20;
