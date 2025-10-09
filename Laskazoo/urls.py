@@ -49,6 +49,7 @@ urlpatterns = [
     path('orders/',     include('apps.orders.urls',     namespace='orders')),
     path('favourites/', include('apps.favourites.urls', namespace='favourites')),
     path('manager/', include('apps.manager.urls', namespace='manager')),
+    path('accounts/', include('allauth.urls')),
     # path('stores/', views.stores_map, name='stores_map'),
     path('info/<slug:slug>/', views.info_page, name='info_page'),
     path("api/torgsoft/", include("apps.ts_ftps.urls")),

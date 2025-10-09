@@ -44,7 +44,6 @@ class CustomUserCreationForm(forms.ModelForm):
         
         email_lower = email.lower().strip()
         
-        # Перевіряємо чи існує користувач з таким email
         if CustomUser.objects.filter(email__iexact=email_lower).exists():
             raise forms.ValidationError(_('Користувач з таким email вже існує.'))
         
@@ -116,7 +115,6 @@ class ProfileForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Видаляємо email з форми, щоб його не можна було змінювати
         if 'email' in self.fields:
             del self.fields['email']
     
@@ -126,10 +124,8 @@ class ProfileForm(forms.ModelForm):
         if not phone:
             return ''
         
-        # Видаляємо всі символи крім цифр і +
         phone = re.sub(r'[^\d+]', '', phone)
         
-        # Якщо номер не починається з +, додаємо +38
         if phone and not phone.startswith('+'):
             if phone.startswith('380'):
                 phone = '+' + phone
@@ -140,7 +136,6 @@ class ProfileForm(forms.ModelForm):
             else:
                 phone = '+380' + phone
         
-        # Перевіряємо формат українського номера
         if phone and not re.match(r'^\+380\d{9}$', phone):
             raise forms.ValidationError(_('Введіть коректний український номер телефону у форматі +380XXXXXXXXX'))
         
@@ -156,8 +151,7 @@ class PasswordResetRequestForm(forms.Form):
             'invalid': _('Введіть коректну email адресу')
         },
         widget=forms.EmailInput(attrs={
-            'placeholder': _('Введіть ваш email'),
-            'class': 'form-control'
+            'placeholder': _('Введіть ваш email')
         })
     )
     
@@ -173,8 +167,7 @@ class SetNewPasswordForm(forms.Form):
     password1 = forms.CharField(
         label=_("Новий пароль"),
         widget=forms.PasswordInput(attrs={
-            'placeholder': _('Введіть новий пароль'),
-            'class': 'form-control'
+            'placeholder': _('Введіть новий пароль')
         }),
         error_messages={'required': _('Введіть новий пароль')},
         help_text=_('Пароль повинен містити щонайменше 4 символи')
@@ -183,8 +176,7 @@ class SetNewPasswordForm(forms.Form):
     password2 = forms.CharField(
         label=_("Повторіть пароль"),
         widget=forms.PasswordInput(attrs={
-            'placeholder': _('Повторіть новий пароль'),
-            'class': 'form-control'
+            'placeholder': _('Повторіть новий пароль')
         }),
         error_messages={'required': _('Повторіть пароль')}
     )

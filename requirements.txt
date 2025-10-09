@@ -14,3 +14,5 @@ celery
 redis
 celery[redis]
 requests
+django-allauth
+jwt

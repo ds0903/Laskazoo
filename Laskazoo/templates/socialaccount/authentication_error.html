@@ -1,0 +1,184 @@
+{% extends "zoosvit/base.html" %}
+{% load static %}
+
+{% block title %}Помилка авторизації{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-card">
+        <div class="error-icon">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                <circle cx="40" cy="40" r="38" stroke="#dc3545" stroke-width="4"/>
+                <path d="M40 20v24M40 52v4" stroke="#dc3545" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <h2>Помилка авторизації</h2>
+        
+        {% if exception %}
+        <div class="error-message">
+            <p>{{ exception }}</p>
+        </div>
+        {% else %}
+        <div class="error-message">
+            <p>Виникла помилка при спробі входу через Google. Будь ласка, спробуйте ще раз.</p>
+        </div>
+        {% endif %}
+
+        <div class="error-actions">
+            <a href="{% url 'users:login' %}" class="btn-primary">Спробувати знову</a>
+            <a href="/" class="btn-secondary">На головну</a>
+        </div>
+
+        <div class="error-help">
+            <p>Якщо проблема повторюється:</p>
+            <ul>
+                <li>Переконайтесь, що ви використовуєте дійсний Google акаунт</li>
+                <li>Перевірте налаштування конфіденційності у вашому Google акаунті</li>
+                <li>Спробуйте очистити кеш браузера</li>
+                <li>Зв'яжіться з нашою <a href="{% url 'info_page' 'contacts' %}">службою підтримки</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.error-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 100%;
+    padding: 3rem;
+    text-align: center;
+}
+
+.error-icon {
+    margin: 0 auto 2rem;
+    width: 80px;
+    height: 80px;
+}
+
+.error-card h2 {
+    color: #dc3545;
+    font-size: 2rem;
+    margin: 0 0 1.5rem 0;
+}
+
+.error-message {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.error-message p {
+    color: #721c24;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-primary {
+    flex: 1;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+.btn-secondary {
+    flex: 1;
+    padding: 14px 20px;
+    background: transparent;
+    color: #666;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-secondary:hover {
+    border-color: #999;
+    color: #333;
+}
+
+.error-help {
+    text-align: left;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.error-help p {
+    color: #333;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.error-help ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    color: #666;
+}
+
+.error-help li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.error-help a {
+    color: #0a5e56;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.error-help a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .error-card {
+        padding: 2rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+    }
+    
+    .error-card h2 {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}

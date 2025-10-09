@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'Laskazoo',
     'apps.products',
     'apps.users',
@@ -46,7 +47,15 @@ INSTALLED_APPS = [
     'apps.ts_ftps',
     'apps.manager',
     'django.contrib.sitemaps',
+    
+    # allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
+
+SITE_ID = 1
 
 TS_SYNC = {
     "MODE": os.getenv("TS_MODE", "ftps"),     # ftps | ftp | local
@@ -84,19 +93,49 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.users.middleware.SessionExpiredMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'Laskazoo.urls'
 
 AUTH_USER_MODEL = 'users.CustomUser'
-LOGIN_REDIRECT_URL  = 'home'
-LOGOUT_REDIRECT_URL = 'home'
-LOGIN_URL = '/users/login/'  # Виправляє проблему з редиректом на accounts/login
+LOGIN_REDIRECT_URL  = '/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/users/login/'
 
 AUTHENTICATION_BACKENDS = [
     'apps.users.backends.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
+
+# Allauth settings
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+ACCOUNT_ADAPTER = 'apps.users.adapters.MyAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'apps.users.adapters.MySocialAccountAdapter'
+
+# Google OAuth redirect
+LOGIN_REDIRECT_URL = '/'
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        # APP налаштовується через базу даних (SocialApp)
+        # Не додавайте 'APP' тут, щоб уникнути конфлікту
+    }
+}
 
 TEMPLATES = [
     {

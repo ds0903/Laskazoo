@@ -1,0 +1,282 @@
+{% extends "zoosvit/base.html" %}
+{% load static %}
+
+{% block title %}Реєстрація через Google{% endblock %}
+
+{% block content %}
+<div class="signup-container">
+    <div class="signup-card">
+        <div class="signup-header">
+            <img src="{% static 'zoosvit/img/logo.png' %}" alt="Laskazoo" class="logo">
+            <h2>Завершити реєстрацію</h2>
+            <p>Майже готово! Підтвердіть дані для завершення реєстрації</p>
+        </div>
+
+        <div class="google-account-preview">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+                <path fill="#4285F4" d="M37.6 20.42c0-1.3-.12-2.55-.33-3.75H20v7.09h9.87c-.42 2.29-1.72 4.23-3.66 5.53v4.6h5.92c3.47-3.19 5.47-7.89 5.47-13.47z"/>
+                <path fill="#34A853" d="M20 38.33c4.95 0 9.1-1.64 12.13-4.44l-5.92-4.6c-1.64 1.1-3.74 1.75-6.21 1.75-4.78 0-8.82-3.22-10.26-7.56H3.62v4.75C6.63 34.23 12.83 38.33 20 38.33z"/>
+                <path fill="#FBBC05" d="M9.74 23.48c-.37-1.1-.58-2.27-.58-3.48s.21-2.38.58-3.48V11.77H3.62C2.4 14.24 1.67 17.02 1.67 20s.73 5.76 1.95 8.23l6.12-4.75z"/>
+                <path fill="#EA4335" d="M20 7.92c2.69 0 5.11.92 7.01 2.74l5.26-5.26C29.09 2.41 24.94.67 20 .67 12.83.67 6.63 4.77 3.62 11.77l6.12 4.75C11.18 11.14 15.22 7.92 20 7.92z"/>
+            </svg>
+            {% if form.instance.email %}
+            <div class="account-info">
+                <strong>{{ form.instance.email }}</strong>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="post" id="signup_form">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                    <div class="error-message">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                {% if field.help_text %}
+                <small class="form-text">{{ field.help_text }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="terms-checkbox">
+                <input type="checkbox" id="accept-terms" required>
+                <label for="accept-terms">
+                    Я приймаю <a href="{% url 'info_page' 'public-offer' %}" target="_blank">Договір публічної оферти</a> 
+                    та погоджуюсь на обробку персональних даних відповідно до 
+                    <a href="{% url 'info_page' 'privacy' %}" target="_blank">Політики конфіденційності</a>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-submit">Завершити реєстрацію</button>
+        </form>
+
+        <div class="signup-footer">
+            <p>Вже маєте акаунт? <a href="{% url 'users:login' %}">Увійти</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.signup-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.signup-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 100%;
+    padding: 3rem;
+}
+
+.signup-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.signup-header .logo {
+    width: 80px;
+    margin-bottom: 1.5rem;
+}
+
+.signup-header h2 {
+    color: #0a5e56;
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.signup-header p {
+    color: #666;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.google-account-preview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.account-info strong {
+    color: #333;
+    font-size: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #0a5e56;
+    box-shadow: 0 0 0 4px rgba(9, 94, 86, 0.1);
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 4px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.form-text {
+    display: block;
+    margin-top: 4px;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.terms-checkbox {
+    margin: 1.5rem 0;
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.terms-checkbox input[type="checkbox"] {
+    margin-top: 4px;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.terms-checkbox label {
+    color: #666;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    font-weight: normal;
+}
+
+.terms-checkbox a {
+    color: #0a5e56;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.terms-checkbox a:hover {
+    text-decoration: underline;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.05rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+.signup-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.signup-footer p {
+    color: #666;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.signup-footer a {
+    color: #0a5e56;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.signup-footer a:hover {
+    text-decoration: underline;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+@media (max-width: 768px) {
+    .signup-card {
+        padding: 2rem;
+    }
+    
+    .signup-header h2 {
+        font-size: 1.5rem;
+    }
+}
+</style>
+
+<script>
+document.getElementById('signup_form').addEventListener('submit', function(e) {
+    const termsCheckbox = document.getElementById('accept-terms');
+    if (!termsCheckbox.checked) {
+        e.preventDefault();
+        alert('Будь ласка, прийміть умови використання');
+        return false;
+    }
+});
+</script>
+{% endblock %}

@@ -43,3 +43,8 @@
 # python manage.py makemigrations manager
 # python manage.py migrate
 # <!--        <li><a href="{% url 'stores_map' %}">Магазини Ласка</a></li>-->
+
+# Команди:
+# python manage.py setup_google_oauth --domain=ваш-домен.com
+# python manage.py check_google_oauth
+# sudo systemctl restart gunicorn

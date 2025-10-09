@@ -2,18 +2,20 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.views import View
+from allauth.socialaccount.models import SocialAccount
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from .forms import CustomUserCreationForm, LoginForm, ProfileForm, PasswordResetRequestForm, SetNewPasswordForm
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
-from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import CustomUser
+from django.utils import timezone
 import logging
+import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +45,15 @@ class UserLoginView(View):
                 login(request, user, backend='apps.users.backends.EmailBackend')
                 request.session.save()
 
+                # Перевіряємо чи є Google акаунт прив'язаний
+                next_url = '/'
+                if not SocialAccount.objects.filter(user=user, provider='google').exists():
+                    # Якщо немає Google акаунту - пропонуємо прив'язати
+                    pass
+
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    return JsonResponse({'redirect_url': '/'})
-                return redirect('/')
+                    return JsonResponse({'redirect_url': next_url})
+                return redirect(next_url)
             error = _('Невірний email або пароль')
         else:
             error = _('Будь ласка, виправте помилки у формі')
@@ -80,20 +88,17 @@ def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         
-        # Перевіряємо валідність форми
         if not form.is_valid():
             logger.warning(f'Невалідна форма реєстрації: {form.errors}')
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return render(request, 'zoosvit/users/register_form.html', {'form': form}, status=400)
             return render(request, 'zoosvit/users/register.html', {'form': form})
         
-        # Форма валідна - створюємо користувача
         try:
             with transaction.atomic():
                 user = form.save()
                 logger.info(f'Успішна реєстрація користувача: {user.username} ({user.email})')
                 
-                # Логінимо користувача
                 login(request, user, backend='apps.users.backends.EmailBackend')
                 request.session.save()
                 
@@ -139,13 +144,17 @@ def profile_view(request):
                 logger.error(f'Помилка при збереженні профілю: {str(e)}')
                 messages.error(request, _('Виникла помилка при збереженні. Спробуйте ще раз.'))
         else:
-            # Якщо форма не валідна, помилки автоматично відобразяться в шаблоні
             logger.warning(f'Невалідна форма профілю для {request.user.email}: {form.errors}')
             messages.error(request, _('Будь ласка, виправте помилки у формі.'))
     else:
         form = ProfileForm(instance=request.user)
     
-    return render(request, 'zoosvit/users/profile.html', {'form': form})
+    has_google = SocialAccount.objects.filter(user=request.user, provider='google').exists()
+    
+    return render(request, 'zoosvit/users/profile.html', {
+        'form': form,
+        'has_google': has_google
+    })
 
 
 def password_reset_request(request):
@@ -157,20 +166,25 @@ def password_reset_request(request):
             email = form.cleaned_data['email']
             user = CustomUser.objects.get(email__iexact=email)
             
-            # Генеруємо токен
-            token = default_token_generator.make_token(user)
+            # Генеруємо одноразовий токен
+            token = secrets.token_urlsafe(32)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Зберігаємо токен в базі
+            user.password_reset_token = token
+            user.password_reset_token_created = timezone.now()
+            user.password_reset_token_used = False
+            user.save()
             
             # Формуємо посилання для відновлення
             reset_url = request.build_absolute_uri(
                 f'/users/password-reset-confirm/{uid}/{token}/'
             )
             
-            # Відправляємо email
             try:
                 send_mail(
                     subject='Відновлення пароля - Laskazoo',
-                    message=f'Перейдіть за посиланням для відновлення пароля:\n\n{reset_url}\n\nПосилання дійсне протягом 24 годин.',
+                    message=f'Перейдіть за посиланням для відновлення пароля:\n\n{reset_url}\n\nПосилання дійсне протягом 30 хвилин і може бути використане лише один раз.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[email],
                     fail_silently=False,
@@ -198,7 +212,6 @@ def password_reset_request(request):
                     'errors': form.errors
                 }, status=400)
     
-    # GET запит або помилка - повертаємо форму
     return JsonResponse({'success': False, 'message': 'Невірний запит'}, status=400)
 
 
@@ -210,15 +223,13 @@ def password_reset_confirm(request, uidb64, token):
     except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
         user = None
     
-    # Перевіряємо валідність токену
-    if user is not None and default_token_generator.check_token(user, token):
+    if user is not None and user.is_token_valid(token):
         if request.method == 'POST':
             form = SetNewPasswordForm(request.POST)
             
             if form.is_valid():
-                # Встановлюємо новий пароль
                 user.set_password(form.cleaned_data['password1'])
-                user.save()
+                user.mark_token_as_used()
                 
                 logger.info(f'Користувач {user.email} успішно змінив пароль')
                 messages.success(request, 'Пароль успішно змінено! Тепер ви можете увійти з новим паролем.')
@@ -237,7 +248,13 @@ def password_reset_confirm(request, uidb64, token):
             })
     
     else:
-        # Невалідне посилання
         return render(request, 'zoosvit/users/password_reset_confirm.html', {
             'validlink': False
         })
+
+
+def check_auth(request):
+    """Перевірка чи користувач авторизований"""
+    return JsonResponse({
+        'authenticated': request.user.is_authenticated
+    })
