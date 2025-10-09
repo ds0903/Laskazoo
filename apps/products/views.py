@@ -298,16 +298,31 @@ def _apply_filters(request, base_qs):
           .order_by('brand__name')
     )
 
+    # Пріоритети брендів (чим менше число - тим вище)
+    BRAND_PRIORITIES = {
+        'optimeal': 1,
+        'opti-meal': 1,
+        'delickcios': 2,
+        'delickcious': 2,
+        'delickscious': 2,
+        'klub-4-lapy': 3,
+        'club-4-lapy': 3,
+        'klub-4-lapi': 3,
+    }
 
     brands_ctx = [
         {
             'slug':    b['brand__brand_slug'],
             'name':  b['brand__name'],
             'count': b['count'],
-            'checked': b['brand__brand_slug'] in selected_brands
+            'checked': b['brand__brand_slug'] in selected_brands,
+            'priority': BRAND_PRIORITIES.get(b['brand__brand_slug'].lower(), 999)  # 999 для непріоритетних
         }
         for b in brands_agg if b['brand__brand_slug']
     ]
+    
+    # Сортуємо: спочатку за пріоритетом, потім за назвою
+    brands_ctx.sort(key=lambda x: (x['priority'], x['name'].lower()))
 
     return qs, {
         'brands':    brands_ctx,
@@ -408,16 +423,32 @@ def catalog_by_brand(request, brand_slug):
                  .annotate(count=Count('id'))
                  .order_by('brand__name'))
 
+    # Пріоритети брендів
+    BRAND_PRIORITIES = {
+        'optimeal': 1,
+        'opti-meal': 1,
+        'delickcios': 2,
+        'delickcious': 2,
+        'delickscious': 2,
+        'klub-4-lapy': 3,
+        'club-4-lapy': 3,
+        'klub-4-lapi': 3,
+    }
+
     picked_set = set(picked_brands) if picked_brands else {cur_brand.brand_slug}
     brands_ctx = [
         {
             'slug':  row['brand__brand_slug'],
             'name':  row['brand__name'],
             'count': row['count'],
-            'checked': row['brand__brand_slug'] in picked_set
+            'checked': row['brand__brand_slug'] in picked_set,
+            'priority': BRAND_PRIORITIES.get(row['brand__brand_slug'].lower(), 999)
         }
         for row in agg if row['brand__brand_slug']
     ]
+    
+    # Сортуємо за пріоритетом, потім за назвою
+    brands_ctx.sort(key=lambda x: (x['priority'], x['name'].lower()))
 
     return render(request, 'zoosvit/products/product_list.html', {
         'title':     f'Бренд: {cur_brand.name}',
