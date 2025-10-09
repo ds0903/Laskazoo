@@ -145,3 +145,62 @@ class ProfileForm(forms.ModelForm):
             raise forms.ValidationError(_('Введіть коректний український номер телефону у форматі +380XXXXXXXXX'))
         
         return phone
+
+
+class PasswordResetRequestForm(forms.Form):
+    """Форма для запиту на відновлення пароля"""
+    email = forms.EmailField(
+        label=_("Email"),
+        error_messages={
+            'required': _('Введіть email'),
+            'invalid': _('Введіть коректну email адресу')
+        },
+        widget=forms.EmailInput(attrs={
+            'placeholder': _('Введіть ваш email'),
+            'class': 'form-control'
+        })
+    )
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').lower().strip()
+        if not CustomUser.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(_('Користувача з таким email не знайдено'))
+        return email
+
+
+class SetNewPasswordForm(forms.Form):
+    """Форма для встановлення нового пароля"""
+    password1 = forms.CharField(
+        label=_("Новий пароль"),
+        widget=forms.PasswordInput(attrs={
+            'placeholder': _('Введіть новий пароль'),
+            'class': 'form-control'
+        }),
+        error_messages={'required': _('Введіть новий пароль')},
+        help_text=_('Пароль повинен містити щонайменше 4 символи')
+    )
+    
+    password2 = forms.CharField(
+        label=_("Повторіть пароль"),
+        widget=forms.PasswordInput(attrs={
+            'placeholder': _('Повторіть новий пароль'),
+            'class': 'form-control'
+        }),
+        error_messages={'required': _('Повторіть пароль')}
+    )
+    
+    def clean_password1(self):
+        password = self.cleaned_data.get('password1')
+        if len(password) < 4:
+            raise forms.ValidationError(_('Пароль повинен містити щонайменше 4 символи'))
+        return password
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+        
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError(_('Паролі не співпадають'))
+        
+        return cleaned_data

@@ -271,3 +271,12 @@ NOVA_POSHTA_SENDER_CONTACT_REF = os.getenv('NOVA_POSHTA_SENDER_CONTACT_REF', '')
 NOVA_POSHTA_SENDER_ADDRESS_REF = os.getenv('NOVA_POSHTA_SENDER_ADDRESS_REF', '')  # Ref адреси відправника
 NOVA_POSHTA_SENDER_CITY_REF = os.getenv('NOVA_POSHTA_SENDER_CITY_REF', '')  # Ref міста відправника
 NOVA_POSHTA_SENDER_PHONE = os.getenv('NOVA_POSHTA_SENDER_PHONE', '')  # Телефон відправника
+
+# Email налаштування
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@laskazoo.com')

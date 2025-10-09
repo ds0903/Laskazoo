@@ -21,27 +21,58 @@
           </div>
         {% endfor %}
         <button type="submit">Увійти</button>
+        
+        <div class="forgot-password-link">
+          <a href="#" onclick="event.preventDefault(); openPasswordResetModal();">Забули пароль?</a>
+        </div>
       </form>
     </div>
-    <div class="auth-form" id="register-form" style="display: none;">
-  <form id="register-form-ajax" method="post" action="{% url 'users:register' %}">
-    {% csrf_token %}
-    {% for field in register_form %}
-      <div class="form-group">
-        {{ field.label_tag }} {{ field }}
-        {% for err in field.errors %}
-          <div class="error-message">{{ err }}</div>
-        {% endfor %}
-      </div>
-    {% endfor %}
-    <button type="submit">Зареєструватись</button>
     
-    <div class="register-terms">
-      Я приймаю <a href="{% url 'info_page' 'public-offer' %}" target="_blank">Договір публічної оферти</a> та погоджуюсь на обробку персональних даних, відповідно до <a href="{% url 'info_page' 'privacy' %}" target="_blank">Політики конфіденційності</a>.
+    <div class="auth-form" id="register-form" style="display: none;">
+      <form id="register-form-ajax" method="post" action="{% url 'users:register' %}">
+        {% csrf_token %}
+        {% for field in register_form %}
+          <div class="form-group">
+            {{ field.label_tag }} {{ field }}
+            {% for err in field.errors %}
+              <div class="error-message">{{ err }}</div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+        <button type="submit">Зареєструватись</button>
+        
+        <div class="register-terms">
+          Я приймаю <a href="{% url 'info_page' 'public-offer' %}" target="_blank">Договір публічної оферти</a> та погоджуюсь на обробку персональних даних, відповідно до <a href="{% url 'info_page' 'privacy' %}" target="_blank">Політики конфіденційності</a>.
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>
 
+<!-- Модальне вікно відновлення пароля -->
+<div id="password-reset-modal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="auth-close-btn" onclick="closePasswordResetModal()">&times;</button>
+    
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <div class="modal-icon" style="width: 80px; height: 80px; background: linear-gradient(135deg, #0a5e56 0%, #1a8b7e 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2.5rem;">
+        🔑
+      </div>
+      <h3 style="color: #0a5e56; font-size: 1.5rem; margin-bottom: 0.5rem;">Відновлення пароля</h3>
+      <p style="color: #666; font-size: 0.95rem;">Введіть ваш email для отримання інструкцій</p>
+    </div>
+
+    <form id="password-reset-form" method="post" action="{% url 'users:password_reset' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="reset-email">Email:</label>
+        <input type="email" id="reset-email" name="email" placeholder="Введіть ваш email" required>
+      </div>
+      
+      <div id="reset-message" style="display: none; padding: 12px; border-radius: 8px; margin-bottom: 1rem; text-align: center;"></div>
+      
+      <button type="submit" class="btn-reset-submit">Надіслати</button>
+    </form>
   </div>
 </div>
 
@@ -169,7 +200,8 @@
   box-shadow: 0 0 0 4px rgba(9, 94, 86, 0.1);
 }
 
-.auth-form button[type="submit"] {
+.auth-form button[type="submit"],
+.btn-reset-submit {
   width: 100%;
   padding: 14px 20px;
   background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
@@ -184,7 +216,8 @@
   margin-top: 8px;
 }
 
-.auth-form button[type="submit"]:hover {
+.auth-form button[type="submit"]:hover,
+.btn-reset-submit:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
 }
@@ -222,6 +255,36 @@
   text-decoration: underline;
 }
 
+.forgot-password-link {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.forgot-password-link a {
+  color: #0a5e56;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.forgot-password-link a:hover {
+  color: #1a8b7e;
+  text-decoration: underline;
+}
+
+#reset-message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+#reset-message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
 @media (max-width: 768px) {
   .auth-modal-content {
     min-width: 90vw;
@@ -233,3 +296,110 @@
   }
 }
 </style>
+
+<script>
+// Функції для відновлення пароля
+function openPasswordResetModal() {
+  // Закриваємо модалку логіна
+  const authModal = document.getElementById('auth-modal');
+  if (authModal) {
+    authModal.classList.remove('show');
+  }
+  
+  // Відкриваємо модалку відновлення
+  const resetModal = document.getElementById('password-reset-modal');
+  if (resetModal) {
+    resetModal.classList.add('show');
+    
+    // Очищаємо форму
+    const form = document.getElementById('password-reset-form');
+    if (form) {
+      form.reset();
+    }
+    
+    // Ховаємо повідомлення
+    const message = document.getElementById('reset-message');
+    if (message) {
+      message.style.display = 'none';
+    }
+  }
+}
+
+function closePasswordResetModal() {
+  const modal = document.getElementById('password-reset-modal');
+  if (modal) {
+    modal.classList.remove('show');
+  }
+}
+
+// Обробник форми відновлення пароля
+document.addEventListener('DOMContentLoaded', () => {
+  const resetForm = document.getElementById('password-reset-form');
+  const resetModal = document.getElementById('password-reset-modal');
+  
+  if (resetForm) {
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = resetForm.querySelector('button[type="submit"]');
+      const messageDiv = document.getElementById('reset-message');
+      
+      // Блокуємо кнопку
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Відправка...';
+      
+      try {
+        const formData = new FormData(resetForm);
+        const response = await fetch(resetForm.action, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          messageDiv.textContent = data.message || 'Лист відправлено на вашу пошту!';
+          messageDiv.className = 'success';
+          messageDiv.style.display = 'block';
+          
+          // Через 3 секунди закриваємо модалку
+          setTimeout(() => {
+            closePasswordResetModal();
+          }, 3000);
+        } else {
+          messageDiv.textContent = data.message || 'Виникла помилка. Спробуйте ще раз.';
+          messageDiv.className = 'error';
+          messageDiv.style.display = 'block';
+        }
+      } catch (error) {
+        messageDiv.textContent = 'Виникла помилка. Спробуйте ще раз.';
+        messageDiv.className = 'error';
+        messageDiv.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Надіслати';
+      }
+    });
+  }
+  
+  // Закриття при кліку поза модалкою
+  if (resetModal) {
+    resetModal.addEventListener('click', (e) => {
+      if (e.target === resetModal) {
+        closePasswordResetModal();
+      }
+    });
+  }
+  
+  // Закриття на Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && resetModal && resetModal.classList.contains('show')) {
+      closePasswordResetModal();
+    }
+  });
+});
+</script>
