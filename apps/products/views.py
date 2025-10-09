@@ -264,12 +264,16 @@ def _apply_filters(request, base_qs):
     qs = base_qs
 
     selected_brands = request.GET.getlist('brand')
+    selected_types = request.GET.getlist('type')
     price_min       = request.GET.get('price_min') or None
     price_max       = request.GET.get('price_max') or None
     in_stock        = request.GET.get('in_stock')
     # TODO: фільтри в бренд перенсти
     if selected_brands:
         qs = qs.filter(brand__brand_slug__in=selected_brands)
+    
+    if selected_types:
+        qs = qs.filter(type__in=selected_types)
 
     if price_min:
         qs = qs.filter(retail_price__gte=price_min)
@@ -323,13 +327,35 @@ def _apply_filters(request, base_qs):
     
     # Сортуємо: спочатку за пріоритетом, потім за назвою
     brands_ctx.sort(key=lambda x: (x['priority'], x['name'].lower()))
+    
+    # Агрегація для типів
+    types_agg = (
+        base_qs.exclude(type__isnull=True)
+          .values('type')
+          .annotate(count=Count('id'))
+          .order_by('type')
+    )
+    
+    TYPE_LABELS = dict(Product.TYPE_CHOICES)
+    
+    types_ctx = [
+        {
+            'value': t['type'],
+            'label': TYPE_LABELS.get(t['type'], t['type']),
+            'count': t['count'],
+            'checked': t['type'] in selected_types
+        }
+        for t in types_agg if t['type']
+    ]
 
     return qs, {
         'brands':    brands_ctx,
+        'types':     types_ctx,
         'price_min': price_min or '',
         'price_max': price_max or '',
         'in_stock':  bool(in_stock),
-        'selected_brands': selected_brands
+        'selected_brands': selected_brands,
+        'selected_types': selected_types
     }
 
 def catalog_by_brand(request, brand_slug):
@@ -337,7 +363,8 @@ def catalog_by_brand(request, brand_slug):
     cur_brand = get_object_or_404(Brand, brand_slug__iexact=brand_slug, is_active=True)
 
 
-    picked_brands = request.GET.getlist('brand')           # може бути кілька
+    picked_brands = request.GET.getlist('brand')
+    picked_types = request.GET.getlist('type')
     price_min     = (request.GET.get('price_min') or '').strip()
     price_max     = (request.GET.get('price_max') or '').strip()
     in_stock      = request.GET.get('in_stock') == '1'
@@ -349,6 +376,9 @@ def catalog_by_brand(request, brand_slug):
         base = base.filter(brand__brand_slug__in=picked_brands)
     else:
         base = base.filter(brand=cur_brand)
+    
+    if picked_types:
+        base = base.filter(type__in=picked_types)
 
 
     products_qs = (base
@@ -449,11 +479,32 @@ def catalog_by_brand(request, brand_slug):
     
     # Сортуємо за пріоритетом, потім за назвою
     brands_ctx.sort(key=lambda x: (x['priority'], x['name'].lower()))
+    
+    # Агрегація для типів
+    types_agg = (
+        sidebar.exclude(type__isnull=True)
+          .values('type')
+          .annotate(count=Count('id'))
+          .order_by('type')
+    )
+    
+    TYPE_LABELS = dict(Product.TYPE_CHOICES)
+    
+    types_ctx = [
+        {
+            'value': t['type'],
+            'label': TYPE_LABELS.get(t['type'], t['type']),
+            'count': t['count'],
+            'checked': t['type'] in picked_types
+        }
+        for t in types_agg if t['type']
+    ]
 
     return render(request, 'zoosvit/products/product_list.html', {
         'title':     f'Бренд: {cur_brand.name}',
         'products':  products,
         'brands':    brands_ctx,
+        'types':     types_ctx,
         'price_min': price_min,
         'price_max': price_max,
         'in_stock':  in_stock,
@@ -462,8 +513,15 @@ def catalog_by_brand(request, brand_slug):
 
 def catalog_by_country(request, country_slug):
     country_brands = Brand.objects.filter(country_slug__iexact=country_slug, is_active=True)
-    products_qs = (Product.objects
-                .filter(brand__in=country_brands)
+    
+    picked_types = request.GET.getlist('type')
+    
+    products_qs = Product.objects.filter(brand__in=country_brands)
+    
+    if picked_types:
+        products_qs = products_qs.filter(type__in=picked_types)
+    
+    products_qs = (products_qs
                 .select_related('brand', 'category')
                 .annotate(
                     is_available=Case(
@@ -488,11 +546,33 @@ def catalog_by_country(request, country_slug):
         products = paginator.page(1)
     except EmptyPage:
         products = paginator.page(paginator.num_pages)
+    
+    # Агрегація для типів
+    types_agg = (
+        Product.objects.filter(brand__in=country_brands)
+          .exclude(type__isnull=True)
+          .values('type')
+          .annotate(count=Count('id'))
+          .order_by('type')
+    )
+    
+    TYPE_LABELS = dict(Product.TYPE_CHOICES)
+    
+    types_ctx = [
+        {
+            'value': t['type'],
+            'label': TYPE_LABELS.get(t['type'], t['type']),
+            'count': t['count'],
+            'checked': t['type'] in picked_types
+        }
+        for t in types_agg if t['type']
+    ]
         
     title = f"Країна: {country_brands.first().country if country_brands else country_slug}"
     return render(request, 'zoosvit/products/product_list.html', {
         'title': title,
         'products': products,
         'brands': country_brands.annotate(count=Count('products')),
+        'types': types_ctx,
         'current_per_page': items_per_page,
     })

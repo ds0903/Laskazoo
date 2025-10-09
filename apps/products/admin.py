@@ -10,7 +10,13 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name','slug','main_category')
 
 admin.site.register(Brand)
-admin.site.register(Product)
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ('name', 'sku', 'brand', 'category', 'type', 'retail_price', 'warehouse_quantity', 'is_active')
+    list_filter = ('type', 'brand', 'category', 'is_active')
+    search_fields = ('name', 'sku', 'barcode')
+    list_editable = ('type',)
 
 # @admin.register(PopularProduct)
 # class PopularProductAdmin(admin.ModelAdmin):

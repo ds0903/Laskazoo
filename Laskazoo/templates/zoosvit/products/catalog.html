@@ -187,6 +187,19 @@
         {% endfor %}
       </div>
 
+      {% if types %}
+      <div class="fs-group">
+        <p class="fs-group-title">Тип</p>
+        {% for t in types %}
+          <label>
+            <input type="checkbox" name="type" value="{{ t.value }}"
+                   {% if t.checked %}checked{% endif %}>
+            {{ t.label }} <span>({{ t.count }})</span>
+          </label>
+        {% endfor %}
+      </div>
+      {% endif %}
+
       <div class="fs-group">
         <p class="fs-group-title">Ціна, грн</p>
         <div class="range-inputs">

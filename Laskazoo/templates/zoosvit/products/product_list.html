@@ -128,6 +128,19 @@
         {% endfor %}
       </div>
 
+      {% if types %}
+      <div class="fs-group">
+        <p class="fs-group-title">Тип</p>
+        {% for t in types %}
+          <label>
+            <input type="checkbox" name="type" value="{{ t.value }}"
+                   {% if t.checked %}checked{% endif %}>
+            {{ t.label }} <span>({{ t.count }})</span>
+          </label>
+        {% endfor %}
+      </div>
+      {% endif %}
+
       <div class="fs-group">
         <p class="fs-group-title">Ціна, грн</p>
         <div class="range-inputs">
@@ -281,10 +294,15 @@
   // Збираємо чекбокси/поля і перезавантажуємо сторінку з query-параметрами
   function applyFilters() {
     const url = new URL(window.location.href);
-    url.searchParams.delete('brand'); // очистити, потім додати вибрані
+    url.searchParams.delete('brand');
+    url.searchParams.delete('type');
 
     document.querySelectorAll('input[name="brand"]:checked').forEach(cb => {
       url.searchParams.append('brand', cb.value);
+    });
+    
+    document.querySelectorAll('input[name="type"]:checked').forEach(cb => {
+      url.searchParams.append('type', cb.value);
     });
 
     const min = document.querySelector('input[name="price_min"]').value;

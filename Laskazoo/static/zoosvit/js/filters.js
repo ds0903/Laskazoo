@@ -4,8 +4,11 @@
 window.applyFilters = function(){
   const url = new URL(window.location.href);
   url.searchParams.delete('brand');
+  url.searchParams.delete('type');
   document.querySelectorAll('input[name="brand"]:checked')
     .forEach(cb => url.searchParams.append('brand', cb.value));
+  document.querySelectorAll('input[name="type"]:checked')
+    .forEach(cb => url.searchParams.append('type', cb.value));
   const min = document.querySelector('input[name="price_min"]')?.value || '';
   const max = document.querySelector('input[name="price_max"]')?.value || '';
   const inStock = document.querySelector('input[name="in_stock"]')?.checked || false;
@@ -19,6 +22,13 @@ window.applyFilters = function(){
 document.addEventListener('DOMContentLoaded', function() {
   // Чекбокси брендів - застосовувати одразу
   document.querySelectorAll('input[name="brand"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      applyFilters();
+    });
+  });
+  
+  // Чекбокси типів - застосовувати одразу
+  document.querySelectorAll('input[name="type"]').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
       applyFilters();
     });

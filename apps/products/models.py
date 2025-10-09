@@ -104,6 +104,16 @@ class Brand(models.Model):
         return self.name
 
 class Product(models.Model):
+    TYPE_CHOICES = [
+        ('package', 'В упаковці'),
+        ('weight', 'На вагу'),
+        ('pouch', 'Паучі'),
+        ('can', 'Консерва'),
+        ('treats_package', 'Смаколики в упаковці'),
+        ('treats_weight', 'Смаколики на вагу'),
+        ('treats_piece', 'Смаколики поштучно'),
+    ]
+    
     torgsoft_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
     barcode = models.CharField(max_length=128, blank=True, null=True)
     name     = models.CharField(max_length=255, blank=True, null=True)
@@ -113,6 +123,7 @@ class Product(models.Model):
     weight = models.PositiveIntegerField("Вага (г)", validators=[MinValueValidator(1)], db_default=0)
     color = models.CharField("Колір", max_length=32, blank=True, null=True)
     size = models.CharField("Розмір", max_length=32, blank=True, null=True)
+    type = models.CharField("Тип", max_length=32, choices=TYPE_CHOICES, blank=True, null=True, db_index=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     brand    = models.ForeignKey(Brand,    on_delete=models.CASCADE, related_name='products')
     description = models.TextField("Опис", blank=True, null=True)

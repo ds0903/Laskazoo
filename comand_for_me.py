@@ -48,3 +48,15 @@
 # python manage.py setup_google_oauth --domain=ваш-домен.com
 # python manage.py check_google_oauth
 # sudo systemctl restart gunicorn
+
+# Додано поле type з чотирма варіантами:
+#
+# package - В упаковці
+# weight - На вагу
+# pouch - Паучі
+# can - Консерва
+# Смаколики в упаковці (treats_package)
+# Смаколики на вагу (treats_weight)
+# Смаколики поштучно (treats_piece)
+
+# python manage.py fill_product_types --preview
