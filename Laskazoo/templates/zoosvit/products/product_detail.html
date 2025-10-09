@@ -445,9 +445,43 @@
       padding: 30px;
       border-radius: 16px;
       border: 2px solid #f0f0f0;
-      line-height: 1.7;
-      color: #555;
-      font-size: 1rem;
+      line-height: 1.8;
+      color: #444;
+      font-size: 1.05rem;
+    }
+    
+    .description-content p {
+      margin-bottom: 16px;
+    }
+    
+    .description-content p:last-child {
+      margin-bottom: 0;
+    }
+    
+    .description-content ul {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+    }
+
+    .description-content ul li {
+      padding-left: 24px;
+      position: relative;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .description-content ul li:before {
+      position: absolute;
+      left: 0;
+      color: var(--color-primary);
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .description-content strong {
+      color: var(--color-primary);
+      font-weight: 600;
     }
     
     .description-placeholder {
@@ -705,7 +739,7 @@
 <section class="description-section">
   <h3 class="description-title">Опис</h3>
   {% if product.description %}
-    <div class="description-content">
+    <div class="description-content" id="product-description">
       {{ product.description|linebreaks }}
     </div>
   {% else %}
@@ -860,5 +894,57 @@
       }
     });
   });
+  
+  // Форматування опису товару
+  (function() {
+    const descEl = document.getElementById('product-description');
+    if (!descEl) return;
+    
+    let html = descEl.innerHTML;
+    
+    // Розбиваємо на абзаци
+    const paragraphs = html.split('</p>').filter(p => p.trim());
+    
+    const formatted = paragraphs.map(p => {
+      // Очищаємо від <p> тегів
+      let text = p.replace(/<p>/g, '').trim();
+      if (!text) return '';
+
+      // Шукаємо списки (рядки з · або •)
+      if (text.includes('·') || text.includes('•')) {
+        // Розділяємо на елементи списку
+        const items = text.split(/[·•]/).filter(item => item.trim());
+
+        if (items.length > 1) {
+          // Перший елемент може бути заголовком
+          const intro = items[0].trim();
+          const listItems = items.slice(1);
+
+          let result = intro ? `<p><strong>${intro}</strong></p>` : '';
+          result += '<ul>';
+
+          listItems.forEach(item => {
+            const trimmed = item.trim();
+            // Виділяємо жирним текст до першого тире, двокрапки або дужки
+            const match = trimmed.match(/^([^:\-—(]+)[:\-—]/);
+            if (match) {
+              const bold = match[1].trim();
+              const rest = trimmed.substring(match[0].length).trim();
+              result += `<li><strong>${bold}:</strong> ${rest}</li>`;
+            } else {
+              result += `<li>${trimmed}</li>`;
+            }
+          });
+
+          result += '</ul>';
+          return result;
+        }
+      }
+
+      return `<p>${text}</p>`;
+    }).join('');
+    
+    descEl.innerHTML = formatted;
+  })();
 </script>
 {% endblock %}
