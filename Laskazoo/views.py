@@ -216,3 +216,8 @@ def info_page(request, slug: str):
         "left_nav": LEFT_NAV,
         "active": slug,
     })
+
+
+def login_success(request):
+    """Сторінка яка закриває popup після успішного входу"""
+    return render(request, 'account/login_success.html')

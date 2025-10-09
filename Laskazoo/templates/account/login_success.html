@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Успішний вхід</title>
+    <script>
+        // Одразу після завантаження сторінки
+        if (window.opener) {
+            // Перезавантажуємо батьківське вікно
+            window.opener.location.href = window.opener.location.href;
+            // Закриваємо popup
+            window.close();
+        } else {
+            // Якщо не popup - перенаправляємо
+            window.location.href = '/';
+        }
+    </script>
+</head>
+<body>
+    <p style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        ✅ Вхід успішний! Закриваємо...
+    </p>
+</body>
+</html>

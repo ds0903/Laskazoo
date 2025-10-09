@@ -1,6 +1,6 @@
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.adapter import DefaultAccountAdapter
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.contrib import messages
 
 

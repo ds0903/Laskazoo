@@ -258,3 +258,8 @@ def check_auth(request):
     return JsonResponse({
         'authenticated': request.user.is_authenticated
     })
+
+
+def login_success(request):
+    """Сторінка яка закриває popup після успішного входу"""
+    return render(request, 'account/login_success.html')

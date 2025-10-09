@@ -120,7 +120,7 @@ ACCOUNT_ADAPTER = 'apps.users.adapters.MyAccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'apps.users.adapters.MySocialAccountAdapter'
 
 # Google OAuth redirect
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/accounts/login-success/'
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 SOCIALACCOUNT_PROVIDERS = {

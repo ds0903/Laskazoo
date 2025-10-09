@@ -431,39 +431,12 @@ function openGooglePopup(url) {
     `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
   );
   
-  if (popup) {
-    // Перевіряємо кожну секунду чи користувач увійшов
-    const checkAuth = setInterval(() => {
-      // Перевіряємо чи popup закрито
-      if (popup.closed) {
-        clearInterval(checkAuth);
-        // Перевіряємо чи користувач увійшов (робимо запит на сервер)
-        fetch('/users/check-auth/', {
-          credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.authenticated) {
-            // Закриваємо модальне вікно
-            const modal = document.getElementById('auth-modal');
-            if (modal) {
-              modal.classList.remove('show');
-            }
-            // Перезавантажуємо сторінку
-            window.location.reload();
-          }
-        })
-        .catch(() => {
-          // Якщо помилка - просто перезавантажуємо
-          window.location.reload();
-        });
-      }
-    }, 1000);
-  } else {
+  if (!popup) {
     // Якщо popup заблоковано браузером
     alert('Будь ласка, дозвольте popup вікна для цього сайту');
     window.location.href = url;
   }
+  // Popup сам закриється і перезавантажить сторінку через /accounts/login-success/
 }
 
 // Функції для відновлення пароля
