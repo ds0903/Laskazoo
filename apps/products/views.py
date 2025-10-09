@@ -280,10 +280,20 @@ def _apply_filters(request, base_qs):
             Q(is_active=True, warehouse_quantity__gt=0) |
             Q(variants__is_active=True, variants__warehouse_quantity__gt=0)
         ).distinct()
+    
+    # Сортування: активні товари зверху, неактивні внизу
+    qs = qs.annotate(
+        is_available=Case(
+            When(Q(is_active=True, warehouse_quantity__gt=0), then=Value(1)),
+            When(Q(variants__is_active=True, variants__warehouse_quantity__gt=0), then=Value(1)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    ).order_by('-is_available', 'id').distinct()
 
 
     brands_agg = (
-        qs.values('brand__brand_slug', 'brand__name')
+        base_qs.values('brand__brand_slug', 'brand__name')
           .annotate(count=Count('id'))
           .order_by('brand__name')
     )
@@ -347,7 +357,15 @@ def catalog_by_brand(request, brand_slug):
             Q(variants__is_active=True, variants__warehouse_quantity__gt=0)
         )
 
-    products_qs = products_qs.distinct()
+    # Сортування: активні товари зверху, неактивні внизу
+    products_qs = products_qs.annotate(
+        is_available=Case(
+            When(Q(is_active=True, warehouse_quantity__gt=0), then=Value(1)),
+            When(Q(variants__is_active=True, variants__warehouse_quantity__gt=0), then=Value(1)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    ).order_by('-is_available', 'id').distinct()
     
     # Додаємо пагінацію
     items_per_page = int(request.GET.get('per_page', 20))
@@ -415,7 +433,15 @@ def catalog_by_country(request, country_slug):
     country_brands = Brand.objects.filter(country_slug__iexact=country_slug, is_active=True)
     products_qs = (Product.objects
                 .filter(brand__in=country_brands)
-                .select_related('brand', 'category'))
+                .select_related('brand', 'category')
+                .annotate(
+                    is_available=Case(
+                        When(Q(is_active=True, warehouse_quantity__gt=0), then=Value(1)),
+                        When(Q(variants__is_active=True, variants__warehouse_quantity__gt=0), then=Value(1)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    )
+                ).order_by('-is_available', 'id'))
     
     # Додаємо пагінацію
     items_per_page = int(request.GET.get('per_page', 20))

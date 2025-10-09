@@ -67,11 +67,23 @@ def toggle(request, pk):
 
 
 def favourite_list(request):
+    from django.db.models import Q, Case, When, Value, IntegerField
+    
     if request.user.is_authenticated:
-        # ПОКАЗУЄМО ВСІ обрані товари, навіть неактивні
+        # ПОКАЗУЄМО ВСІ обрані товари, навіть неактивні, але сортуємо активні зверху
         favs = (Favourite.objects
                 .filter(user=request.user)
-                .select_related('product', 'variant', 'product__brand', 'product__category'))
+                .select_related('product', 'variant', 'product__brand', 'product__category')
+                .annotate(
+                    is_available=Case(
+                        # Якщо є варіант, перевіряємо його
+                        When(Q(variant__isnull=False, variant__is_active=True, variant__warehouse_quantity__gt=0), then=Value(1)),
+                        # Якщо немає варіанту, перевіряємо товар
+                        When(Q(variant__isnull=True, product__is_active=True, product__warehouse_quantity__gt=0), then=Value(1)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    )
+                ).order_by('-is_available', 'id'))
         
         fav_ids = set(f.product_id for f in favs)
         fav_variant_ids = [f.variant_id for f in favs if f.variant_id]
@@ -85,12 +97,19 @@ def favourite_list(request):
         for pid in fav_prod_ids:
             p = products.get(pid)
             if p:
-                favs.append(type('F', (), {'product': p, 'variant': None, 'id': f'p-{pid}'}))
+                # Додаємо поле для сортування
+                is_available = 1 if (p.is_active and p.warehouse_quantity > 0) else 0
+                favs.append(type('F', (), {'product': p, 'variant': None, 'id': f'p-{pid}', 'is_available': is_available}))
 
         # ПОКАЗУЄМО ВСІ варіанти, навіть неактивні
         variants = list(Product_Variant.objects.filter(id__in=fav_var_ids).select_related('product', 'product__brand', 'product__category'))
         for v in variants:
-            favs.append(type('F', (), {'product': v.product, 'variant': v, 'id': f'v-{v.id}'}))
+            # Додаємо поле для сортування
+            is_available = 1 if (v.is_active and v.warehouse_quantity > 0) else 0
+            favs.append(type('F', (), {'product': v.product, 'variant': v, 'id': f'v-{v.id}', 'is_available': is_available}))
+
+        # Сортуємо: активні зверху, неактивні внизу
+        favs.sort(key=lambda f: (-f.is_available, f.id))
 
         fav_ids = set(fav_prod_ids) | set(v.product_id for v in variants)
         fav_variant_ids = fav_var_ids
