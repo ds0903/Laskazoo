@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // DOM елементи
   const modal = document.getElementById('auth-modal');
   const closeBtn = modal?.querySelector('.auth-close-btn');
-  const headerLoginBtn = document.getElementById('open-login-modal');
-  const headerRegBtn = document.getElementById('open-register-modal');
   const tabs = document.querySelectorAll('.auth-tab');
   const loginBox = document.getElementById('login-form');
   const registerBox = document.getElementById('register-form');
@@ -64,6 +62,19 @@ document.addEventListener('DOMContentLoaded', () => {
     clearAllForms();
   }
 
+  // Глобальні функції для відкриття модалки (доступні з header.html)
+  window.openLoginModal = function() {
+    clearAllForms();
+    showTab('login');
+    modal.classList.add('show');
+  };
+
+  window.openRegisterModal = function() {
+    clearAllForms();
+    showTab('register');
+    modal.classList.add('show');
+  };
+
   // Клики по вкладках усередині модалки
   tabs.forEach(tab => {
     tab.addEventListener('click', e => {
@@ -73,28 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Клики на кнопки в header
-  if (headerLoginBtn) {
-    headerLoginBtn.addEventListener('click', e => {
-      e.preventDefault();
-      clearAllForms();
-      showTab('login');
-      modal.classList.add('show');
-    });
-  }
-
-  if (headerRegBtn) {
-    headerRegBtn.addEventListener('click', e => {
-      e.preventDefault();
-      clearAllForms();
-      showTab('register');
-      modal.classList.add('show');
-    });
-  }
-
   // Закрити модалку
   if (closeBtn) {
-    closeBtn.addEventListener('click', closeModal);
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    });
   }
 
   // Закрити модалку при кліку поза нею
@@ -189,4 +185,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // За замовчуванням показуємо вкладку логін
   showTab('login');
+  
+  // Підключаємо обробник для іконки користувача (неавторизовані)
+  const userLoginBtn = document.getElementById('user-login-btn');
+  if (userLoginBtn) {
+    userLoginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.openLoginModal();
+    });
+  }
 });

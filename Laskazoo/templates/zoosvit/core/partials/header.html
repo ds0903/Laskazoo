@@ -57,7 +57,7 @@
         </div>
 
         <div class="header-actions">
-          <!-- Іконка користувача з дропдауном -->
+          <!-- Іконка користувача -->
           {% if user.is_authenticated %}
             <div class="icon-btn login-btn user-profile-btn" id="user-profile-btn">
               <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
@@ -77,15 +77,8 @@
               </div>
             </div>
           {% else %}
-            <div class="icon-btn login-btn" id="user-login-btn">
+            <div class="icon-btn login-btn" id="user-login-btn" style="cursor: pointer;">
               <img src="{% static 'zoosvit/img/header_icons/profile-icon.png' %}" alt="User">
-              <div class="login-dropdown">
-                <div class="dropdown-title">Вхід / Реєстрація</div>
-                <div class="dropdown-chats">
-                  <a href="#" class="dropdown-link" id="open-login-modal">Увійти</a>
-                  <a href="#" class="dropdown-link" id="open-register-modal">Зареєструватись</a>
-                </div>
-              </div>
             </div>
           {% endif %}
 
@@ -318,9 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
     phoneBtn.addEventListener('mouseleave', hidePhoneDropdown);
     phoneDropdown.addEventListener('mouseenter', showPhoneDropdown);
     phoneDropdown.addEventListener('mouseleave', hidePhoneDropdown);
-    
-    // Клік по лінку веде на сторінку контактів (браузер сам обробляє це)
-    // Не потрібно додавати preventDefault, щоб лінк працював
   }
 
   // =============== ДРОПДАУНИ КОРИСТУВАЧА ===============
@@ -352,43 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const firstLink = profileDropdown.querySelector('.dropdown-link');
       if (firstLink) {
         window.location.href = firstLink.href;
-      }
-    });
-  }
-
-  // Для неавторизованих - hover (як у авторизованих)
-  const userLoginBtn = document.getElementById('user-login-btn');
-  const loginDropdown = userLoginBtn?.querySelector('.login-dropdown');
-
-  if (userLoginBtn && loginDropdown) {
-    let loginTimer;
-
-    const showLoginDropdown = () => {
-      clearTimeout(loginTimer);
-      loginDropdown.classList.add('show');
-    };
-
-    const hideLoginDropdown = () => {
-      loginTimer = setTimeout(() => {
-        loginDropdown.classList.remove('show');
-      }, 150);
-    };
-
-    userLoginBtn.addEventListener('mouseenter', showLoginDropdown);
-    userLoginBtn.addEventListener('mouseleave', hideLoginDropdown);
-    loginDropdown.addEventListener('mouseenter', showLoginDropdown);
-    loginDropdown.addEventListener('mouseleave', hideLoginDropdown);
-
-    // Також залишаємо клік для мобільних пристроїв
-    userLoginBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      loginDropdown.classList.toggle('show');
-    });
-
-    // Закриваємо при кліку поза дропдауном
-    document.addEventListener('click', (e) => {
-      if (!userLoginBtn.contains(e.target)) {
-        loginDropdown.classList.remove('show');
       }
     });
   }
