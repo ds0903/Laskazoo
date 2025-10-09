@@ -49,7 +49,7 @@ urlpatterns = [
     path('orders/',     include('apps.orders.urls',     namespace='orders')),
     path('favourites/', include('apps.favourites.urls', namespace='favourites')),
     path('manager/', include('apps.manager.urls', namespace='manager')),
-    path('stores/', views.stores_map, name='stores_map'),
+    # path('stores/', views.stores_map, name='stores_map'),
     path('info/<slug:slug>/', views.info_page, name='info_page'),
     path("api/torgsoft/", include("apps.ts_ftps.urls")),
     path("favicon.ico",RedirectView.as_view(url=static_url("zoosvit/img/favicon.ico"), permanent=True)),

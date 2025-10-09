@@ -206,6 +206,7 @@
     font-weight: 600;
     box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .social-link:hover {
@@ -250,6 +251,8 @@
     font-size: 1.1rem;
     transition: all 0.3s ease;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    border: none;
 }
 
 .cta-button:hover {
@@ -276,12 +279,137 @@
     font-weight: 600;
 }
 
+/* Modal Overlay */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.3s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal Content */
+.contact-modal {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+    text-align: center;
+    transform: scale(0.8);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal-overlay.active .contact-modal {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.modal-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #0a5e56 0%, #1a8b7e 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2.5rem;
+}
+
+.contact-modal h3 {
+    color: #0a5e56;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.modal-contact-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1rem 0;
+    transition: all 0.3s ease;
+}
+
+.modal-contact-item:hover {
+    background: #e8f5e9;
+    transform: translateY(-2px);
+}
+
+.modal-contact-item a {
+    color: #0a5e56;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.modal-hours {
+    background: linear-gradient(135deg, #fff8e6 0%, #ffe4b5 100%);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1.5rem;
+}
+
+.modal-hours h4 {
+    color: #ff9800;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.modal-hours p {
+    color: #666;
+    margin: 0.3rem 0;
+    font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .contacts-hero h1 { font-size: 2rem; }
     .contact-grid { grid-template-columns: 1fr; }
     .hours-grid { grid-template-columns: 1fr; }
     .social-links { flex-direction: column; align-items: center; }
+    .contact-modal { padding: 2rem 1.5rem; }
 }
 </style>
 
@@ -291,7 +419,7 @@
 <div class="cta-section">
     <h3>💬 Потрібна консультація?</h3>
     <p>Наші фахівці завжди готові допомогти вам обрати найкращі товари для ваших улюбленців!</p>
-    <a href="tel:+380932384730" class="cta-button">Зателефонувати зараз</a>
+    <button class="cta-button" onclick="openModal('phone')">Зателефонувати зараз</button>
 </div>
 
 <!-- Social Media -->
@@ -300,11 +428,11 @@
     <p>Слідкуйте за нами, щоб не пропустити акції та новинки!</p>
     
     <div class="social-links">
-        <a href="https://t.me/ds0903" target="_blank" class="social-link">
+        <a href="javascript:void(0)" onclick="openModal('telegram')" class="social-link">
             <span class="social-icon">✈️</span>
             <span>Telegram</span>
         </a>
-        <a href="mailto:zoosvitoffice15@gmail.com" class="social-link">
+        <a href="javascript:void(0)" onclick="openModal('email')" class="social-link">
             <span class="social-icon">📧</span>
             <span>Email</span>
         </a>
@@ -342,5 +470,127 @@
         Ми завжди раді бачити вас та ваших пухнастих друзів! 🐾
     </p>
 </div>
+
+<!-- Phone Modal -->
+<div class="modal-overlay" id="phoneModal" onclick="closeModal(event, 'phone')">
+    <div class="contact-modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal(null, 'phone')">&times;</button>
+        
+        <div class="modal-icon">📞</div>
+        
+        <h3>Зв'яжіться з нами</h3>
+        
+        <div class="modal-contact-item">
+            <a href="tel:+380932384730">
+                <span style="font-size: 1.3rem;">📞</span>
+                +38 (093) 238-47-30
+            </a>
+        </div>
+        
+        <div class="modal-hours">
+            <h4>🕐 Графік роботи</h4>
+            <p>Понеділок – Неділя</p>
+            <p>8:00 – 20:00</p>
+        </div>
+    </div>
+</div>
+
+<!-- Telegram Modal -->
+<div class="modal-overlay" id="telegramModal" onclick="closeModal(event, 'telegram')">
+    <div class="contact-modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal(null, 'telegram')">&times;</button>
+        
+        <div class="modal-icon">✈️</div>
+        
+        <h3>Напишіть нам</h3>
+        
+        <div class="modal-contact-item">
+            <a href="https://t.me/ds0903" target="_blank">
+                <span style="font-size: 1.3rem;">✈️</span>
+                Telegram
+            </a>
+        </div>
+        
+        <div class="modal-contact-item">
+            <a href="mailto:zoosvitoffice15@gmail.com">
+                <span style="font-size: 1.3rem;">📧</span>
+                zoosvitoffice15@gmail.com
+            </a>
+        </div>
+        
+        <div class="modal-hours">
+            <h4>🕐 Графік роботи</h4>
+            <p>Понеділок – Неділя</p>
+            <p>8:00 – 20:00</p>
+        </div>
+    </div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal-overlay" id="emailModal" onclick="closeModal(event, 'email')">
+    <div class="contact-modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal(null, 'email')">&times;</button>
+        
+        <div class="modal-icon">📧</div>
+        
+        <h3>Напишіть нам</h3>
+        
+        <div class="modal-contact-item">
+            <a href="mailto:zoosvitoffice15@gmail.com">
+                <span style="font-size: 1.3rem;">📧</span>
+                zoosvitoffice15@gmail.com
+            </a>
+        </div>
+        
+        <div class="modal-contact-item">
+            <a href="https://t.me/ds0903" target="_blank">
+                <span style="font-size: 1.3rem;">✈️</span>
+                Telegram
+            </a>
+        </div>
+        
+        <div class="modal-hours">
+            <h4>🕐 Графік роботи</h4>
+            <p>Понеділок – Неділя</p>
+            <p>8:00 – 20:00</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function openModal(type) {
+    const modalId = type + 'Modal';
+    const modal = document.getElementById(modalId);
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Trigger animation
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
+}
+
+function closeModal(event, type) {
+    if (!event || event.target.classList.contains('modal-overlay') || event.target.classList.contains('modal-close')) {
+        const modalId = type + 'Modal';
+        const modal = document.getElementById(modalId);
+        
+        modal.classList.remove('active');
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        ['phone', 'telegram', 'email'].forEach(type => {
+            closeModal(null, type);
+        });
+    }
+});
+</script>
 
 </div>

@@ -37,3 +37,8 @@
 # python manage.py setup_novaposhta
 # python manage.py find_warehouse --city="Київ" --number="366"
 # python manage.py sync_novaposhta_statuses
+# якщо не виходить скинути міграції і тд начисмто видаляємо і наново стоврюємо
+# python manage.py migrate manager zero
+# rm apps/manager/migrations/0*.py
+# python manage.py makemigrations manager
+# python manage.py migrate
